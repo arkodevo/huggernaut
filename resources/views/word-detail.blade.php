@@ -3,46 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ $word['traditional'] }} — 流動 Living Lexicon</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;700&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+@include('partials.lexicon._foundations')
+@include('partials.lexicon._attr-chip-css')
+@include('partials.lexicon._definition-css')
+@include('partials.lexicon._word-header-css')
+@include('partials.lexicon._example-sentence-css')
 <style>
-:root {
-  --bg: #ffffff;
-  --surface: #f5f4f8;
-  --surface2: #eeecf4;
-  --border: rgba(0,0,0,0.12);
-  --border-active: rgba(100,70,200,0.4);
-  --text: #1a1828;
-  --dim: rgba(26,24,40,0.72);
-  --accent: #6240c8;
-  --gold: #a0720a;
-  --jade: #1a8a5a;
-  --rose: #b83050;
-  --ink: #0a0816;
-  --tag-bg: rgba(98,64,200,0.08);
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; overflow-x: hidden; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  min-height: 100vh;
-  line-height: 1.6;
-  overflow-x: hidden;
-}
-
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background:
-    radial-gradient(ellipse 60% 40% at 15% 20%, rgba(98,64,200,0.05) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 85% 80%, rgba(26,138,90,0.04) 0%, transparent 70%);
-  pointer-events: none; z-index: 0;
-}
-
 /* ── WD PREFIX STYLES ── */
 
 /* Sticky header */
@@ -75,50 +44,102 @@ body::before {
   transition: opacity 0.15s;
 }
 .wd-breadcrumb a:hover { opacity: 0.7; }
+/* Word header card — matches SRP .word-card styling */
 .wd-header-char {
-  display: flex; align-items: center; gap: 0.75rem;
-  padding: 0.2rem 0;
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 1rem 1.2rem;
+  margin-top: 5px;
 }
-.wd-hero-char {
-  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: 2.4rem; font-weight: 300;
-  color: var(--ink); line-height: 1.1;
+.wd-header-char .hanzi-char {
+  font-size: 2.4rem;
 }
-.wd-hero-pinyin {
-  font-style: italic; font-family: 'Cormorant Garamond', serif;
-  font-size: 1.1rem; color: var(--accent);
-  letter-spacing: 0.05em;
+.wd-header-char .hanzi-secondary {
+  font-size: calc(2.4rem * 0.65);
 }
-.wd-hero-domain {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.72rem; letter-spacing: 0.04em;
-  color: var(--gold); background: rgba(160,114,10,0.08);
-  border: 1px solid rgba(160,114,10,0.28);
-  border-radius: 2px; padding: 0.1rem 0.5rem;
-  cursor: pointer; user-select: none;
-  transition: background 0.15s;
+.wd-header-char .script-switch-btn {
+  font-size: 1rem; padding: 0.25rem 0;
 }
-.wd-hero-domain:hover { background: rgba(160,114,10,0.15); }
-.wd-hero-right {
-  display: flex; flex-direction: column; gap: 0.2rem;
+.wd-header-char .card-hdr-mid {
+  flex: 1; gap: 0.25rem;
+}
+/* Domain: full-width, centered (matches SRP mobile) */
+.wd-header-char .card-hdr-mid .card-domain-row { margin-bottom: 0; width: 100%; }
+.wd-header-char .card-hdr-mid .card-domain {
+  display: block; width: 100%;
+  font-size: 0.81rem; padding: 0.3rem 0.6rem; text-align: center;
+}
+/* POS: full-width, left-justified, one per line */
+.wd-header-char .card-pos-summary {
+  flex-direction: column; gap: 0.2rem;
+}
+.wd-header-char .card-pos-hdr {
+  display: block; width: 100%;
+  font-size: 0.81rem; padding: 0.15rem 0.6rem; text-align: left;
+}
+.wd-header-char .card-pinyin-row {
+  margin-top: 0.1rem;
+}
+.wd-header-char .pinyin {
+  font-size: 1.05rem;
 }
 
-/* ── SETTINGS BAR ── */
-.wd-settings-bar {
-  display: flex; flex-wrap: wrap; gap: 0.5rem 0.8rem;
-  padding: 0.6rem 1rem;
-  background: #eae8f2;
+/* ── GEAR BUTTON ── */
+.wd-gear-btn {
+  margin-left: auto;
+  background: none; border: none; cursor: pointer;
+  font-size: 1.1rem; color: var(--dim);
+  padding: 0.2rem 0.3rem; line-height: 1;
+  transition: color 0.15s, transform 0.2s;
+  flex-shrink: 0;
+}
+.wd-gear-btn:hover { color: var(--accent); }
+.wd-gear-btn.open { color: var(--accent); transform: rotate(60deg); }
+
+/* ── GEAR PANEL (drops down inside sticky header, above word card) ── */
+.wd-gear-panel {
+  max-height: 0; overflow: hidden;
+  border-bottom: 0px solid var(--border);
+  transition: max-height 0.28s ease, border-bottom-width 0.28s;
+}
+.wd-gear-panel.open {
+  max-height: 900px;
   border-bottom: 1px solid var(--border);
-  align-items: center;
 }
-.wd-setting-group {
-  display: flex; align-items: center; gap: 0.3rem;
+.wd-gear-panel-inner {
+  padding: 1.2rem 1rem 1rem;
+  position: relative;
 }
-.wd-setting-label {
-  font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--dim); white-space: nowrap;
+.wd-gear-close {
+  position: absolute; bottom: 0.6rem; right: 0.8rem;
+  background: none; border: 1px solid var(--border);
+  border-radius: 2px; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: var(--dim); padding: 0.2rem 0.5rem;
+  transition: color 0.15s, border-color 0.15s;
 }
+.wd-gear-close:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── INTERFACE GRID (same layout as lexicon-live iface-grid) ── */
+.iface-grid {
+  display: flex; flex-wrap: wrap; gap: 1.4rem 2.4rem; align-items: flex-start;
+}
+.iface-group {
+  display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start;
+}
+.iface-group-label {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--dim);
+}
+.iface-hint {
+  font-size: 0.6rem; color: var(--dim); font-style: italic;
+  max-width: 12rem; line-height: 1.3;
+}
+
+/* ── TOGGLE (shared by gear panel groups) ── */
 .wd-toggle {
   display: inline-flex; border-radius: 3px; overflow: hidden;
   border: 1px solid var(--border); flex-shrink: 0;
@@ -143,6 +164,28 @@ body::before {
 }
 .wd-toggle-btn.active { color: white; }
 .wd-toggle-btn:not(.active):hover { background: rgba(98,64,200,0.06); }
+.wd-toggle-btn.disabled {
+  opacity: 0.35; cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── SECTION VISIBILITY TOGGLES ── */
+.iface-section-toggles {
+  display: flex; flex-direction: column; gap: 0.45rem;
+}
+.iface-section-toggle {
+  display: flex; align-items: center; gap: 0.5rem;
+  cursor: pointer; user-select: none;
+}
+.iface-section-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+  width: 13px; height: 13px;
+}
+.iface-section-toggle-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem; color: var(--text);
+}
 
 /* ── MAIN CONTENT ── */
 .wd-main {
@@ -201,7 +244,8 @@ body::before {
   display: flex; flex-direction: column; gap: 0.75rem;
 }
 .wd-sense-header {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem;
+  display: flex; flex-direction: column; gap: 0.4rem;
+  position: relative;
 }
 .wd-sense-badge {
   display: inline-flex; align-items: center; justify-content: center;
@@ -211,21 +255,68 @@ body::before {
   border-radius: 50%;
   flex-shrink: 0;
 }
-.wd-sense-pinyin {
-  font-style: italic; font-family: 'Cormorant Garamond', serif;
-  font-size: 1rem; color: var(--accent);
-  letter-spacing: 0.05em;
+.wd-save-btn {
+  font-size: 1.1rem; background: none; border: none;
+  cursor: pointer; color: var(--dim); padding: 0 0.2rem;
+  transition: color 0.15s; flex-shrink: 0;
+  line-height: 1;
 }
-.wd-sense-domain {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem; letter-spacing: 0.04em;
-  color: var(--gold); background: rgba(160,114,10,0.08);
-  border: 1px solid rgba(160,114,10,0.28);
-  border-radius: 2px; padding: 0.1rem 0.45rem;
-  cursor: pointer; user-select: none;
+.wd-save-btn:hover { color: var(--gold); }
+.wd-save-btn.saved { color: var(--gold); }
+
+/* Collection picker popover */
+.wd-cp {
+  position: absolute; top: 2rem; left: 0; z-index: 200;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; min-width: 200px; padding: 0.4rem 0;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  animation: wdCpIn 0.15s ease;
+  max-height: 50vh; overflow-y: auto;
 }
-.wd-sense-domain:hover { background: rgba(160,114,10,0.15); }
+@keyframes wdCpIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+.wd-cp-title {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--dim); padding: 0.3rem 0.65rem 0.2rem;
+}
+.wd-cp-item {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  color: var(--ink); cursor: pointer;
+  transition: background 0.1s;
+}
+.wd-cp-item:hover { background: rgba(0,0,0,0.03); }
+.wd-cp-item input[type="checkbox"] { accent-color: var(--accent); margin: 0; flex-shrink: 0; }
+.wd-cp-empty {
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: var(--dim); padding: 0.3rem 0.65rem; font-style: italic;
+}
+.wd-cp-new {
+  border-top: 1px solid var(--border); margin-top: 0.25rem;
+  padding: 0.4rem 0.65rem 0.2rem;
+  display: flex; align-items: center; gap: 0.3rem;
+}
+.wd-cp-new input {
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.25rem 0.4rem; flex: 1; outline: none;
+  background: var(--bg); color: var(--ink);
+}
+.wd-cp-new input:focus { border-color: var(--accent); }
+.wd-cp-new button {
+  font-size: 0.9rem; background: none; border: none;
+  color: var(--accent); cursor: pointer; padding: 0; line-height: 1;
+  transition: opacity 0.15s;
+}
+.wd-cp-new button:hover { opacity: 0.7; }
+/* Sense pinyin: uses shared .pinyin class */
+/* Sense domain chip: full-width centered, matching header card */
+.wd-sense-header .card-domain-row { width: 100%; }
+.wd-sense-header .card-domain {
+  display: block; width: 100%;
+  font-size: 0.81rem; padding: 0.3rem 0.6rem; text-align: center;
+}
 .wd-sense-tocfl {
   display: inline-block;
   font-family: 'DM Mono', monospace;
@@ -237,40 +328,10 @@ body::before {
 
 /* Definitions */
 .wd-defs { display: flex; flex-direction: column; gap: 0.5rem; }
-.wd-def-row { display: block; }
-.wd-def-row + .wd-def-row { margin-top: 0.3rem; }
-.wd-pos {
-  display: inline-block;
-  margin-right: 0.4rem; vertical-align: baseline;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.78rem; letter-spacing: 0.04em;
-  color: #7060a8; background: rgba(98,64,200,0.07);
-  border: 1px solid rgba(98,64,200,0.18);
-  border-radius: 2px; padding: 1px 7px;
-  cursor: pointer; user-select: none;
-  transition: background 0.15s, border-color 0.15s;
-}
-.wd-pos:hover { background: rgba(98,64,200,0.13); border-color: rgba(98,64,200,0.35); }
-.wd-definition {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: var(--fs-defn, 1.5rem); font-weight: 300;
-  color: var(--ink); line-height: 1.4;
-}
-.wd-formula {
-  font-size: var(--fs-formula, 1rem);
-  background: rgba(98,64,200,0.05);
-  border: 1px solid rgba(98,64,200,0.15);
-  padding: 0.3rem 0.6rem; border-radius: 2px;
-  color: var(--accent);
-  font-family: 'DM Mono', monospace;
-  display: inline-block; margin-top: 0.15rem;
-}
-.wd-usage-note {
-  font-size: var(--fs-note, 0.9rem); color: var(--dim); line-height: 1.5;
-  margin-top: 0.1rem;
-}
+/* Definition row spacing (uses shared card-def-row, card-pos, etc. from partial) */
+.card-usage-note { margin-top: 0.1rem; }
 
-/* Attribute chips — reuse card-attr pattern */
+/* Attribute chips — grid container (page-specific) */
 .wd-attrs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -278,63 +339,6 @@ body::before {
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
 }
-.card-attr {
-  display: flex; flex-direction: column;
-  border-radius: 3px; overflow: hidden;
-  border: 1px solid var(--border);
-  cursor: pointer; user-select: none;
-}
-.card-attr-header {
-  font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
-  font-family: 'DM Mono', monospace;
-  padding: 0.22rem 0.5rem 0.18rem;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-.card-attr-value {
-  display: flex; flex-direction: row; align-items: center; gap: 0.35rem;
-  padding: 0.25rem 0.5rem;
-  font-family: 'DM Mono', monospace; font-size: 0.78rem;
-}
-.card-attr-value .attr-icon { font-size: 1.05rem; line-height: 1; flex-shrink: 0; }
-.card-attr-value.multi { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
-.attr-val-item { display: inline-flex; align-items: center; gap: 0.35rem; flex-shrink: 0; white-space: nowrap; }
-.card-attr:hover .card-attr-header { opacity: 0.72; }
-.card-attr:hover .attr-label { opacity: 0.72; }
-
-/* Attribute colour tints */
-.card-attr.attr-register   { background: rgba(20,140,80,0.05);  border-color: rgba(20,140,80,0.2); }
-.card-attr.attr-register   .card-attr-header { color: #148c50; background: rgba(20,140,80,0.08); border-color: rgba(20,140,80,0.15); }
-.card-attr.attr-register   .card-attr-value  { color: #148c50; }
-
-.card-attr.attr-connotation.conno-pos .card-attr-header { color: #8a6000; background: rgba(232,160,32,0.1); border-color: rgba(232,160,32,0.2); }
-.card-attr.attr-connotation.conno-pos { background: rgba(232,160,32,0.07); border-color: rgba(232,160,32,0.3); }
-.card-attr.attr-connotation.conno-pos .card-attr-value  { color: #8a6000; }
-.card-attr.attr-connotation.conno-neg { background: rgba(80,96,160,0.07); border-color: rgba(80,96,160,0.3); }
-.card-attr.attr-connotation.conno-neg .card-attr-header { color: #3a4880; background: rgba(80,96,160,0.1); border-color: rgba(80,96,160,0.2); }
-.card-attr.attr-connotation.conno-neg .card-attr-value  { color: #3a4880; }
-.card-attr.attr-connotation.conno-neu { background: rgba(112,144,176,0.07); border-color: rgba(112,144,176,0.3); }
-.card-attr.attr-connotation.conno-neu .card-attr-header { color: #4a6880; background: rgba(112,144,176,0.1); border-color: rgba(112,144,176,0.2); }
-.card-attr.attr-connotation.conno-neu .card-attr-value  { color: #4a6880; }
-.card-attr.attr-connotation.conno-ctx { background: rgba(96,160,112,0.07); border-color: rgba(96,160,112,0.3); }
-.card-attr.attr-connotation.conno-ctx .card-attr-header { color: #3a7850; background: rgba(96,160,112,0.1); border-color: rgba(96,160,112,0.2); }
-.card-attr.attr-connotation.conno-ctx .card-attr-value  { color: #3a7850; }
-
-.card-attr.attr-channel   { background: rgba(160,114,10,0.05); border-color: rgba(160,114,10,0.2); }
-.card-attr.attr-channel   .card-attr-header { color: var(--gold); background: rgba(160,114,10,0.08); border-color: rgba(160,114,10,0.15); }
-.card-attr.attr-channel   .card-attr-value  { color: var(--gold); }
-
-.card-attr.attr-tocfl     { background: rgba(160,114,10,0.05); border-color: rgba(160,114,10,0.2); }
-.card-attr.attr-tocfl     .card-attr-header { color: var(--gold); background: rgba(160,114,10,0.08); border-color: rgba(160,114,10,0.15); }
-.card-attr.attr-tocfl     .card-attr-value  { color: var(--gold); }
-
-.card-attr.attr-dimension { background: rgba(60,80,180,0.05); border-color: rgba(60,80,180,0.2); }
-.card-attr.attr-dimension .card-attr-header { color: #3c50b4; background: rgba(60,80,180,0.08); border-color: rgba(60,80,180,0.15); }
-.card-attr.attr-dimension .card-attr-value  { color: #3c50b4; }
-
-.card-attr.attr-intensity { background: rgba(180,60,120,0.05); border-color: rgba(180,60,120,0.2); }
-.card-attr.attr-intensity .card-attr-header { color: #a03070; background: rgba(180,60,120,0.08); border-color: rgba(180,60,120,0.15); }
-.card-attr.attr-intensity .card-attr-value  { color: #a03070; }
 
 /* ── EXAMPLES ── */
 .wd-examples {
@@ -346,56 +350,49 @@ body::before {
   font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
   color: var(--dim);
 }
-.wd-example {
-  display: flex; align-items: flex-start; gap: 0.5rem;
-  padding: 0.45rem 0.6rem;
-  background: rgba(255,255,255,0.7);
-  border: 1px solid rgba(98,64,200,0.08);
-  border-radius: 2px;
+/* Example sentence styles loaded from shared partial (_example-sentence-css) */
+
+/* ── LEARNER NOTE ── */
+.wd-learner-note {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
 }
-.wd-ex-num { font-size: 0.55rem; color: var(--accent); opacity: 0.6; margin-top: 0.15rem; flex-shrink: 0; }
-.wd-ex-body { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; min-width: 0; }
-.wd-ex-cn {
-  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: var(--fs-ex-cn, 1.8rem); color: var(--ink); line-height: 1.5;
+.wd-learner-note-label {
+  font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 0.3rem;
 }
-.wd-ex-cn .highlight { color: var(--gold); font-weight: 600; }
-.wd-ex-en { font-size: var(--fs-ex-en, 1rem); color: var(--dim); font-style: italic; }
-.wd-ex-source { font-size: 0.55rem; color: var(--dim); opacity: 0.6; }
-.wd-ex-theme {
-  display: inline-block;
-  font-size: 0.55rem; color: var(--jade);
-  background: rgba(26,138,90,0.06);
-  border: 1px solid rgba(26,138,90,0.15);
-  border-radius: 2px; padding: 0 0.3rem;
-  margin-top: 0.1rem;
+.wd-learner-note-area {
+  width: 100%; min-height: 48px;
+  background: #fff;
+  border: 1px solid rgba(98,64,200,0.18);
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem; padding: 0.5rem 0.6rem;
+  border-radius: 2px; outline: none; resize: vertical;
+  line-height: 1.5;
+  transition: border-color 0.2s;
 }
+.wd-learner-note-area::placeholder {
+  font-size: 0.72rem; color: rgba(26,24,40,0.3);
+}
+.wd-learner-note-area:focus { border-color: var(--accent); }
+.wd-learner-note-actions {
+  display: flex; align-items: center; gap: 0.5rem; margin-top: 0.3rem;
+}
+.wd-note-save-btn {
+  align-self: flex-start;
+  padding: 0.3rem 0.7rem; border-radius: 2px;
+  border: 1px solid var(--accent);
+  background: var(--tag-bg); color: var(--accent);
+  font-family: 'DM Mono', monospace; font-size: 0.68rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.wd-note-save-btn:hover { background: rgba(155,127,240,0.2); }
 
 /* Segmented word spans */
-.wd-seg-known {
-  cursor: pointer;
-  border-bottom: 1px dashed transparent;
-  transition: border-color 0.15s, color 0.15s;
-  position: relative;
-}
-.wd-seg-known:hover { border-color: var(--accent); color: var(--accent); }
+/* Segmentation styles loaded from shared partial */
 
-/* Vertical text mode */
-.wd-vertical .wd-ex-cn {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  letter-spacing: 0.08em;
-  max-height: 20rem;
-}
-.wd-vertical .wd-examples {
-  flex-direction: row-reverse;
-  overflow-x: auto;
-  gap: 0.75rem;
-}
-.wd-vertical .wd-example {
-  flex-direction: column;
-  min-width: auto;
-}
+/* Vertical example text mode — handled by shared partial (.ex-sent.vertical) */
 
 /* ── LEARNER TRAPS ── */
 .wd-traps {
@@ -551,33 +548,10 @@ body::before {
   font-style: italic; padding: 0.6rem 0;
 }
 
-/* ── FAMILY TREE ── */
-.wd-family {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  overflow: hidden;
+/* ── FAMILY TREE (content inside section wrapper) ── */
+.wd-family-content {
+  display: flex; flex-direction: column; gap: 0.6rem;
 }
-.wd-family-toggle {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0.65rem 1rem;
-  cursor: pointer; background: transparent; border: none;
-  width: 100%; text-align: left;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.72rem; letter-spacing: 0.08em;
-  color: var(--dim);
-  transition: color 0.15s, background 0.15s;
-}
-.wd-family-toggle:hover { color: var(--text); background: rgba(98,64,200,0.04); }
-.wd-family-arrow {
-  font-size: 0.65rem; transition: transform 0.2s; display: inline-block;
-}
-.wd-family-body {
-  display: none;
-  padding: 0 1rem 1rem;
-  flex-direction: column; gap: 0.6rem;
-}
-.wd-family-body.open { display: flex; }
 .wd-family-group-title {
   font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
   color: var(--dim);
@@ -601,63 +575,7 @@ body::before {
 }
 .wd-action-btn:hover { color: var(--accent); border-color: var(--accent); }
 
-/* ── PHASE 2 STUBS ── */
-.wd-phase-stub {
-  background: var(--surface);
-  border: 1px dashed var(--border);
-  border-radius: 2px;
-  padding: 1.2rem 1rem;
-  text-align: center;
-}
-.wd-phase-stub-title {
-  font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
-  color: var(--dim); margin-bottom: 0.3rem;
-}
-.wd-phase-stub-text {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 0.95rem; color: var(--dim); font-style: italic;
-}
-
-/* ── POPOVER ── */
-.wd-popover {
-  position: fixed; z-index: 500;
-  background: white;
-  border: 1px solid var(--border-active);
-  border-radius: 4px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
-  padding: 0.6rem 0.8rem;
-  min-width: 180px; max-width: 280px;
-  display: none;
-  flex-direction: column; gap: 0.2rem;
-  animation: wdPopIn 0.15s ease;
-}
-.wd-popover.open { display: flex; }
-@keyframes wdPopIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.wd-popover-char {
-  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: 1.4rem; font-weight: 300; color: var(--ink); line-height: 1.2;
-}
-.wd-popover-pinyin {
-  font-style: italic; font-family: 'Cormorant Garamond', serif;
-  font-size: 0.82rem; color: var(--accent);
-}
-.wd-popover-pos {
-  font-family: 'DM Mono', monospace; font-size: 0.65rem;
-  color: #7060a8;
-}
-.wd-popover-def {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 0.85rem; color: var(--text); line-height: 1.3;
-}
-.wd-popover-link {
-  font-family: 'DM Mono', monospace; font-size: 0.65rem;
-  color: var(--accent); text-decoration: none;
-  margin-top: 0.15rem;
-}
-.wd-popover-link:hover { text-decoration: underline; }
+/* Popover styles loaded from shared partial */
 
 /* ── BACK TO TOP ── */
 #wdBackToTop {
@@ -680,10 +598,45 @@ body::before {
 .wd-hidden { display: none !important; }
 
 /* ── NO-PINYIN MODE ── */
-.wd-no-pinyin .wd-hero-pinyin,
+.wd-no-pinyin .card-pinyin-row,
 .wd-no-pinyin .wd-sense-pinyin,
 .wd-no-pinyin .wd-rel-card-pinyin,
-.wd-no-pinyin .wd-popover-pinyin { display: none; }
+.wd-no-pinyin .seg-pop-pinyin { display: none; }
+
+/* ── SECTION WRAPPERS ── */
+.wd-section {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.wd-section-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.65rem 1rem;
+  cursor: pointer; background: transparent; border: none;
+  width: 100%; text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem; letter-spacing: 0.08em;
+  color: var(--dim);
+  transition: color 0.15s, background 0.15s;
+}
+.wd-section-toggle:hover { color: var(--text); background: rgba(98,64,200,0.04); }
+.wd-section-body {
+  display: none;
+  flex-direction: column; gap: 0.75rem;
+  padding: 1rem;
+}
+.wd-section-body.open {
+  display: flex;
+}
+.wd-section-arrow {
+  font-size: 0.65rem; transition: transform 0.2s; display: inline-block;
+}
+.wd-section-stub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem; color: var(--dim);
+  font-style: italic; padding: 0.4rem 0;
+  line-height: 1.5;
+}
 
 /* ── RESPONSIVE ── */
 @media (min-width: 768px) {
@@ -693,69 +646,87 @@ body::before {
 </style>
 </head>
 <body>
+<script>window.__AUTH = @json($authUser);</script>
 
 <!-- Popover (singleton) -->
-<div class="wd-popover" id="wdPopover">
-  <div class="wd-popover-char" id="wdPopChar"></div>
-  <div class="wd-popover-pinyin" id="wdPopPinyin"></div>
-  <div class="wd-popover-pos" id="wdPopPos"></div>
-  <div class="wd-popover-def" id="wdPopDef"></div>
-  <a class="wd-popover-link" id="wdPopLink" href="#">Open &rarr;</a>
-</div>
+@include('partials.lexicon._popover')
 
 <!-- Sticky Header -->
 <div class="wd-header" id="wdHeader">
   <div class="wd-header-top">
     <button class="wd-back-btn" onclick="goBack()">&larr; Back</button>
     <div class="wd-breadcrumb" id="wdBreadcrumb"></div>
+    @include('partials.lexicon._user-menu')
+    <button class="wd-gear-btn" id="wdGearBtn" onclick="wdToggleGear()" title="Settings">&#9881;</button>
   </div>
-  <div class="wd-header-char">
-    <span class="wd-hero-char" id="wdHeroChar"></span>
-    <div class="wd-hero-right">
-      <span class="wd-hero-pinyin" id="wdHeroPinyin"></span>
-      <div id="wdHeroDomains"></div>
-    </div>
-  </div>
-</div>
 
-<!-- Settings Bar -->
-<div class="wd-settings-bar">
-  <div class="wd-setting-group">
-    <span class="wd-setting-label">Script</span>
-    <div class="wd-toggle" id="wdScriptToggle">
-      <button class="wd-toggle-btn active" id="wdBtnTrad" onclick="wdSetScript('traditional')">繁</button>
-      <button class="wd-toggle-btn" id="wdBtnSimp" onclick="wdSetScript('simplified')">简</button>
+  <!-- Gear Settings Panel (drops down between nav row and word header) -->
+  <div class="wd-gear-panel" id="wdGearPanel">
+    <div class="wd-gear-panel-inner">
+      <div class="iface-grid">
+
+        <div class="iface-group">
+          <div class="iface-group-label">CHARACTER SET</div>
+          <div class="wd-toggle" id="wdScriptToggle">
+            <button class="wd-toggle-btn active" id="wdBtnTrad" onclick="wdSetScript('traditional')">Traditional 繁</button>
+            <button class="wd-toggle-btn" id="wdBtnSimp" onclick="wdSetScript('simplified')">Simplified 簡</button>
+          </div>
+        </div>
+
+        <div class="iface-group">
+          <div class="iface-group-label">LANGUAGE</div>
+          <div class="wd-toggle" id="wdLangToggle">
+            <button class="wd-toggle-btn" id="wdBtnLangEn" onclick="wdSetLang('en')">EN</button>
+            <button class="wd-toggle-btn" id="wdBtnLangZh" onclick="wdSetLang('zh')">中文</button>
+            <button class="wd-toggle-btn active" id="wdBtnLangBoth" onclick="wdSetLang('both')">EN+中文</button>
+          </div>
+        </div>
+
+        <div class="iface-group">
+          <div class="iface-group-label">ICONS</div>
+          <div class="wd-toggle" id="wdIconsToggle">
+            <button class="wd-toggle-btn active" id="wdBtnIconsOn" onclick="wdSetIcons('on')">On</button>
+            <button class="wd-toggle-btn" id="wdBtnIconsOff" onclick="wdSetIcons('off')">Off</button>
+          </div>
+        </div>
+
+        <div class="iface-group">
+          <div class="iface-group-label">PINYIN</div>
+          <div class="wd-toggle" id="wdPinyinToggle">
+            <button class="wd-toggle-btn active" id="wdBtnPinyinOn" onclick="wdSetPinyin('on')">On</button>
+            <button class="wd-toggle-btn" id="wdBtnPinyinOff" onclick="wdSetPinyin('off')">Off</button>
+          </div>
+        </div>
+
+        <div class="iface-group">
+          <div class="iface-group-label">TEXT ORIENTATION</div>
+          <div class="wd-toggle" id="wdTextDirToggle">
+            <button class="wd-toggle-btn active" id="wdBtnHoriz" onclick="wdSetTextDir('horizontal')">Horizontal 橫</button>
+            <button class="wd-toggle-btn" id="wdBtnVert" onclick="wdSetTextDir('vertical')">Vertical 直</button>
+          </div>
+        </div>
+
+        <div class="iface-group">
+          <div class="iface-group-label">SECTIONS</div>
+          <div class="iface-section-toggles" id="wdSectionToggles"></div>
+          <div class="iface-hint">Hide sections globally</div>
+        </div>
+
+        <div class="iface-group">
+          <div class="iface-group-label">VIEW MODE</div>
+          <div class="wd-toggle" id="wdViewModeToggle">
+            <button class="wd-toggle-btn active" id="wdBtnScroll" onclick="wdSetViewMode('scroll')">Full Scroll</button>
+            <button class="wd-toggle-btn disabled" id="wdBtnTabs" title="Coming soon">Tabs</button>
+          </div>
+          <div class="iface-hint">Tabs view coming soon</div>
+        </div>
+
+      </div>
+      <button class="wd-gear-close" onclick="wdToggleGear()" title="Close settings">&times; Close</button>
     </div>
   </div>
-  <div class="wd-setting-group">
-    <span class="wd-setting-label">Lang</span>
-    <div class="wd-toggle" id="wdLangToggle">
-      <button class="wd-toggle-btn" id="wdBtnLangEn" onclick="wdSetLang('en')">EN</button>
-      <button class="wd-toggle-btn" id="wdBtnLangZh" onclick="wdSetLang('zh')">中文</button>
-      <button class="wd-toggle-btn active" id="wdBtnLangBoth" onclick="wdSetLang('both')">EN+中文</button>
-    </div>
-  </div>
-  <div class="wd-setting-group">
-    <span class="wd-setting-label">Icons</span>
-    <div class="wd-toggle" id="wdIconsToggle">
-      <button class="wd-toggle-btn active" id="wdBtnIconsOn" onclick="wdSetIcons('on')">On</button>
-      <button class="wd-toggle-btn" id="wdBtnIconsOff" onclick="wdSetIcons('off')">Off</button>
-    </div>
-  </div>
-  <div class="wd-setting-group">
-    <span class="wd-setting-label">Pinyin</span>
-    <div class="wd-toggle" id="wdPinyinToggle">
-      <button class="wd-toggle-btn active" id="wdBtnPinyinOn" onclick="wdSetPinyin('on')">On</button>
-      <button class="wd-toggle-btn" id="wdBtnPinyinOff" onclick="wdSetPinyin('off')">Off</button>
-    </div>
-  </div>
-  <div class="wd-setting-group">
-    <span class="wd-setting-label">Text</span>
-    <div class="wd-toggle" id="wdTextDirToggle">
-      <button class="wd-toggle-btn active" id="wdBtnHoriz" onclick="wdSetTextDir('horizontal')">橫</button>
-      <button class="wd-toggle-btn" id="wdBtnVert" onclick="wdSetTextDir('vertical')">直</button>
-    </div>
-  </div>
+
+  <div class="wd-header-char" id="wdHeaderChar"></div>
 </div>
 
 <!-- Main Content Container -->
@@ -833,75 +804,6 @@ const LABELS = {
   },
 };
 
-const POS_RENAME = {
-  'Verb': 'Verb (all)', 'Intransitive Verb': 'Verb - intransitive',
-  'Process Verb': 'Verb - process', 'Vp-sep / Separable Process Verb': 'Verb - process (sep.)',
-  'Process Verb (Telic)': 'Verb - process (telic)', 'Stative Verb': 'Verb - stative',
-  'Vs-attr / Stative Verb (Attributive)': 'Verb - stative (attr.)',
-  'Vs-pred / Stative Verb (Predicative)': 'Verb - stative (pred.)',
-  'Vs-sep / Separable Stative Verb': 'Verb - stative (sep.)',
-  'State-Transitive Verb': 'Verb - state-transitive',
-  'Auxiliary Verb': 'Verb - auxiliary', 'V-sep / Separable Verb': 'Verb - separable',
-};
-
-const POS_ABBR = {
-  'Verb':'V', 'Intransitive Verb':'Vi', 'Process Verb':'Vp',
-  'Vp-sep / Separable Process Verb':'Vp-sep', 'Process Verb (Telic)':'Vpt',
-  'Stative Verb':'Vs', 'Vs-attr / Stative Verb (Attributive)':'Vs-attr',
-  'Vs-pred / Stative Verb (Predicative)':'Vs-pred',
-  'Vs-sep / Separable Stative Verb':'Vs-sep', 'State-Transitive Verb':'Vst',
-  'Auxiliary Verb':'Vaux', 'V-sep / Separable Verb':'V-sep',
-  'Noun':'N', 'Measure Word':'M', 'Adverb':'Adv', 'Preposition':'Prep',
-  'Conjunction':'Conj', 'Particle':'Ptcl', 'Determiner':'Det',
-  'Pronoun':'Prn', 'Number':'Num', 'Idiomatic Expression':'IE', 'Phrase':'Ph',
-};
-
-const POS_ZH = {
-  'Verb':'動詞（全部）', 'Intransitive Verb':'不及物動詞', 'Process Verb':'過程動詞',
-  'Vp-sep / Separable Process Verb':'離合過程動詞', 'Process Verb (Telic)':'完結動詞',
-  'Stative Verb':'狀態動詞', 'Vs-attr / Stative Verb (Attributive)':'狀態動詞（定語）',
-  'Vs-pred / Stative Verb (Predicative)':'狀態動詞（謂語）',
-  'Vs-sep / Separable Stative Verb':'離合狀態動詞', 'State-Transitive Verb':'狀態及物動詞',
-  'Auxiliary Verb':'助動詞', 'V-sep / Separable Verb':'離合詞',
-  'Noun':'名詞', 'Measure Word':'量詞', 'Adverb':'副詞', 'Preposition':'介詞',
-  'Conjunction':'連詞', 'Particle':'助詞', 'Determiner':'限定詞',
-  'Pronoun':'代詞', 'Number':'數詞', 'Idiomatic Expression':'成語', 'Phrase':'詞組',
-};
-
-const ATTR_LABELS = {
-  register:    { literary:['🦋','Literary'], formal:['🐝','Formal'], neutral:['🐞','Standard'], colloquial:['🪲','Colloquial'], informal:['🦗','Informal'], slang:['🕷️','Slang'] },
-  connotation: { positive:['☀️','Positive'], neutral:['⛅','Neutral'], negative:['⛈️','Negative'], 'context-dependent':['🌦️','Context'] },
-  channel:     { 'spoken-only':['🦎','Spoken Only'], 'spoken-dominant':['🐍','Spoken Dominant'], fluid:['🦜','Fluid'], 'written-dominant':['🦚','Written Dominant'], 'written-only':['🐉','Written Only'] },
-  dimension:   { abstract:['🐙','Abstract'], concrete:['🐢','Concrete'], internal:['🐟','Internal'], external:['🦂','External'], fluid:['🦀','Fluid'] },
-  intensity:   { 1:['🌸','Faint'], 2:['🌼','Mild'], 3:['🪷','Moderate'], 4:['🌻','Strong'], 5:['🌺','Blazing'] },
-  tocfl:       { prep:['🌑','Prep'], entry:['🌒','Entry'], basic:['🌓','Basic'], intermediate:['🌔','Intermediate'], advanced:['🌕','Advanced'], high:['🌖','High'], fluency:['🌝','Fluency'] },
-};
-
-const ATTR_ZH = {
-  register:    { literary:'文學體', formal:'正式', neutral:'標準', colloquial:'口語', informal:'非正式', slang:'俚語' },
-  connotation: { positive:'褒義', neutral:'中性', negative:'貶義', 'context-dependent':'隨境' },
-  channel:     { 'spoken-only':'純口語', 'spoken-dominant':'偏口語', fluid:'流動', 'written-dominant':'偏書面', 'written-only':'純書面' },
-  dimension:   { abstract:'抽象', concrete:'具體', internal:'內在', external:'外在', fluid:'流動' },
-  intensity:   { 1:'微', 2:'淡', 3:'中', 4:'濃', 5:'烈' },
-  tocfl:       { prep:'準備', entry:'入門', basic:'基礎', advanced:'高階', high:'精通', fluency:'流利' },
-};
-
-const ATTR_HEADER_ZH = {
-  register: '語域', connotation: '感情色彩', channel: '媒介',
-  dimension: '維度', intensity: '強度', tocfl: '華測',
-};
-
-const connoClass = { positive: 'conno-pos', neutral: 'conno-neu', negative: 'conno-neg', 'context-dependent': 'conno-ctx' };
-
-const LEVEL_FONTS = {
-  beginner:   { hanzi: 3.8, simp: 1.9, pinyin: 1.2, defn: 2.0, note: 1.1, formula: 1.1, exCn: 2.0, exEn: 1.1, scale: 130 },
-  learner:    { hanzi: 3.2, simp: 1.6, pinyin: 1.1, defn: 1.9, note: 1.0, formula: 1.0, exCn: 1.9, exEn: 1.0, scale: 115 },
-  developing: { hanzi: 2.8, simp: 1.4, pinyin: 1.0, defn: 1.5, note: 0.9, formula: 1.0, exCn: 1.8, exEn: 1.0, scale: 100 },
-  advanced:   { hanzi: 2.4, simp: 1.2, pinyin: 0.9, defn: 1.6, note: 0.9, formula: 0.9, exCn: 1.6, exEn: 0.9, scale: 90  },
-  native:     { hanzi: 2.0, simp: 1.0, pinyin: 0.8, defn: 1.4, note: 0.85,formula: 0.85,exCn: 1.4, exEn: 0.85,scale: 85  },
-};
-const FONT_STEPS = [75, 85, 100, 115, 130, 150];
-
 // ── SETTINGS STATE ──
 let scriptMode   = localStorage.getItem('scriptMode')   || 'traditional';
 let langMode     = localStorage.getItem('langMode')     || 'both';
@@ -909,7 +811,7 @@ let iconsMode    = localStorage.getItem('iconsMode')     || 'on';
 let pinyinMode   = localStorage.getItem('pinyinMode')    || 'on';
 let currentLevel = localStorage.getItem('currentLevel')  || 'developing';
 let fontScale    = parseInt(localStorage.getItem('fontScale')) || 100;
-let textDir      = 'horizontal';
+let textDir      = localStorage.getItem('textDir') || 'horizontal';
 
 // Derived UI mode
 function deriveUiMode() {
@@ -924,6 +826,11 @@ function deriveUiMode() {
   }
 }
 let uiMode = deriveUiMode();
+</script>
+@include('partials.lexicon._pos-data')
+@include('partials.lexicon._attr-data')
+@include('partials.lexicon._level-fonts')
+<script>
 
 // ── SECTION VISIBILITY ──
 const SECTION_VISIBILITY = {
@@ -976,6 +883,8 @@ function goBack() {
   const prev = popTrail();
   if (prev) {
     window.location.href = '/lexicon/' + prev.smartId;
+  } else if (window.history.length > 1) {
+    window.history.back();
   } else {
     window.location.href = '/lexicon';
   }
@@ -984,191 +893,117 @@ function goBack() {
 // Push current word onto trail
 pushTrail(SMART_ID, WORD.traditional);
 
-// ── SENTENCE SEGMENTATION ──
-function segmentSentence(text) {
-  const segments = [];
-  let i = 0;
-  while (i < text.length) {
-    let matched = false;
-    for (let len = Math.min(4, text.length - i); len >= 1; len--) {
-      const slice = text.substring(i, i + len);
-      if (WORD_INDEX[slice]) {
-        segments.push({ text: slice, data: WORD_INDEX[slice], known: true });
-        i += len;
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      segments.push({ text: text[i], known: false });
-      i++;
-    }
-  }
-  return segments;
+// Navigate hook: push to breadcrumb trail before navigating
+window.onSegNavigate = function(smartId, trad) {
+  pushTrail(smartId, trad);
+};
+</script>
+@include('partials.lexicon._segmentation')
+@include('partials.lexicon._word-header-js')
+@include('partials.lexicon._example-sentence-js')
+<script>
+
+// ── GEAR PANEL ──
+function wdToggleGear() {
+  const panel = document.getElementById('wdGearPanel');
+  const btn = document.getElementById('wdGearBtn');
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
 }
 
-function segmentedHTML(text) {
-  const segs = segmentSentence(text);
-  return segs.map(s => {
-    if (s.known) {
-      const d = s.data;
-      return `<span class="wd-seg-known" data-smart-id="${d.smartId}" data-trad="${d.trad || s.text}" data-pinyin="${d.pinyin || ''}" data-pos="${d.pos || ''}" data-def="${(d.def || '').replace(/"/g, '&quot;')}" data-tocfl="${d.tocfl || ''}">${s.text}</span>`;
-    }
-    return s.text;
+// Click outside to close gear panel
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('wdGearPanel');
+  const btn = document.getElementById('wdGearBtn');
+  if (!panel || !panel.classList.contains('open')) return;
+  if (panel.contains(e.target) || btn.contains(e.target)) return;
+  panel.classList.remove('open');
+  btn.classList.remove('open');
+});
+
+// ── SECTION VISIBILITY (global hide/show) ──
+const HIDEABLE_SECTIONS = [
+  { key: 'stroke',     en: 'Stroke',       zh: '筆順' },
+  { key: 'characters', en: 'Characters',   zh: '字形' },
+  { key: 'words',      en: 'Words',        zh: '詞彙' },
+  { key: 'familyTree', en: 'Constellation', zh: '詞族' },
+  { key: 'community',  en: 'Community',    zh: '社群' },
+];
+let sectionVisibility = {};
+HIDEABLE_SECTIONS.forEach(s => {
+  sectionVisibility[s.key] = localStorage.getItem('wdSection_' + s.key) !== 'hidden';
+});
+
+function wdSetSectionVisible(key, visible) {
+  sectionVisibility[key] = visible;
+  localStorage.setItem('wdSection_' + key, visible ? 'visible' : 'hidden');
+  if (window.syncPref) syncPref('wdSection_' + key, visible ? 'visible' : 'hidden');
+  renderPage();
+}
+
+function renderSectionToggles() {
+  const container = document.getElementById('wdSectionToggles');
+  if (!container) return;
+  container.innerHTML = HIDEABLE_SECTIONS.map(s => {
+    const checked = sectionVisibility[s.key] ? 'checked' : '';
+    const label = langMode === 'en' ? s.en : langMode === 'zh' ? s.zh : s.en + ' · ' + s.zh;
+    return `<label class="iface-section-toggle">
+      <input type="checkbox" ${checked} onchange="wdSetSectionVisible('${s.key}', this.checked)">
+      <span class="iface-section-toggle-label">${label}</span>
+    </label>`;
   }).join('');
 }
 
-// ── POPOVER ──
-let popoverTarget = null;
-let popoverTapCount = 0;
-
-function showPopover(el) {
-  const pop = document.getElementById('wdPopover');
-  const rect = el.getBoundingClientRect();
-  document.getElementById('wdPopChar').textContent = el.dataset.trad || el.textContent;
-  document.getElementById('wdPopPinyin').textContent = el.dataset.pinyin || '';
-  document.getElementById('wdPopPos').textContent = el.dataset.pos ? (POS_ABBR[el.dataset.pos] || el.dataset.pos) : '';
-  const def = el.dataset.def || '';
-  document.getElementById('wdPopDef').textContent = def.length > 40 ? def.substring(0, 40) + '...' : def;
-  document.getElementById('wdPopLink').href = '/lexicon/' + el.dataset.smartId;
-  // Position
-  let top = rect.bottom + 6;
-  let left = rect.left;
-  if (left + 280 > window.innerWidth) left = window.innerWidth - 290;
-  if (left < 4) left = 4;
-  if (top + 160 > window.innerHeight) top = rect.top - 160;
-  pop.style.top = top + 'px';
-  pop.style.left = left + 'px';
-  pop.classList.add('open');
-}
-
-function hidePopover() {
-  document.getElementById('wdPopover').classList.remove('open');
-  popoverTarget = null;
-  popoverTapCount = 0;
-}
-
-document.addEventListener('click', function(e) {
-  const seg = e.target.closest('.wd-seg-known');
-  if (seg) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (popoverTarget === seg) {
-      // Second tap: navigate
-      popoverTapCount++;
-      if (popoverTapCount >= 2) {
-        pushTrail(seg.dataset.smartId, seg.dataset.trad || seg.textContent);
-        window.location.href = '/lexicon/' + seg.dataset.smartId;
-        return;
-      }
-    } else {
-      popoverTarget = seg;
-      popoverTapCount = 1;
-      showPopover(seg);
-    }
-    return;
-  }
-  if (!e.target.closest('.wd-popover')) {
-    hidePopover();
-  }
+// ── SECTION COLLAPSE STATE ──
+const SECTIONS = [
+  { key: 'stroke',     en: 'Stroke',          zh: '筆順' },
+  { key: 'characters', en: 'Characters',      zh: '字形資訊' },
+  { key: 'words',      en: 'Words',           zh: '詞彙' },
+  { key: 'familyTree', en: 'Constellation', zh: '詞族' },
+  { key: 'community',  en: 'Community',       zh: '社群' },
+];
+let sectionOpenState = {};
+HIDEABLE_SECTIONS.forEach(s => {
+  sectionOpenState[s.key] = localStorage.getItem('wdOpen_' + s.key) !== 'false';
 });
 
-// ── ATTRIBUTE CHIP BUILDERS ──
-function metaAttrLabel(cat, key) {
-  return ATTR_LABELS[cat]?.[key] || ['', String(key)];
+function wdToggleSectionCollapse(key) {
+  const body = document.getElementById('wdSectionBody-' + key);
+  const arrow = document.getElementById('wdSectionArrow-' + key);
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  sectionOpenState[key] = isOpen;
+  localStorage.setItem('wdOpen_' + key, isOpen);
+  if (window.syncPref) syncPref('wdOpen_' + key, String(isOpen));
+  if (arrow) arrow.style.transform = isOpen ? 'rotate(180deg)' : '';
 }
 
-function cardAttr(cat, key, header, labelPair, extraClass) {
-  extraClass = extraClass || '';
-  const [icon, label] = labelPair;
-  const showIcon  = iconsMode === 'on';
-  const showLabel = uiMode !== 'icon-only';
-  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-  const isBoth  = (uiMode === 'all' || uiMode === 'en-zh');
-  const zhLabel = ATTR_ZH[cat]?.[key] || label;
-  const hdrZh   = ATTR_HEADER_ZH[cat] || header;
-  const initLabel = preferred === 'zh' ? zhLabel : isBoth ? `${label} \u00b7 ${zhLabel}` : label;
-  const initHdr   = preferred === 'zh' ? hdrZh   : isBoth ? `${header} \u00b7 ${hdrZh}`  : header;
-  return `<div class="card-attr attr-${cat} ${extraClass}" onclick="toggleAttrLang(event)">
-    <div class="card-attr-header" data-en="${header}" data-zh="${hdrZh}" data-state="${preferred}">${initHdr}</div>
-    <div class="card-attr-value">
-      ${showIcon && icon ? `<span class="attr-icon">${icon}</span>` : ''}
-      ${showLabel ? `<span class="attr-label" data-en="${label}" data-zh="${zhLabel}" data-state="${preferred}">${initLabel}</span>` : ''}
+function renderSection(key, contentHTML) {
+  if (!sectionVisibility[key]) return '';
+  const sec = SECTIONS.find(s => s.key === key);
+  if (!sec) return '';
+  const isOpen = sectionOpenState[key] !== false;
+  return `<div class="wd-section" id="wdSection-${key}">
+    <button class="wd-section-toggle" onclick="wdToggleSectionCollapse('${key}')">
+      <span>${langText(sec.en, sec.zh)}</span>
+      <span class="wd-section-arrow" id="wdSectionArrow-${key}" style="transform:${isOpen ? 'rotate(180deg)' : ''}">&#9662;</span>
+    </button>
+    <div class="wd-section-body${isOpen ? ' open' : ''}" id="wdSectionBody-${key}">
+      ${contentHTML}
     </div>
   </div>`;
 }
 
-function cardAttrMulti(cat, keys, header) {
-  const showIcon  = iconsMode === 'on';
-  const showLabel = uiMode !== 'icon-only';
-  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-  const isBoth  = (uiMode === 'all' || uiMode === 'en-zh');
-  const hdrZh   = ATTR_HEADER_ZH[cat] || header;
-  const initHdr = preferred === 'zh' ? hdrZh : isBoth ? `${header} \u00b7 ${hdrZh}` : header;
-  const valueHTML = keys.map(k => {
-    const [icon, label] = metaAttrLabel(cat, k);
-    const zhLabel = ATTR_ZH[cat]?.[k] || label;
-    const initLabel = preferred === 'zh' ? zhLabel : isBoth ? `${label} \u00b7 ${zhLabel}` : label;
-    return `<span class="attr-val-item">${showIcon && icon ? `<span class="attr-icon">${icon}</span>` : ''}${showLabel ? `<span class="attr-label" data-en="${label}" data-zh="${zhLabel}" data-state="${preferred}">${initLabel}</span>` : ''}</span>`;
-  }).join('');
-  return `<div class="card-attr attr-${cat}" onclick="toggleAttrLang(event)">
-    <div class="card-attr-header" data-en="${header}" data-zh="${hdrZh}" data-state="${preferred}">${initHdr}</div>
-    <div class="card-attr-value multi">${valueHTML}</div>
-  </div>`;
-}
+// ── VIEW MODE (scaffold) ──
+let viewMode = localStorage.getItem('wdViewMode') || 'scroll';
 
-function toggleAttrLang(e) {
-  e.stopPropagation();
-  e.preventDefault();
-  const chip = e.currentTarget;
-  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-  const alt = preferred === 'zh' ? 'en' : 'zh';
-  chip.querySelectorAll('[data-en][data-zh]').forEach(el => {
-    const current = el.dataset.state || preferred;
-    const next = current === preferred ? alt : preferred;
-    el.dataset.state = next;
-    el.textContent = el.dataset[next] || el.dataset.en;
-  });
-}
-
-function cyclePosChip(e, chip) {
-  e.stopPropagation();
-  e.preventDefault();
-  const order = ['abbr', 'full', 'zh'];
-  const current = chip.dataset.state || 'abbr';
-  const next = order[(order.indexOf(current) + 1) % 3];
-  chip.dataset.state = next;
-  chip.textContent = chip.dataset[next] || chip.dataset.abbr;
-}
-
-function toggleLangChip(e, chip) {
-  e.stopPropagation();
-  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-  const alt = preferred === 'zh' ? 'en' : 'zh';
-  const current = chip.dataset.state || preferred;
-  const next = current === preferred ? alt : preferred;
-  chip.dataset.state = next;
-  chip.textContent = chip.dataset[next] || chip.dataset.en;
-}
-
-function posLabel(raw) { return POS_ABBR[raw] || raw; }
-function posDisplay(raw) { return POS_RENAME[raw] || raw; }
-
-// ── LEVEL FONTS ──
-function applyLevelFonts(level) {
-  currentLevel = level;
-  const f = LEVEL_FONTS[level];
-  if (!f) return;
-  const r = document.documentElement;
-  r.style.setProperty('--fs-hanzi',   f.hanzi   + 'rem');
-  r.style.setProperty('--fs-simp',    f.simp    + 'rem');
-  r.style.setProperty('--fs-pinyin',  f.pinyin  + 'rem');
-  r.style.setProperty('--fs-defn',    f.defn    + 'rem');
-  r.style.setProperty('--fs-note',    f.note    + 'rem');
-  r.style.setProperty('--fs-formula', f.formula + 'rem');
-  r.style.setProperty('--fs-ex-cn',   f.exCn    + 'rem');
-  r.style.setProperty('--fs-ex-en',   f.exEn    + 'rem');
-  document.documentElement.style.fontSize = f.scale + '%';
+function wdSetViewMode(mode) {
+  viewMode = mode;
+  localStorage.setItem('wdViewMode', mode);
+  if (window.syncPref) syncPref('wdViewMode', mode);
+  document.getElementById('wdBtnScroll').classList.toggle('active', mode === 'scroll');
+  document.getElementById('wdBtnTabs').classList.toggle('active', mode === 'tabs');
+  wdUpdatePill('wdViewModeToggle');
 }
 
 // ── TOGGLE PILL ──
@@ -1192,6 +1027,7 @@ function wdUpdatePill(toggleId) {
 function wdSetScript(mode) {
   scriptMode = mode;
   localStorage.setItem('scriptMode', mode);
+  if (window.syncPref) syncPref('scriptMode', mode);
   document.getElementById('wdBtnTrad').classList.toggle('active', mode === 'traditional');
   document.getElementById('wdBtnSimp').classList.toggle('active', mode === 'simplified');
   wdUpdatePill('wdScriptToggle');
@@ -1201,6 +1037,7 @@ function wdSetScript(mode) {
 function wdSetLang(mode) {
   langMode = mode;
   localStorage.setItem('langMode', mode);
+  if (window.syncPref) syncPref('langMode', mode);
   ['wdBtnLangEn','wdBtnLangZh','wdBtnLangBoth'].forEach(id => document.getElementById(id)?.classList.remove('active'));
   const map = { en: 'wdBtnLangEn', zh: 'wdBtnLangZh', both: 'wdBtnLangBoth' };
   document.getElementById(map[mode])?.classList.add('active');
@@ -1212,6 +1049,7 @@ function wdSetLang(mode) {
 function wdSetIcons(mode) {
   iconsMode = mode;
   localStorage.setItem('iconsMode', mode);
+  if (window.syncPref) syncPref('iconsMode', mode);
   document.getElementById('wdBtnIconsOn').classList.toggle('active', mode === 'on');
   document.getElementById('wdBtnIconsOff').classList.toggle('active', mode === 'off');
   uiMode = deriveUiMode();
@@ -1222,6 +1060,7 @@ function wdSetIcons(mode) {
 function wdSetPinyin(mode) {
   pinyinMode = mode;
   localStorage.setItem('pinyinMode', mode);
+  if (window.syncPref) syncPref('pinyinMode', mode);
   document.getElementById('wdBtnPinyinOn').classList.toggle('active', mode === 'on');
   document.getElementById('wdBtnPinyinOff').classList.toggle('active', mode === 'off');
   wdUpdatePill('wdPinyinToggle');
@@ -1230,14 +1069,189 @@ function wdSetPinyin(mode) {
 
 function wdSetTextDir(mode) {
   textDir = mode;
+  localStorage.setItem('textDir', mode);
+  if (window.syncPref) syncPref('textDir', mode);
   document.getElementById('wdBtnHoriz').classList.toggle('active', mode === 'horizontal');
   document.getElementById('wdBtnVert').classList.toggle('active', mode === 'vertical');
   wdUpdatePill('wdTextDirToggle');
-  document.getElementById('wdMain').classList.toggle('wd-vertical', mode === 'vertical');
-  // Update all writing textareas
-  document.querySelectorAll('.wd-writing-area').forEach(el => {
-    el.classList.toggle('vertical-mode', mode === 'vertical');
+  renderPage();
+}
+
+// ── SAVE/UNSAVE SENSE ──
+function _csrfHeader() {
+  return document.querySelector('meta[name="csrf-token"]').content;
+}
+
+function wdToggleSave(senseId) {
+  if (!window.__AUTH) return;
+  fetch('/api/saved-senses/' + senseId, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var btn = document.getElementById('wdSaveBtn-' + senseId);
+    if (!btn) return;
+    if (data.saved) {
+      btn.classList.add('saved');
+      btn.innerHTML = '&#9733;';
+      btn.title = 'Unsave';
+      if (!window.__AUTH.savedSenseIds.includes(senseId)) {
+        window.__AUTH.savedSenseIds.push(senseId);
+      }
+      wdShowCollectionPicker(senseId);
+    } else {
+      btn.classList.remove('saved');
+      btn.innerHTML = '&#9734;';
+      btn.title = 'Save';
+      window.__AUTH.savedSenseIds = window.__AUTH.savedSenseIds.filter(function(id) { return id !== senseId; });
+      // Remove from all collections in memory
+      (window.__AUTH.collections || []).forEach(function(c) {
+        c.senseIds = (c.senseIds || []).filter(function(id) { return id !== senseId; });
+      });
+      wdDismissCollectionPicker();
+    }
   });
+}
+
+// ── COLLECTION PICKER POPOVER ──
+var _cpDismissHandler = null;
+
+function wdShowCollectionPicker(senseId) {
+  wdDismissCollectionPicker();
+  var collections = window.__AUTH.collections || [];
+  var html = '<div class="wd-cp-title">Add to collection</div>';
+
+  if (collections.length === 0) {
+    html += '<div class="wd-cp-empty">No collections yet</div>';
+  } else {
+    collections.forEach(function(c) {
+      var checked = (c.senseIds || []).includes(senseId) ? ' checked' : '';
+      html += '<label class="wd-cp-item">'
+        + '<input type="checkbox"' + checked + ' onchange="wdToggleCollectionSense(' + c.id + ',' + senseId + ',this)">'
+        + '<span>' + escHtml(c.name) + '</span></label>';
+    });
+  }
+
+  html += '<div class="wd-cp-new">'
+    + '<input type="text" id="wdCpNewInput-' + senseId + '" placeholder="New collection…" '
+    + 'onkeydown="if(event.key===\'Enter\')wdCreateCollection(' + senseId + ')">'
+    + '<button onclick="wdCreateCollection(' + senseId + ')" title="Create">+</button>'
+    + '</div>';
+
+  var popover = document.createElement('div');
+  popover.className = 'wd-cp';
+  popover.id = 'wdCollectionPicker';
+  popover.innerHTML = html;
+
+  var header = document.getElementById('wdSaveBtn-' + senseId);
+  if (header && header.parentElement) {
+    header.parentElement.appendChild(popover);
+  }
+
+  // Click outside to dismiss
+  setTimeout(function() {
+    _cpDismissHandler = function(e) {
+      if (!e.target.closest('.wd-cp') && !e.target.closest('.wd-save-btn')) {
+        wdDismissCollectionPicker();
+      }
+    };
+    document.addEventListener('click', _cpDismissHandler);
+  }, 10);
+}
+
+function wdDismissCollectionPicker() {
+  var el = document.getElementById('wdCollectionPicker');
+  if (el) el.remove();
+  if (_cpDismissHandler) {
+    document.removeEventListener('click', _cpDismissHandler);
+    _cpDismissHandler = null;
+  }
+}
+
+function wdToggleCollectionSense(collectionId, senseId, checkbox) {
+  var method = checkbox.checked ? 'POST' : 'DELETE';
+  fetch('/api/collections/' + collectionId + '/senses/' + senseId, {
+    method: method,
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
+  }).then(function() {
+    // Update __AUTH.collections in memory
+    var c = (window.__AUTH.collections || []).find(function(c) { return c.id === collectionId; });
+    if (!c) return;
+    if (checkbox.checked) {
+      if (!(c.senseIds || []).includes(senseId)) c.senseIds.push(senseId);
+    } else {
+      c.senseIds = (c.senseIds || []).filter(function(id) { return id !== senseId; });
+    }
+  });
+}
+
+function wdCreateCollection(senseId) {
+  var input = document.getElementById('wdCpNewInput-' + senseId);
+  if (!input || !input.value.trim()) return;
+  var name = input.value.trim();
+  input.disabled = true;
+
+  fetch('/api/collections', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
+    body: JSON.stringify({ name: name }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(collection) {
+    // Add sense to the new collection
+    return fetch('/api/collections/' + collection.id + '/senses/' + senseId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
+    }).then(function() { return collection; });
+  })
+  .then(function(collection) {
+    // Update __AUTH
+    if (!window.__AUTH.collections) window.__AUTH.collections = [];
+    window.__AUTH.collections.push({
+      id: collection.id,
+      name: collection.name,
+      senseIds: [senseId],
+    });
+    // Re-show picker with updated data
+    wdShowCollectionPicker(senseId);
+  });
+}
+
+function escHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ── LEARNER NOTE ──
+var _noteSyncTimer = {};
+function wdSaveNote(senseId) {
+  const ta = document.getElementById('wdNote-' + senseId);
+  const noteVal = ta?.value || '';
+  localStorage.setItem('wd_note_' + SMART_ID + '_' + senseId, noteVal);
+  // Debounced DB sync for logged-in users
+  if (window.__AUTH) {
+    clearTimeout(_noteSyncTimer[senseId]);
+    _noteSyncTimer[senseId] = setTimeout(function() {
+      var csrfToken = document.querySelector('meta[name="csrf-token"]');
+      fetch('/api/saved-senses/' + senseId + '/note', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken.content },
+        body: JSON.stringify({ note: noteVal }),
+      });
+    }, 500);
+  }
+}
+
+function wdSaveNoteBtn(senseId) {
+  wdSaveNote(senseId);
+  const btn = document.getElementById('wdNoteSaveBtn-' + senseId);
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = langMode === 'zh' ? '已儲存!' : 'Saved!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  }
 }
 
 // ── WORKSHOP STATE ──
@@ -1268,16 +1282,6 @@ function wdSwitchWorkshopTab(senseId, tabName, btn) {
   if (target) target.classList.add('active');
   btn.closest('.wd-workshop-tabs').querySelectorAll('.wd-workshop-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-}
-
-// ── FAMILY TREE TOGGLE ──
-function wdToggleFamily() {
-  const body = document.getElementById('wdFamilyBody');
-  const arrow = document.getElementById('wdFamilyArrow');
-  if (!body) return;
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 
 // ── SHARE / SAVE ──
@@ -1317,11 +1321,30 @@ function primaryPinyin() {
   return p ? p.text : '';
 }
 
+// ── Shared domain chip builder: two-tier layout ────────────────────────
+// Primary on top, chevron + secondaries beneath
+function buildDomainChipHTML(primaryObj, secondariesArr) {
+  if (!primaryObj) return '';
+  const pEn = primaryObj.en || primaryObj.slug;
+  const pZh = primaryObj.zh || '';
+  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
+  const pDisplay = preferred === 'zh' ? pZh : (uiMode === 'all' || uiMode === 'en-zh') ? `${pEn} ${pZh}` : pEn;
+  const secs = secondariesArr || [];
+  if (!secs.length) {
+    return `<span class="card-domain" data-en="${pEn}" data-zh="${pZh}" data-state="${preferred}" onclick="toggleLangChip(event,this)">${pDisplay}</span>`;
+  }
+  const secEn = secs.map(sd => sd.en || sd.slug).join(', ');
+  const secZh = secs.map(sd => sd.zh || sd.slug).join(', ');
+  const sDisplay = preferred === 'zh' ? secZh : (uiMode === 'all' || uiMode === 'en-zh') ? `${secEn} ${secZh}` : secEn;
+  return `<div class="card-domain-stack" data-p-en="${pEn}" data-p-zh="${pZh}" data-s-en="${secEn}" data-s-zh="${secZh}" data-state="${preferred}" onclick="toggleLangChip(event,this)">
+    <span class="card-domain-primary">${pDisplay}</span>
+    <span class="card-domain-chevron">⌄</span>
+    <span class="card-domain-secondary">${sDisplay}</span>
+  </div>`;
+}
+
 // ── RENDER: HEADER ──
 function renderHeader() {
-  document.getElementById('wdHeroChar').textContent = charDisplay();
-  document.getElementById('wdHeroPinyin').textContent = primaryPinyin();
-
   // Breadcrumb
   const trail = getTrail();
   const bc = document.getElementById('wdBreadcrumb');
@@ -1334,22 +1357,60 @@ function renderHeader() {
     bc.innerHTML = '';
   }
 
-  // Domain chips in header
-  const domainsEl = document.getElementById('wdHeroDomains');
+  // Build header using shared card-hanzi + card-hdr-mid pattern
+  const primaryChar = charDisplay();
+  const simpCharVal = scriptMode === 'simplified'
+    ? (WORD.traditional !== WORD.simplified ? WORD.traditional : '')
+    : (WORD.simplified && WORD.simplified !== WORD.traditional ? WORD.simplified : '');
+
+  // Collect domain chips for header: group by primary, union secondaries
   const senses = WORD.senses || [];
-  const domains = [];
+  const domainGroups = {};
   senses.forEach(s => {
-    if (s.domain) {
-      const key = s.domain.slug;
-      if (!domains.find(d => d.slug === key)) domains.push(s.domain);
-    }
+    if (!s.domain) return;
+    const pSlug = s.domain.slug;
+    if (!domainGroups[pSlug]) domainGroups[pSlug] = { primary: s.domain, secMap: {} };
+    (s.secondaryDomains || []).forEach(sd => {
+      if (!domainGroups[pSlug].secMap[sd.slug]) domainGroups[pSlug].secMap[sd.slug] = sd;
+    });
   });
-  domainsEl.innerHTML = domains.map(d => {
-    const en = d.en || d.slug;
-    const zh = d.zh || '';
-    const display = langMode === 'en' ? en : langMode === 'zh' ? zh : `${en} \u00b7 ${zh}`;
-    return `<span class="wd-hero-domain" data-en="${en}" data-zh="${zh}" data-state="${langMode === 'zh' ? 'zh' : 'en'}" onclick="toggleLangChip(event,this)">${display}</span>`;
-  }).join(' ');
+  const domainHTML = Object.values(domainGroups).map(g =>
+    buildDomainChipHTML(g.primary, Object.values(g.secMap))
+  ).join('');
+
+  // Collect unique POS across all definitions
+  const allPOS = [];
+  const seenPOS = {};
+  senses.forEach(s => {
+    (s.definitions || []).forEach(d => {
+      if (d.pos && !seenPOS[d.pos]) {
+        seenPOS[d.pos] = true;
+        allPOS.push(d.pos);
+      }
+    });
+  });
+  const posHTML = allPOS.length ? `<div class="card-pos-summary">${allPOS.map(p => {
+    const enText = posDisplay(p) + ' \u00b7 ' + (POS_ABBR[p] || p);
+    const zhText = POS_ZH[p] || posDisplay(p);
+    const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
+    const display = preferred === 'zh' ? zhText : (uiMode === 'all' || uiMode === 'en-zh') ? enText + ' ' + zhText : enText;
+    return `<span class="card-pos-hdr" data-en="${enText}" data-zh="${zhText}" data-state="${preferred}" onclick="toggleLangChip(event,this)">${display}</span>`;
+  }).join('')}</div>` : '';
+
+  const pinyin = primaryPinyin();
+
+  document.getElementById('wdHeaderChar').innerHTML = `
+    <div class="card-hanzi">
+      <div class="hanzi-primary-wrap">
+        <span class="hanzi-char">${primaryChar}</span>
+        ${simpCharVal ? `<button class="script-switch-btn" data-secondary="${simpCharVal}" onclick="toggleSecondaryChar(event,this)" title="Reveal ${scriptMode === 'simplified' ? 'traditional' : 'simplified'}">⇌</button>` : ''}
+      </div>
+    </div>
+    <div class="card-hdr-mid">
+      ${domainHTML ? `<div class="card-domain-row">${domainHTML}</div>` : ''}
+      ${posHTML}
+      ${pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${pinyin}</span></div>` : ''}
+    </div>`;
 }
 
 // ── RENDER: IDENTITY SECTION ──
@@ -1392,38 +1453,33 @@ function renderIdentity() {
 function renderSense(sense, idx) {
   const parts = [];
 
-  // Sense header
-  const headerItems = [`<span class="wd-sense-badge">${idx + 1}</span>`];
-  if (sense.pinyin) headerItems.push(`<span class="wd-sense-pinyin">${sense.pinyin}</span>`);
+  // Sense header: badge + save button, then domain chip (full-width, matching header), then pinyin
+  const isSaved = window.__AUTH && (window.__AUTH.savedSenseIds || []).includes(sense.id);
+  const saveBtn = window.__AUTH
+    ? `<button class="wd-save-btn${isSaved ? ' saved' : ''}" id="wdSaveBtn-${sense.id}" onclick="wdToggleSave(${sense.id})" title="${isSaved ? 'Unsave' : 'Save'}">${isSaved ? '&#9733;' : '&#9734;'}</button>`
+    : '';
+  let senseHdrHTML = `<span class="wd-sense-badge">${idx + 1}</span>${saveBtn}`;
+
+  // Domain chip: two-tier (primary + chevron + secondaries)
   if (sense.domain) {
-    const en = sense.domain.en || sense.domain.slug;
-    const zh = sense.domain.zh || '';
-    const display = langMode === 'en' ? en : langMode === 'zh' ? zh : `${en} \u00b7 ${zh}`;
-    headerItems.push(`<span class="wd-sense-domain" data-en="${en}" data-zh="${zh}" data-state="${langMode === 'zh' ? 'zh' : 'en'}" onclick="toggleLangChip(event,this)">${display}</span>`);
+    senseHdrHTML += `<div class="card-domain-row">${buildDomainChipHTML(sense.domain, sense.secondaryDomains)}</div>`;
   }
-  if (sense.secondaryDomain) {
-    const en = sense.secondaryDomain.en || sense.secondaryDomain.slug;
-    const zh = sense.secondaryDomain.zh || '';
-    const display = langMode === 'en' ? en : langMode === 'zh' ? zh : `${en} \u00b7 ${zh}`;
-    headerItems.push(`<span class="wd-sense-domain" data-en="${en}" data-zh="${zh}" data-state="${langMode === 'zh' ? 'zh' : 'en'}" onclick="toggleLangChip(event,this)">${display}</span>`);
-  }
-  if (sense.tocfl) {
-    const tl = LABELS.tocfl[sense.tocfl];
-    if (tl) headerItems.push(`<span class="wd-sense-tocfl">${iconsMode === 'on' ? tl.icon + ' ' : ''}${langMode === 'zh' ? tl.zh : langMode === 'en' ? tl.en : tl.en + ' \u00b7 ' + tl.zh}</span>`);
-  }
-  parts.push(`<div class="wd-sense-header">${headerItems.join('')}</div>`);
+
+  if (sense.pinyin) senseHdrHTML += `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${sense.pinyin}</span></div>`;
+
+  parts.push(`<div class="wd-sense-header">${senseHdrHTML}</div>`);
 
   // Definitions
   if (isSectionVisible('definitions') && sense.definitions && sense.definitions.length) {
     const defs = sense.definitions.map(d => {
       const fml = d.formula || '';
       const fmlDisplay = scriptMode === 'simplified' && WORD.traditional !== WORD.simplified ? fml.replace(new RegExp(WORD.traditional.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), WORD.simplified) : fml;
-      return `<div class="wd-def-row">
-        ${d.pos ? `<span class="wd-pos" data-abbr="${POS_ABBR[d.pos] || d.pos}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}</span>` : ''}
-        <span class="wd-definition">${d.def}</span>
+      return `<div class="card-def-row">
+        ${d.pos ? `<span class="card-pos" data-abbr="${POS_ABBR[d.pos] || d.pos}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}</span>` : ''}
+        <span class="card-definition">${d.def}</span>
       </div>
-      ${fmlDisplay ? `<div class="wd-formula">${fmlDisplay}</div>` : ''}
-      ${d.usageNote ? `<div class="wd-usage-note">${d.usageNote}</div>` : ''}`;
+      ${fmlDisplay ? `<div class="card-formula">${fmlDisplay}</div>` : ''}
+      ${d.usageNote ? `<div class="card-usage-note">${d.usageNote}</div>` : ''}`;
     }).join('');
     parts.push(`<div class="wd-defs">${defs}</div>`);
   }
@@ -1442,22 +1498,20 @@ function renderSense(sense, idx) {
     }
   }
 
-  // Examples
+  // Examples — uses shared renderExSentence()
   if (isSectionVisible('examples') && sense.examples && sense.examples.length) {
+    const sensePosForEx = (sense.definitions || [])[0]?.pos || '';
+    const sensePosAbbrForEx = sensePosForEx ? (POS_ABBR[sensePosForEx] || sensePosForEx) : '';
     const exHTML = sense.examples.filter(ex => !ex.isSuppressed).map((ex, i) => {
-      return `<div class="wd-example">
-        <span class="wd-ex-num">${i + 1}</span>
-        <div class="wd-ex-body">
-          <div class="wd-ex-cn">${segmentedHTML(ex.cn)}</div>
-          <div class="wd-ex-en">${ex.en}</div>
-          ${ex.source ? `<span class="wd-ex-source">${ex.source}</span>` : ''}
-          ${ex.theme ? `<span class="wd-ex-theme">${ex.theme}</span>` : ''}
-        </div>
-      </div>`;
+      return renderExSentence(ex, {
+        pos: sensePosAbbrForEx,
+        vertical: textDir === 'vertical',
+        segFn: segmentedHTML,
+      });
     }).join('');
     parts.push(`<div class="wd-examples">
       <div class="wd-examples-title">${langText('Examples', '例句')}</div>
-      ${exHTML}
+      <div class="ex-sentences">${exHTML}</div>
     </div>`);
   }
 
@@ -1480,29 +1534,7 @@ function renderSense(sense, idx) {
     </div>`);
   }
 
-  // Related words
-  if (isSectionVisible('relations') && sense.relations) {
-    const groups = [
-      { key: 'synonymClose',     en: 'Close Synonyms',    zh: '近義詞' },
-      { key: 'synonymRelated',   en: 'Related Synonyms',  zh: '相關近義' },
-      { key: 'antonym',          en: 'Antonyms',          zh: '反義詞' },
-      { key: 'contrast',         en: 'Contrasts',         zh: '對比' },
-      { key: 'registerVariant',  en: 'Register Variants', zh: '語域變體' },
-    ];
-    const relHTML = groups.map(g => {
-      const items = sense.relations[g.key];
-      if (!items || !items.length) return '';
-      return `<div>
-        <div class="wd-relation-group-title">${langText(g.en, g.zh)}</div>
-        <div class="wd-relation-cards">
-          ${items.map(r => renderRelCard(r)).join('')}
-        </div>
-      </div>`;
-    }).filter(Boolean).join('');
-    if (relHTML) {
-      parts.push(`<div class="wd-relations">${relHTML}</div>`);
-    }
-  }
+  // Relations moved to Words section (renderWordsSection)
 
   // Workshop
   if (isSectionVisible('workshop')) {
@@ -1530,15 +1562,17 @@ function renderWorkshop(sense, idx) {
   const title = langText('Writing Workshop', '寫作工坊');
   const savedText = wdLoadWriting(senseId);
 
-  // Default examples tab
+  // Primary POS for this sense's examples
+  const sensePOS = (sense.definitions || [])[0]?.pos || '';
+  const sensePosAbbr = sensePOS ? (POS_ABBR[sensePOS] || sensePOS) : '';
+
+  // Default examples tab — uses shared renderExSentence()
   const defaultExHTML = (sense.examples || []).filter(ex => !ex.isSuppressed).map((ex, i) => {
-    return `<div class="wd-example">
-      <span class="wd-ex-num">${i + 1}</span>
-      <div class="wd-ex-body">
-        <div class="wd-ex-cn">${segmentedHTML(ex.cn)}</div>
-        <div class="wd-ex-en">${ex.en}</div>
-      </div>
-    </div>`;
+    return renderExSentence(ex, {
+      pos: sensePosAbbr,
+      vertical: textDir === 'vertical',
+      segFn: segmentedHTML,
+    });
   }).join('') || `<div class="wd-stub">${langText('No examples yet.', '尚無例句。')}</div>`;
 
   // Tabs visibility
@@ -1556,7 +1590,7 @@ function renderWorkshop(sense, idx) {
     </div>
     <div class="wd-workshop-content">
       <div class="wd-workshop-panel active" id="wdWsPanel-examples-${senseId}">
-        ${defaultExHTML}
+        <div class="ex-sentences">${defaultExHTML}</div>
       </div>
       <div class="wd-workshop-panel" id="wdWsPanel-writing-${senseId}">
         <textarea class="wd-writing-area ${textDir === 'vertical' ? 'vertical-mode' : ''}" id="wdWriting-${senseId}" placeholder="${langMode === 'zh' ? '在這裡寫你的句子…' : 'Write your sentence here...'}">${savedText}</textarea>
@@ -1572,9 +1606,8 @@ function renderWorkshop(sense, idx) {
   </div>`;
 }
 
-// ── RENDER: FAMILY TREE ──
-function renderFamilyTree() {
-  if (!isSectionVisible('familyTree')) return '';
+// ── RENDER: FAMILY TREE (inner content) ──
+function renderFamilyTreeContent() {
   const family = WORD.family;
   if (!family) return '';
   const { derivatives, familyMembers, compounds } = family;
@@ -1601,15 +1634,7 @@ function renderFamilyTree() {
     </div>`);
   }
 
-  return `<div class="wd-family">
-    <button class="wd-family-toggle" onclick="wdToggleFamily()">
-      <span>${langText('Word Family Tree', '詞族樹')}</span>
-      <span class="wd-family-arrow" id="wdFamilyArrow">&#9662;</span>
-    </button>
-    <div class="wd-family-body" id="wdFamilyBody">
-      ${groups.join('')}
-    </div>
-  </div>`;
+  return `<div class="wd-family-content">${groups.join('')}</div>`;
 }
 
 // ── RENDER: ACTIONS ──
@@ -1620,18 +1645,94 @@ function renderActions() {
   </div>`;
 }
 
-// ── RENDER: PHASE 2 STUBS ──
-function renderPhaseStubs() {
-  return `
-    <div class="wd-phase-stub">
-      <div class="wd-phase-stub-title">${langText('Collections', '收藏')}</div>
-      <div class="wd-phase-stub-text">${langText('Personal collections coming in Phase 2', '個人收藏功能將在第二階段推出')}</div>
-    </div>
-    <div class="wd-phase-stub">
-      <div class="wd-phase-stub-title">${langText('Learning History', '學習紀錄')}</div>
-      <div class="wd-phase-stub-text">${langText('Learning history coming in Phase 2', '學習紀錄將在第二階段推出')}</div>
-    </div>
-  `;
+// ── RENDER: WORDS SECTION (relations + beginning/containing) ──
+function renderWordsSection() {
+  const parts = [];
+
+  // Aggregate relations across all senses
+  const allRelations = { synonymClose: [], synonymRelated: [], antonym: [], contrast: [], registerVariant: [] };
+  const seen = {};
+  (WORD.senses || []).forEach(sense => {
+    if (!sense.relations) return;
+    Object.keys(allRelations).forEach(key => {
+      const items = sense.relations[key];
+      if (!items) return;
+      items.forEach(r => {
+        if (!seen[key + '_' + r.smartId]) {
+          seen[key + '_' + r.smartId] = true;
+          allRelations[key].push(r);
+        }
+      });
+    });
+  });
+
+  // Sub-sections for relation groups
+  const groups = [
+    { key: 'synonymClose',    en: 'Close Synonyms',    zh: '近義詞',   items: allRelations.synonymClose },
+    { key: 'synonymRelated',  en: 'Related Synonyms',  zh: '相關近義', items: allRelations.synonymRelated },
+    { key: 'antonym',         en: 'Antonyms',          zh: '反義詞',   items: allRelations.antonym },
+    { key: 'contrast',        en: 'Contrasts',         zh: '對比',     items: allRelations.contrast },
+    { key: 'registerVariant', en: 'Register Variants', zh: '語域變體', items: allRelations.registerVariant },
+  ];
+
+  groups.forEach(g => {
+    if (!g.items.length) return;
+    parts.push(`<div>
+      <div class="wd-relation-group-title">${langText(g.en, g.zh)}</div>
+      <div class="wd-relation-cards">${g.items.map(r => renderRelCard(r)).join('')}</div>
+    </div>`);
+  });
+
+  // Placeholders for Words Beginning / Words Containing (filled by loadRelatedWords)
+  parts.push(`<div id="wdWordsBeginning"></div>`);
+  parts.push(`<div id="wdWordsContaining"></div>`);
+
+  return parts.join('') || `<div class="wd-section-stub">${langText('No related words found', '未找到相關詞彙')}</div>`;
+}
+
+// ── FETCH & RENDER: Words Beginning / Containing ──
+let relatedWordsCache = null;
+
+async function loadRelatedWords() {
+  if (relatedWordsCache) {
+    renderRelatedWords(relatedWordsCache);
+    return;
+  }
+  const chars = [...new Set((WORD.traditional || '').split(''))];
+  const results = { beginning: [], containing: [] };
+  const seenB = {}, seenC = {};
+
+  for (const c of chars) {
+    try {
+      const resp = await fetch('/api/lexicon/related-words/' + encodeURIComponent(c));
+      const data = await resp.json();
+      (data.beginning || []).forEach(w => {
+        if (!seenB[w.smartId]) { seenB[w.smartId] = true; results.beginning.push(w); }
+      });
+      (data.containing || []).forEach(w => {
+        if (!seenC[w.smartId]) { seenC[w.smartId] = true; results.containing.push(w); }
+      });
+    } catch (e) { /* silently skip failed fetches */ }
+  }
+  relatedWordsCache = results;
+  renderRelatedWords(results);
+}
+
+function renderRelatedWords(results) {
+  const bEl = document.getElementById('wdWordsBeginning');
+  const cEl = document.getElementById('wdWordsContaining');
+  if (bEl && results.beginning.length) {
+    bEl.innerHTML = `<div>
+      <div class="wd-relation-group-title">${langText('Words Beginning With', '以此字開頭')}</div>
+      <div class="wd-relation-cards">${results.beginning.map(r => renderRelCard(r)).join('')}</div>
+    </div>`;
+  }
+  if (cEl && results.containing.length) {
+    cEl.innerHTML = `<div>
+      <div class="wd-relation-group-title">${langText('Words Containing', '包含此字')}</div>
+      <div class="wd-relation-cards">${results.containing.map(r => renderRelCard(r)).join('')}</div>
+    </div>`;
+  }
 }
 
 // ── MAIN RENDER ──
@@ -1640,22 +1741,48 @@ function renderPage() {
 
   const sections = [];
 
-  // Identity
-  sections.push(renderIdentity());
-
-  // Senses
+  // Section 1: Core (always visible — senses)
   (WORD.senses || []).forEach((sense, i) => {
     sections.push(renderSense(sense, i));
   });
 
-  // Family tree
-  sections.push(renderFamilyTree());
+  // Section 2: Stroke (stub)
+  sections.push(renderSection('stroke',
+    `<div class="wd-section-stub">${langText('Stroke animation coming soon', '筆順動畫即將推出')}</div>`
+  ));
+
+  // Section 3: Characters
+  const identityContent = renderIdentity();
+  if (identityContent) {
+    sections.push(renderSection('characters', identityContent));
+  } else {
+    // Still render the section shell even if no identity data
+    sections.push(renderSection('characters',
+      `<div class="wd-section-stub">${langText('Character information not available', '字形資訊暫無')}</div>`
+    ));
+  }
+
+  // Section 4: Words (relations aggregated — placeholder, Phase 4 fills this)
+  sections.push(renderSection('words',
+    renderWordsSection()
+  ));
+
+  // Section 5: Constellation (family tree)
+  const familyContent = renderFamilyTreeContent();
+  sections.push(renderSection('familyTree',
+    familyContent || `<div class="wd-section-stub">${langText('No constellation data yet', '尚無詞族資料')}</div>`
+  ));
+
+  // Section 6: Community (stub)
+  sections.push(renderSection('community',
+    `<div class="wd-section-stub">${langText(
+      'Community contributions coming soon — public learner writing, AI-verified examples, ratings, and more.',
+      '社群內容即將推出 — 學習者公開寫作、AI 驗證例句、評分等功能。'
+    )}</div>`
+  ));
 
   // Actions
   sections.push(renderActions());
-
-  // Phase stubs
-  sections.push(renderPhaseStubs());
 
   document.getElementById('wdMain').innerHTML = sections.filter(Boolean).join('');
 
@@ -1685,13 +1812,21 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('wdBtnPinyinOn').classList.remove('active');
     document.getElementById('wdBtnPinyinOff').classList.add('active');
   }
+  if (textDir === 'vertical') {
+    document.getElementById('wdBtnHoriz').classList.remove('active');
+    document.getElementById('wdBtnVert').classList.add('active');
+  }
 
   applyLevelFonts(currentLevel);
+  renderSectionToggles();
   renderPage();
+
+  // Load related words asynchronously (once)
+  loadRelatedWords();
 
   // Init pills after render
   requestAnimationFrame(() => {
-    ['wdScriptToggle','wdLangToggle','wdIconsToggle','wdPinyinToggle','wdTextDirToggle'].forEach(wdUpdatePill);
+    ['wdScriptToggle','wdLangToggle','wdIconsToggle','wdPinyinToggle','wdTextDirToggle','wdViewModeToggle'].forEach(wdUpdatePill);
   });
 
   // Back to top
@@ -1701,5 +1836,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }, { passive: true });
 });
 </script>
+@include('partials.lexicon._preference-sync')
 </body>
 </html>

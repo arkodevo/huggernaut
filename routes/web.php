@@ -9,17 +9,62 @@ use App\Http\Controllers\Admin\WordObjectController;
 use App\Http\Controllers\Admin\WordPronunciationController;
 use App\Http\Controllers\Admin\WordSenseController;
 use App\Http\Controllers\Admin\WordSenseExampleController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\LearnerLoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\CollectionController;
+use App\Http\Controllers\Api\PreferenceController;
+use App\Http\Controllers\Api\SavedSenseController;
 use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\MyWordsController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public ────────────────────────────────────────────────────────────────────
 
-Route::get('/', fn () => redirect()->route('admin.login'));
+Route::get('/', fn () => redirect()->route('lexicon.index'));
+
+// ── Learner auth ─────────────────────────────────────────────────────────────
+
+Route::get('/register', [RegisterController::class, 'showForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'register']);
+Route::get('/login', [LearnerLoginController::class, 'showForm'])->name('login');
+Route::post('/login', [LearnerLoginController::class, 'login']);
+Route::post('/logout', [LearnerLoginController::class, 'logout'])->name('logout');
+
+// Password reset
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showForm'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
+
+// ── Learner pages (auth required) ────────────────────────────────────────────
+
+Route::get('/my-words', [MyWordsController::class, 'index'])->name('my-words')->middleware('auth');
+
+// ── Learner API (auth required) ──────────────────────────────────────────────
+
+Route::middleware('auth')->prefix('api')->group(function () {
+    Route::get('/preferences', [PreferenceController::class, 'index']);
+    Route::patch('/preferences', [PreferenceController::class, 'update']);
+
+    Route::get('/saved-senses', [SavedSenseController::class, 'index']);
+    Route::post('/saved-senses/{senseId}', [SavedSenseController::class, 'toggle']);
+    Route::patch('/saved-senses/{senseId}/note', [SavedSenseController::class, 'updateNote']);
+
+    Route::get('/collections', [CollectionController::class, 'index']);
+    Route::post('/collections', [CollectionController::class, 'store']);
+    Route::patch('/collections/{collection}', [CollectionController::class, 'update']);
+    Route::delete('/collections/{collection}', [CollectionController::class, 'destroy']);
+    Route::post('/collections/{collection}/senses/{senseId}', [CollectionController::class, 'addSense']);
+    Route::delete('/collections/{collection}/senses/{senseId}', [CollectionController::class, 'removeSense']);
+});
 
 // ── Lexicon explorer (public, no auth) ───────────────────────────────────────
 
 Route::get('/lexicon', [ExploreController::class, 'index'])->name('lexicon.index');
 Route::get('/lexicon/{smartId}', [ExploreController::class, 'show'])->name('lexicon.show');
+Route::get('/api/lexicon/related-words/{character}', [ExploreController::class, 'relatedWords'])->name('lexicon.relatedWords');
 
 // ── Admin auth ────────────────────────────────────────────────────────────────
 

@@ -3,47 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>流動 Living Lexicon — Flow 流</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;700&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+@include('partials.lexicon._foundations')
+@include('partials.lexicon._attr-chip-css')
+@include('partials.lexicon._definition-css')
+@include('partials.lexicon._word-header-css')
+@include('partials.lexicon._example-sentence-css')
 <style>
-:root {
-  --bg: #ffffff;
-  --surface: #f5f4f8;
-  --surface2: #eeecf4;
-  --border: rgba(0,0,0,0.12);
-  --border-active: rgba(100,70,200,0.4);
-  --text: #1a1828;
-  --dim: rgba(26,24,40,0.72);
-  --accent: #6240c8;
-  --gold: #a0720a;
-  --jade: #1a8a5a;
-  --rose: #b83050;
-  --ink: #0a0816;
-  --tag-bg: rgba(98,64,200,0.08);
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; overflow-x: hidden; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  min-height: 100vh;
-  line-height: 1.6;
-  overflow-x: hidden;
-}
-
-/* ── BACKGROUND ── */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background:
-    radial-gradient(ellipse 60% 40% at 15% 20%, rgba(98,64,200,0.05) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 85% 80%, rgba(26,138,90,0.04) 0%, transparent 70%);
-  pointer-events: none; z-index: 0;
-}
-
 /* ── HEADER ── */
 header {
   position: relative; z-index: 10;
@@ -51,6 +19,9 @@ header {
   border-bottom: 1px solid var(--border);
   display: flex; flex-direction: column; align-items: center;
   gap: 0.65rem;
+}
+header > .user-menu {
+  position: absolute; right: 1rem; top: 0.85rem;
 }
 .logo-tag {
   font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase;
@@ -166,10 +137,10 @@ main {
   border-bottom: 1px solid var(--border);
 }
 
-/* ── FILTER BAR — desktop: 6 equal cols + reset auto ── */
+/* ── FILTER BAR — desktop: 2 rows of 3 + reset full-width ── */
 .filter-bar {
   display: grid;
-  grid-template-columns: repeat(6, 1fr) auto;
+  grid-template-columns: repeat(3, 1fr);
   background: #f5f4f8;
 }
 
@@ -180,17 +151,21 @@ main {
   position: relative;
   cursor: pointer;
   border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   user-select: none;
   transition: background 0.15s;
 }
-/* TOCFL is the 6th — no right border before the reset button */
-.filter-bar .filter-row:nth-child(6) { border-right: none; }
+/* Remove right border on every 3rd column */
+.filter-bar .filter-row:nth-child(3n) { border-right: none; }
+/* Remove bottom border on last row (4th, 5th, 6th) */
+.filter-bar .filter-row:nth-child(n+4) { border-bottom: none; }
 
-/* Reset as the 7th grid item */
+/* Reset as the 7th grid item — full width below */
 .filter-reset-btn {
+  grid-column: 1 / -1;
   display: flex; align-items: center; justify-content: center;
-  padding: 0 1rem;
-  border: none; border-left: 1px solid var(--border);
+  padding: 0.65rem 1rem;
+  border: none; border-top: 1px solid var(--border);
   background: transparent;
   font-family: 'DM Mono', monospace; font-size: 0.58rem;
   letter-spacing: 0.1em; text-transform: uppercase;
@@ -222,33 +197,33 @@ main {
 }
 .filter-row.open .filter-row-chevron { transform: rotate(180deg); color: var(--accent); }
 
-/* Per-group permanent label colours */
+/* Per-group permanent label colours — spectrum cascade (rich) */
 .frow-register   .filter-row-label,
-.frow-register   .filter-row-chevron { color: rgba(20,140,80,0.7); }
+.frow-register   .filter-row-chevron { color: #12a84e; }
 .frow-connotation .filter-row-label,
-.frow-connotation .filter-row-chevron { color: rgba(154,104,0,0.7); }
+.frow-connotation .filter-row-chevron { color: #2468d0; }
 .frow-channel    .filter-row-label,
-.frow-channel    .filter-row-chevron { color: rgba(140,100,8,0.7); }
+.frow-channel    .filter-row-chevron { color: #d03030; }
 .frow-dimension  .filter-row-label,
-.frow-dimension  .filter-row-chevron { color: rgba(60,80,180,0.7); }
+.frow-dimension  .filter-row-chevron { color: #d47818; }
 .frow-intensity  .filter-row-label,
-.frow-intensity  .filter-row-chevron { color: rgba(180,60,120,0.7); }
+.frow-intensity  .filter-row-chevron { color: #a0602a; }
 .frow-tocfl      .filter-row-label,
-.frow-tocfl      .filter-row-chevron { color: rgba(140,100,8,0.7); }
+.frow-tocfl      .filter-row-chevron { color: #c4a808; }
 
 /* Full strength on open/active */
 .frow-register.open   .filter-row-label, .frow-register.has-selection   .filter-row-label,
-.frow-register.open   .filter-row-chevron { color: #148c50; }
+.frow-register.open   .filter-row-chevron { color: #12a84e; }
 .frow-connotation.open .filter-row-label, .frow-connotation.has-selection .filter-row-label,
-.frow-connotation.open .filter-row-chevron { color: #9a6800; }
+.frow-connotation.open .filter-row-chevron { color: #2468d0; }
 .frow-channel.open    .filter-row-label, .frow-channel.has-selection    .filter-row-label,
-.frow-channel.open    .filter-row-chevron { color: var(--gold); }
+.frow-channel.open    .filter-row-chevron { color: #d03030; }
 .frow-dimension.open  .filter-row-label, .frow-dimension.has-selection  .filter-row-label,
-.frow-dimension.open  .filter-row-chevron { color: #3c50b4; }
+.frow-dimension.open  .filter-row-chevron { color: #d47818; }
 .frow-intensity.open  .filter-row-label, .frow-intensity.has-selection  .filter-row-label,
-.frow-intensity.open  .filter-row-chevron { color: #a03070; }
+.frow-intensity.open  .filter-row-chevron { color: #a0602a; }
 .frow-tocfl.open      .filter-row-label, .frow-tocfl.has-selection      .filter-row-label,
-.frow-tocfl.open      .filter-row-chevron { color: var(--gold); }
+.frow-tocfl.open      .filter-row-chevron { color: #c4a808; }
 
 /* Active tags under the trigger */
 .filter-row-preview {
@@ -281,7 +256,7 @@ main {
 
 /* ── FILTER DROPDOWN ── */
 .filter-dropdown {
-  position: absolute; left: 0; top: 100%;
+  position: fixed;
   z-index: 1000;
   background: #fff;
   border: 1px solid var(--border-active);
@@ -330,8 +305,8 @@ main {
 .d-chip.selected::after { content: '✓'; margin-left: auto; font-size: 0.65rem; opacity: 0.7; }
 .chip-icon {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 3.2rem; height: 3.2rem; flex-shrink: 0;
-  font-size: 2.3rem; line-height: 1; overflow: hidden;
+  width: 2.4rem; height: 2.4rem; flex-shrink: 0;
+  font-size: 1.72rem; line-height: 1; overflow: hidden;
 }
 
 /* Connotation chip colour overrides — weather palette */
@@ -421,7 +396,7 @@ main {
   border-bottom: 1px solid var(--border);
 }
 .acc-panel-inner {
-  padding: 1.4rem 2rem 1.2rem;
+  padding: 1.4rem 1rem 1.2rem;
 }
 
 /* ── Scenario grid ──────────────────────────────── */
@@ -450,6 +425,23 @@ main {
   transition: color 0.15s, border-color 0.15s;
 }
 .acc-clear-btn:hover { color: var(--text); border-color: var(--dim); }
+.sc-delete {
+  position: absolute; top: -0.3rem; right: -0.3rem;
+  width: 1.2rem; height: 1.2rem; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--dim); font-size: 0.7rem; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 2;
+}
+.sc-delete:hover { color: var(--danger, #c00); border-color: var(--danger, #c00); }
+.acc-close-btn {
+  display: block; margin: 0.9rem 0 0 auto; padding: 0.25rem 0.6rem;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: var(--dim); background: transparent; border: none;
+  cursor: pointer; transition: color 0.15s;
+}
+.acc-close-btn:hover { color: var(--text); }
 
 /* ── Level grid ─────────────────────────────────── */
 .level-grid {
@@ -569,96 +561,86 @@ main {
 }
 .reset-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
 
-/* ── FILTER BAR — PER-GROUP COLOUR REINFORCEMENT ─────────────────────────── */
-/* Register — forest green */
-.frow-register                                   { background: rgba(20,140,80,0.04); }
-.frow-register:hover                             { background: rgba(20,140,80,0.08); }
+/* ── FILTER BAR — PER-GROUP COLOUR REINFORCEMENT (spectrum cascade) ───────── */
+/* Register — green */
+.frow-register                                   { background: rgba(18,168,78,0.06); }
+.frow-register:hover                             { background: rgba(18,168,78,0.12); }
 .frow-register.has-selection,
-.frow-register.open                              { background: rgba(20,140,80,0.12); }
+.frow-register.open                              { background: rgba(18,168,78,0.18); }
 .frow-register.has-selection .filter-row-label,
-.frow-register.open .filter-row-label            { color: #148c50; }
+.frow-register.open .filter-row-label            { color: #12a84e; }
 .frow-register.has-selection .filter-row-chevron,
-.frow-register.open .filter-row-chevron          { color: #148c50; }
-.frow-register .preview-text                     { background: rgba(20,140,80,0.08); border-color: rgba(20,140,80,0.2); color: #148c50; }
-.frow-register .d-chip:hover                     { background: rgba(20,140,80,0.04); border-color: rgba(20,140,80,0.25); color: #148c50; }
-.frow-register .d-chip.selected                  { background: rgba(20,140,80,0.12); border-color: #148c50; color: #148c50; }
+.frow-register.open .filter-row-chevron          { color: #12a84e; }
+.frow-register .preview-text                     { background: rgba(18,168,78,0.08); border-color: rgba(18,168,78,0.2); color: #12a84e; }
+.frow-register .d-chip:hover                     { background: rgba(18,168,78,0.04); border-color: rgba(18,168,78,0.25); color: #12a84e; }
+.frow-register .d-chip.selected                  { background: rgba(18,168,78,0.12); border-color: #12a84e; color: #12a84e; }
 
-/* Connotation — amber */
-.frow-connotation                                { background: rgba(200,140,20,0.05); }
-.frow-connotation:hover                              { background: rgba(200,140,20,0.09); }
+/* Connotation — blue */
+.frow-connotation                                { background: rgba(36,104,208,0.06); }
+.frow-connotation:hover                          { background: rgba(36,104,208,0.12); }
 .frow-connotation.has-selection,
-.frow-connotation.open                               { background: rgba(200,140,20,0.13); }
+.frow-connotation.open                           { background: rgba(36,104,208,0.18); }
 .frow-connotation.has-selection .filter-row-label,
-.frow-connotation.open .filter-row-label             { color: #9a6800; }
+.frow-connotation.open .filter-row-label         { color: #2468d0; }
 .frow-connotation.has-selection .filter-row-chevron,
-.frow-connotation.open .filter-row-chevron           { color: #9a6800; }
-.frow-connotation .preview-text                      { background: rgba(200,140,20,0.08); border-color: rgba(200,140,20,0.25); color: #9a6800; }
+.frow-connotation.open .filter-row-chevron       { color: #2468d0; }
+.frow-connotation .preview-text                  { background: rgba(36,104,208,0.08); border-color: rgba(36,104,208,0.2); color: #2468d0; }
+.frow-connotation .d-chip:hover                  { background: rgba(36,104,208,0.04); border-color: rgba(36,104,208,0.25); color: #2468d0; }
+.frow-connotation .d-chip.selected               { background: rgba(36,104,208,0.12); border-color: #2468d0; color: #2468d0; }
 
-/* Channel — gold */
-.frow-channel                                    { background: rgba(160,114,10,0.05); }
-.frow-channel:hover                              { background: rgba(160,114,10,0.09); }
+/* Channel — red */
+.frow-channel                                    { background: rgba(208,48,48,0.06); }
+.frow-channel:hover                              { background: rgba(208,48,48,0.12); }
 .frow-channel.has-selection,
-.frow-channel.open                               { background: rgba(160,114,10,0.13); }
+.frow-channel.open                               { background: rgba(208,48,48,0.18); }
 .frow-channel.has-selection .filter-row-label,
-.frow-channel.open .filter-row-label             { color: var(--gold); }
+.frow-channel.open .filter-row-label             { color: #d03030; }
 .frow-channel.has-selection .filter-row-chevron,
-.frow-channel.open .filter-row-chevron           { color: var(--gold); }
-.frow-channel .preview-text                      { background: rgba(160,114,10,0.08); border-color: rgba(160,114,10,0.25); color: var(--gold); }
-.frow-channel .d-chip:hover                      { background: rgba(160,114,10,0.04); border-color: rgba(160,114,10,0.25); color: var(--gold); }
-.frow-channel .d-chip.selected                   { background: rgba(160,114,10,0.1);  border-color: var(--gold); color: var(--gold); }
+.frow-channel.open .filter-row-chevron           { color: #d03030; }
+.frow-channel .preview-text                      { background: rgba(208,48,48,0.08); border-color: rgba(208,48,48,0.2); color: #d03030; }
+.frow-channel .d-chip:hover                      { background: rgba(208,48,48,0.04); border-color: rgba(208,48,48,0.25); color: #d03030; }
+.frow-channel .d-chip.selected                   { background: rgba(208,48,48,0.1);  border-color: #d03030; color: #d03030; }
 
-/* Dimension — blue */
-.frow-dimension                                  { background: rgba(60,80,180,0.05); }
-.frow-dimension:hover                              { background: rgba(60,80,180,0.09); }
+/* Dimension — orange */
+.frow-dimension                                  { background: rgba(212,120,24,0.06); }
+.frow-dimension:hover                            { background: rgba(212,120,24,0.12); }
 .frow-dimension.has-selection,
-.frow-dimension.open                               { background: rgba(60,80,180,0.13); }
+.frow-dimension.open                             { background: rgba(212,120,24,0.18); }
 .frow-dimension.has-selection .filter-row-label,
-.frow-dimension.open .filter-row-label             { color: #3c50b4; }
+.frow-dimension.open .filter-row-label           { color: #d47818; }
 .frow-dimension.has-selection .filter-row-chevron,
-.frow-dimension.open .filter-row-chevron           { color: #3c50b4; }
-.frow-dimension .preview-text                      { background: rgba(60,80,180,0.08); border-color: rgba(60,80,180,0.25); color: #3c50b4; }
-.frow-dimension .d-chip:hover                      { background: rgba(60,80,180,0.04); border-color: rgba(60,80,180,0.25); color: #3c50b4; }
-.frow-dimension .d-chip.selected                   { background: rgba(60,80,180,0.1);  border-color: #3c50b4; color: #3c50b4; }
+.frow-dimension.open .filter-row-chevron         { color: #d47818; }
+.frow-dimension .preview-text                    { background: rgba(212,120,24,0.08); border-color: rgba(212,120,24,0.2); color: #d47818; }
+.frow-dimension .d-chip:hover                    { background: rgba(212,120,24,0.04); border-color: rgba(212,120,24,0.25); color: #d47818; }
+.frow-dimension .d-chip.selected                 { background: rgba(212,120,24,0.1);  border-color: #d47818; color: #d47818; }
 
-/* Intensity — rose */
-.frow-intensity                                  { background: rgba(180,60,120,0.05); }
-.frow-intensity:hover                              { background: rgba(180,60,120,0.09); }
+/* Intensity — brown */
+.frow-intensity                                  { background: rgba(160,96,42,0.06); }
+.frow-intensity:hover                            { background: rgba(160,96,42,0.12); }
 .frow-intensity.has-selection,
-.frow-intensity.open                               { background: rgba(180,60,120,0.13); }
+.frow-intensity.open                             { background: rgba(160,96,42,0.18); }
 .frow-intensity.has-selection .filter-row-label,
-.frow-intensity.open .filter-row-label             { color: #a03070; }
+.frow-intensity.open .filter-row-label           { color: #a0602a; }
 .frow-intensity.has-selection .filter-row-chevron,
-.frow-intensity.open .filter-row-chevron           { color: #a03070; }
-.frow-intensity .preview-text                      { background: rgba(180,60,120,0.08); border-color: rgba(180,60,120,0.25); color: #a03070; }
+.frow-intensity.open .filter-row-chevron         { color: #a0602a; }
+.frow-intensity .preview-text                    { background: rgba(160,96,42,0.08); border-color: rgba(160,96,42,0.2); color: #a0602a; }
+.frow-intensity .d-chip:hover                    { background: rgba(160,96,42,0.04); border-color: rgba(160,96,42,0.25); color: #a0602a; }
+.frow-intensity .d-chip.selected                 { background: rgba(160,96,42,0.1);  border-color: #a0602a; color: #a0602a; }
 
-
-/* TOCFL — gold */
-.frow-tocfl                                      { background: rgba(160,114,10,0.05); }
-.frow-tocfl:hover                              { background: rgba(160,114,10,0.09); }
+/* TOCFL — yellow */
+.frow-tocfl                                      { background: rgba(196,168,8,0.06); }
+.frow-tocfl:hover                                { background: rgba(196,168,8,0.12); }
 .frow-tocfl.has-selection,
-.frow-tocfl.open                               { background: rgba(160,114,10,0.13); }
+.frow-tocfl.open                                 { background: rgba(196,168,8,0.18); }
 .frow-tocfl.has-selection .filter-row-label,
-.frow-tocfl.open .filter-row-label             { color: var(--gold); }
+.frow-tocfl.open .filter-row-label               { color: #c4a808; }
 .frow-tocfl.has-selection .filter-row-chevron,
-.frow-tocfl.open .filter-row-chevron           { color: var(--gold); }
-.frow-tocfl .preview-text                      { background: rgba(160,114,10,0.08); border-color: rgba(160,114,10,0.25); color: var(--gold); }
-.frow-tocfl .d-chip:hover                      { background: rgba(160,114,10,0.04); border-color: rgba(160,114,10,0.25); color: var(--gold); }
-.frow-tocfl .d-chip.selected                   { background: rgba(160,114,10,0.1);  border-color: var(--gold); color: var(--gold); }
+.frow-tocfl.open .filter-row-chevron             { color: #c4a808; }
+.frow-tocfl .preview-text                        { background: rgba(196,168,8,0.08); border-color: rgba(196,168,8,0.2); color: #c4a808; }
+.frow-tocfl .d-chip:hover                        { background: rgba(196,168,8,0.04); border-color: rgba(196,168,8,0.25); color: #c4a808; }
+.frow-tocfl .d-chip.selected                     { background: rgba(196,168,8,0.1);  border-color: #c4a808; color: #c4a808; }
 
-/* Domain — pill chip above definition, styled like POS */
-.card-domain-row { margin-bottom: 0.3rem; }
-.card-domain {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.81rem; letter-spacing: 0.04em;
-  color: var(--gold); background: rgba(160,114,10,0.08);
-  border: 1px solid rgba(160,114,10,0.28);
-  border-radius: 2px; padding: 0.15rem 0.6rem;
-  cursor: pointer; user-select: none;
-  transition: background 0.15s, border-color 0.15s;
-}
-.card-domain:hover { background: rgba(160,114,10,0.15); border-color: rgba(160,114,10,0.5); }
-
+/* Domain + character header styles loaded from shared partial */
 
 .results-panel {
   padding: 1.5rem;
@@ -763,67 +745,7 @@ main {
 }
 .word-card:hover { border-color: rgba(98,64,200,0.25); transform: translateY(-1px); }
 
-.card-hanzi {
-  display: flex; flex-direction: row; align-items: flex-start;
-  gap: 0.4rem;
-  /* border-right and padding-right applied on desktop only */
-}
-/* Wrapper: character stacked above the switch icon */
-.hanzi-primary-wrap {
-  display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
-}
-/* ⇌ switch button — only rendered when trad ≠ simp */
-.script-switch-btn {
-  font-size: 1.2rem; font-family: 'DM Mono', monospace;
-  color: var(--accent); opacity: 0.45;
-  background: none; border: none; cursor: pointer;
-  padding: 0.4rem 0; line-height: 1;
-  transition: opacity 0.35s ease;
-}
-@media (hover: hover) {
-  .script-switch-btn:hover { opacity: 0.85; transition: opacity 0.15s; }
-}
-/* Secondary character — slides in from the right */
-.hanzi-secondary {
-  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: calc(var(--fs-hanzi, 2.8rem) * 0.65);
-  font-weight: 300; color: var(--dim); line-height: 1.1;
-  writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.1em;
-}
-.hanzi-secondary.entering { animation: charSlideIn 0.22s ease forwards; }
-.hanzi-secondary.leaving  { animation: charSlideOut 0.15s ease forwards; }
-@keyframes charSlideIn {
-  from { opacity: 0; transform: translateX(10px); }
-  to   { opacity: 1; transform: translateX(0);    }
-}
-@keyframes charSlideOut {
-  from { opacity: 1; transform: translateX(0);    }
-  to   { opacity: 0; transform: translateX(10px); }
-}
-
-/* ── Mobile card header zones ── */
-.card-hdr-mid {
-  display: flex; flex-direction: column; gap: 0.4rem; min-width: 0;
-}
-.card-hdr-mid .card-domain-row { margin-bottom: 0; width: 100%; }
-.card-hdr-mid .card-domain {
-  display: block; width: 100%; text-align: center;
-  font-size: 0.81rem;
-  padding: 0.3rem 0.6rem;
-}
-.card-pos-summary { display: flex; flex-direction: column; gap: 0.3rem; }
-/* Header POS label: always shows full · abbr, non-interactive, full-width */
-.card-pos-hdr {
-  display: block; width: 100%;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.81rem; letter-spacing: 0.04em;
-  color: #7060a8; background: rgba(98,64,200,0.07);
-  border: 1px solid rgba(98,64,200,0.18);
-  border-radius: 2px; padding: 0.15rem 0.6rem;
-  cursor: pointer; user-select: none;
-  transition: background 0.15s, border-color 0.15s;
-}
-.card-pos-hdr:hover { background: rgba(98,64,200,0.13); border-color: rgba(98,64,200,0.35); }
+/* Character display, domain, POS summary, pinyin styles loaded from shared partial */
 .card-divider {
   grid-column: 1 / -1;
   border: none; border-top: 1px solid var(--border);
@@ -832,28 +754,6 @@ main {
 .card-body { grid-column: 1 / -1; }
 .card-meta { grid-column: 1 / -1; }
 
-.hanzi-char {
-  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: var(--fs-hanzi, 2.8rem); font-weight: 300;
-  color: var(--ink); line-height: 1.1;
-  writing-mode: vertical-rl; text-orientation: mixed;
-  letter-spacing: 0.1em;
-}
-.hanzi-char.simp {
-  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: var(--fs-simp, 1.4rem); font-weight: 300;
-  color: var(--dim); line-height: 1.1;
-  writing-mode: vertical-rl; text-orientation: mixed;
-  letter-spacing: 0.1em;
-}
-.pinyin {
-  font-style: italic; font-family: 'Cormorant Garamond', serif;
-  font-size: var(--fs-pinyin, 1.05rem); color: var(--accent);
-  letter-spacing: 0.05em;
-}
-.pinyin-h { writing-mode: horizontal-tb; }
-/* Row wrapper so pinyin doesn't stretch full width in the flex column */
-.card-pinyin-row { display: flex; align-items: center; margin-top: 0.15rem; }
 /* Pinyin off — hide all pronunciation rows without re-rendering */
 #cardContainer.no-pinyin .card-pinyin-row { display: none; }
 
@@ -862,41 +762,6 @@ main {
   display: flex; flex-direction: column; gap: 0;
 }
 .card-body { display: flex; flex-direction: column; gap: 0.5rem; }
-.card-def-row {
-  display: block;
-}
-.card-def-row + .card-def-row { margin-top: 0.4rem; }
-.card-pos {
-  display: inline-block;
-  margin-right: 0.45rem; vertical-align: baseline;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.81rem; letter-spacing: 0.04em;
-  color: #7060a8; background: rgba(98,64,200,0.07);
-  border: 1px solid rgba(98,64,200,0.18);
-  border-radius: 2px; padding: 1px 8px;
-  cursor: pointer; user-select: none;
-  transition: background 0.15s, border-color 0.15s;
-}
-.card-pos:hover { background: rgba(98,64,200,0.13); border-color: rgba(98,64,200,0.35); }
-.card-pos[data-overridden] { border-style: dashed; }
-.card-definition {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: var(--fs-defn, 1.5rem); font-weight: 300;
-  color: var(--ink);
-  line-height: 1.4;
-}
-.card-usage-note {
-  font-size: var(--fs-note, 0.9rem); color: var(--dim); line-height: 1.5;
-}
-.card-formula {
-  font-size: var(--fs-formula, 1rem);
-  background: rgba(98,64,200,0.05);
-  border: 1px solid rgba(98,64,200,0.15);
-  padding: 0.3rem 0.6rem; border-radius: 2px;
-  color: var(--accent);
-  font-family: 'DM Mono', monospace;
-  display: inline-block; margin-top: 0.15rem;
-}
 .card-example {
   font-size: 0.85rem;
   padding-top: 0.3rem; border-top: 1px solid var(--border);
@@ -930,69 +795,51 @@ main {
 @media (hover: hover) {
   .card-action-btn:hover { color: var(--accent); border-color: var(--accent); }
 }
-
-/* Attribute chip: label header stacked above icon+value */
-.card-attr {
-  display: flex; flex-direction: column;
-  border-radius: 3px; overflow: hidden;
-  border: 1px solid var(--border);
+.card-action-btn.saved { color: var(--accent); border-color: var(--accent); }
+/* Collection picker popover (SRP) */
+.card-actions { position: relative; }
+.srp-cp {
+  position: absolute; bottom: 100%; right: 0; z-index: 200;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; min-width: 200px; padding: 0.4rem 0;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  animation: srpCpIn 0.15s ease;
+  margin-bottom: 0.4rem;
 }
-.card-attr-header {
-  font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase;
-  font-family: 'DM Mono', monospace;
-  padding: 0.25rem 0.55rem 0.2rem;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
+@keyframes srpCpIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+.srp-cp-title {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--dim); padding: 0.3rem 0.65rem 0.2rem;
 }
-.card-attr-value {
-  display: flex; flex-direction: row; align-items: center; gap: 0.35rem;
-  padding: 0.3rem 0.55rem;
-  font-family: 'DM Mono', monospace; font-size: 0.82rem;
+.srp-cp-item {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  color: var(--text); cursor: pointer; transition: background 0.12s;
 }
-.card-attr-value .attr-icon { font-size: 1.1rem; line-height: 1; flex-shrink: 0; }
-.card-attr-value.multi { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-.attr-val-item { display: inline-flex; align-items: center; gap: 0.35rem; flex-shrink: 0; white-space: nowrap; }
-.attr-val-sep { color: var(--dim); font-size: 0.65rem; margin: 0 0.1rem; }
-.card-attr-value .attr-sep  { color: var(--dim); font-size: 0.65rem; }
-.card-attr-value .attr-label { }
-.card-attr { cursor: pointer; user-select: none; }
-.card-attr:hover .card-attr-header { opacity: 0.72; }
-.card-attr:hover .attr-label { opacity: 0.72; }
-
-/* Per-attribute colours — header + value tinted together */
-.card-attr.attr-register   { background: rgba(20,140,80,0.05);  border-color: rgba(20,140,80,0.2); }
-.card-attr.attr-register   .card-attr-header { color: #148c50; background: rgba(20,140,80,0.08); border-color: rgba(20,140,80,0.15); }
-.card-attr.attr-register   .card-attr-value  { color: #148c50; }
-
-.card-attr.attr-connotation.conno-pos { background: rgba(232,160,32,0.07);  border-color: rgba(232,160,32,0.3); }
-.card-attr.attr-connotation.conno-pos .card-attr-header { color: #8a6000; background: rgba(232,160,32,0.1); border-color: rgba(232,160,32,0.2); }
-.card-attr.attr-connotation.conno-pos .card-attr-value  { color: #8a6000; }
-.card-attr.attr-connotation.conno-neg { background: rgba(80,96,160,0.07);   border-color: rgba(80,96,160,0.3); }
-.card-attr.attr-connotation.conno-neg .card-attr-header { color: #3a4880; background: rgba(80,96,160,0.1); border-color: rgba(80,96,160,0.2); }
-.card-attr.attr-connotation.conno-neg .card-attr-value  { color: #3a4880; }
-.card-attr.attr-connotation.conno-neu { background: rgba(112,144,176,0.07); border-color: rgba(112,144,176,0.3); }
-.card-attr.attr-connotation.conno-neu .card-attr-header { color: #4a6880; background: rgba(112,144,176,0.1); border-color: rgba(112,144,176,0.2); }
-.card-attr.attr-connotation.conno-neu .card-attr-value  { color: #4a6880; }
-.card-attr.attr-connotation.conno-ctx { background: rgba(96,160,112,0.07);  border-color: rgba(96,160,112,0.3); }
-.card-attr.attr-connotation.conno-ctx .card-attr-header { color: #3a7850; background: rgba(96,160,112,0.1); border-color: rgba(96,160,112,0.2); }
-.card-attr.attr-connotation.conno-ctx .card-attr-value  { color: #3a7850; }
-
-.card-attr.attr-channel   { background: rgba(160,114,10,0.05);  border-color: rgba(160,114,10,0.2); }
-.card-attr.attr-channel   .card-attr-header { color: var(--gold); background: rgba(160,114,10,0.08); border-color: rgba(160,114,10,0.15); }
-.card-attr.attr-channel   .card-attr-value  { color: var(--gold); }
-
-.card-attr.attr-tocfl     { background: rgba(160,114,10,0.05);  border-color: rgba(160,114,10,0.2); }
-.card-attr.attr-tocfl     .card-attr-header { color: var(--gold); background: rgba(160,114,10,0.08); border-color: rgba(160,114,10,0.15); }
-.card-attr.attr-tocfl     .card-attr-value  { color: var(--gold); }
-
-.card-attr.attr-dimension { background: rgba(60,80,180,0.05);   border-color: rgba(60,80,180,0.2); }
-.card-attr.attr-dimension .card-attr-header { color: #3c50b4; background: rgba(60,80,180,0.08); border-color: rgba(60,80,180,0.15); }
-.card-attr.attr-dimension .card-attr-value  { color: #3c50b4; }
-
-.card-attr.attr-intensity { background: rgba(180,60,120,0.05);  border-color: rgba(180,60,120,0.2); }
-.card-attr.attr-intensity .card-attr-header { color: #a03070; background: rgba(180,60,120,0.08); border-color: rgba(180,60,120,0.15); }
-.card-attr.attr-intensity .card-attr-value  { color: #a03070; }
-
+.srp-cp-item:hover { background: rgba(0,0,0,0.03); }
+.srp-cp-item input[type="checkbox"] { accent-color: var(--accent); margin: 0; flex-shrink: 0; }
+.srp-cp-empty {
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: var(--dim); padding: 0.3rem 0.65rem; font-style: italic;
+}
+.srp-cp-new {
+  border-top: 1px solid var(--border); margin-top: 0.25rem;
+  padding: 0.4rem 0.65rem 0.2rem;
+  display: flex; align-items: center; gap: 0.3rem;
+}
+.srp-cp-new input {
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.25rem 0.4rem; flex: 1; outline: none;
+  background: var(--surface); color: var(--text);
+}
+.srp-cp-new input:focus { border-color: var(--accent); }
+.srp-cp-new button {
+  font-size: 0.9rem; background: none; border: none;
+  color: var(--accent); cursor: pointer; padding: 0; line-height: 1;
+}
 
 .word-card:hover::after {
   content: '↗ Open word page';
@@ -1002,6 +849,11 @@ main {
   pointer-events: none;
 }
 .word-card { position: relative; }
+.card-saved-star {
+  position: absolute; top: 0.45rem; right: 0.5rem;
+  font-size: 0.7rem; color: var(--accent); opacity: 0.75;
+  pointer-events: none; line-height: 1;
+}
 
 /* Level chips — compact horizontal layout */
 .d-chip.level-chip {
@@ -1062,30 +914,10 @@ main {
 .zaoju-toggle:hover { color: var(--accent); }
 
 /* Default sentences */
-.default-sentences { display: flex; flex-direction: column; gap: 0.4rem; }
-.default-sent {
-  display: flex; align-items: flex-start; gap: 0.6rem;
-  padding: 0.5rem 0.7rem;
-  background: rgba(255,255,255,0.7);
-  border: 1px solid rgba(98,64,200,0.08);
-  border-radius: 2px;
-  position: relative;
-}
-.sent-num { font-size: 0.55rem; color: var(--accent); opacity: 0.6; margin-top: 0.15rem; flex-shrink: 0; }
-.sent-body { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
-.sent-cn { font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif; font-size: var(--fs-ex-cn, 1.8rem); color: var(--ink); line-height: 1.5; }
-.sent-cn .highlight { color: var(--gold); font-weight: 600; }
-.sent-en { font-size: var(--fs-ex-en, 1rem); color: var(--dim); font-style: italic; }
-.save-sent-btn {
-  font-size: 0.81rem; padding: 0.2rem 0.5rem;
-  border: 1px solid rgba(62,180,137,0.25); border-radius: 2px;
-  color: var(--jade); background: rgba(62,180,137,0.05);
-  cursor: pointer; font-family: 'DM Mono', monospace;
-  transition: all 0.2s; flex-shrink: 0; margin-top: 0.1rem;
-  white-space: nowrap;
-}
-.save-sent-btn:hover { background: rgba(62,180,137,0.12); border-color: var(--jade); }
-.save-sent-btn.saved { color: var(--dim); border-color: var(--border); cursor: default; }
+/* Example sentence styles loaded from shared partial (_example-sentence-css) */
+
+/* ── Sentence segmentation: clickable word spans ── */
+/* Segmentation + popover styles loaded from shared partial */
 
 /* AI tabs */
 .ai-tabs {
@@ -1112,7 +944,7 @@ main {
 .ai-instruction {
   font-size: 0.81rem; color: var(--dim); line-height: 1.6;
 }
-.ai-input-row { display: flex; gap: 0.5rem; align-items: flex-start; flex-wrap: wrap; }
+.ai-input-row { display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch; }
 .ai-textarea {
   flex: 1; min-width: 200px;
   background: #ffffff;
@@ -1143,6 +975,7 @@ main {
   font-family: 'DM Mono', monospace; font-size: 0.81rem;
   letter-spacing: 0.1em; cursor: pointer;
   transition: all 0.2s; white-space: nowrap;
+  width: 100%;
 }
 .ai-submit-btn:hover { background: rgba(155,127,240,0.2); }
 .ai-submit-btn:disabled { opacity: 0.4; cursor: wait; }
@@ -1204,20 +1037,13 @@ main {
 @media (max-width: 700px) {
   main { grid-template-columns: 1fr; }
 
-  /* Filter bar: 2 columns, 3 rows of 2, reset full-width 7th */
+  /* Filter bar: 2 columns on mobile, 3 rows of 2 */
   .filter-bar { grid-template-columns: repeat(2, 1fr); }
-  .filter-row  { border-bottom: 1px solid var(--border); }
-  /* Restore TOCFL right border (overridden from desktop), then remove even cols */
-  .filter-bar .filter-row:nth-child(6) { border-right: 1px solid var(--border); }
+  /* Reset nth-child rules for 2-col layout */
+  .filter-bar .filter-row:nth-child(3n) { border-right: 1px solid var(--border); }
   .filter-bar .filter-row:nth-child(2n) { border-right: none; }
-  /* Last row (5th + 6th) gets no bottom border */
+  .filter-bar .filter-row:nth-child(n+4) { border-bottom: 1px solid var(--border); }
   .filter-bar .filter-row:nth-child(n+5) { border-bottom: none; }
-  /* Reset button spans full width below the 6 */
-  .filter-reset-btn {
-    grid-column: 1 / -1;
-    border-left: none; border-top: 1px solid var(--border);
-    padding: 0.65rem;
-  }
 
   /* Refine bar: selects stack and each takes full row width */
   .results-refine { gap: 0.4rem; }
@@ -1259,15 +1085,27 @@ main {
     display: inline-block; width: auto;
     font-size: 0.81rem; padding: 0.15rem 0.6rem; text-align: left;
   }
+  .card-hdr-mid .card-domain-stack {
+    width: auto; align-items: flex-start;
+  }
   .card-hdr-mid .card-domain-row { margin-bottom: 0.3rem; }
-  .card-pos-summary { display: none; } /* POS shown inline with definitions on desktop */
+  /* POS chips: match domain chip sizing on desktop */
+  .card-pos-hdr {
+    display: inline-block; width: auto;
+  }
+  /* Workshop submit buttons: constrain width on desktop */
+  .ai-submit-btn {
+    width: auto; max-width: 280px;
+  }
 }
 </style>
 </head>
 <body>
+<script>window.__AUTH = @json($authUser);</script>
 
 <header>
   <div class="logo-tag">流動 · Living Lexicon</div>
+  @include('partials.lexicon._user-menu')
   <input
     id="searchInput"
     type="text"
@@ -1308,37 +1146,37 @@ main {
 <div class="acc-panel" id="accPanelScenario">
   <div class="acc-panel-inner">
     <div class="scenario-grid">
-      <button class="scenario-card" onclick="applyScenarioPreset('beginner')">
+      <button class="scenario-card" data-scenario="beginner" onclick="applyScenarioPreset('beginner')">
         <span class="sc-icon">🌱</span>
         <span class="sc-name">The Beginner</span>
         <span class="sc-desc">Everyday spoken words, positive tone, prep-level TOCFL</span>
       </button>
-      <button class="scenario-card" onclick="applyScenarioPreset('exchange')">
+      <button class="scenario-card" data-scenario="exchange" onclick="applyScenarioPreset('exchange')">
         <span class="sc-icon">🗣️</span>
         <span class="sc-name">Language Exchange</span>
         <span class="sc-desc">Colloquial, neutral, spoken — natural conversation words</span>
       </button>
-      <button class="scenario-card" onclick="applyScenarioPreset('essay')">
+      <button class="scenario-card" data-scenario="essay" onclick="applyScenarioPreset('essay')">
         <span class="sc-icon">✏️</span>
         <span class="sc-name">Essay Writing</span>
         <span class="sc-desc">Formal written register, basic TOCFL and above</span>
       </button>
-      <button class="scenario-card" onclick="applyScenarioPreset('business')">
+      <button class="scenario-card" data-scenario="business" onclick="applyScenarioPreset('business')">
         <span class="sc-icon">💼</span>
         <span class="sc-name">Business</span>
         <span class="sc-desc">Formal, positive, spoken — confident professional register</span>
       </button>
-      <button class="scenario-card" onclick="applyScenarioPreset('literature')">
+      <button class="scenario-card" data-scenario="literature" onclick="applyScenarioPreset('literature')">
         <span class="sc-icon">📚</span>
         <span class="sc-name">Classical Reading</span>
         <span class="sc-desc">Literary register, high-intensity written words</span>
       </button>
-      <button class="scenario-card" onclick="applyScenarioPreset('classicist')">
+      <button class="scenario-card" data-scenario="classicist" onclick="applyScenarioPreset('classicist')">
         <span class="sc-icon">📜</span>
         <span class="sc-name">The Classicist</span>
         <span class="sc-desc">Literary, dark-toned, advanced — for prose and poetry</span>
       </button>
-      <button class="scenario-card" onclick="applyScenarioPreset('creative')">
+      <button class="scenario-card" data-scenario="creative" onclick="applyScenarioPreset('creative')">
         <span class="sc-icon">🎨</span>
         <span class="sc-name">Creative Writing</span>
         <span class="sc-desc">Literary, any channel — expressive and stylistic words</span>
@@ -1351,6 +1189,7 @@ main {
     </div>
     <div id="customScenariosGrid" class="scenario-grid" style="margin-top:0.75rem; display:none"></div>
     <button class="acc-clear-btn" onclick="clearScenario()">↺ Clear filters</button>
+    <button class="acc-close-btn" onclick="closeAccordion()">&times; Close</button>
   </div>
 </div>
 
@@ -1392,6 +1231,7 @@ main {
       <option value="advanced">Advanced</option>
       <option value="native">Native</option>
     </select>
+    <button class="acc-close-btn" onclick="closeAccordion()">&times; Close</button>
   </div>
 </div>
 
@@ -1452,7 +1292,16 @@ main {
           <button class="script-btn"        id="btnWorkshopExpanded"  onclick="setWorkshopDefault('expanded')">Expanded</button>
           <button class="script-btn active" id="btnWorkshopCollapsed" onclick="setWorkshopDefault('collapsed')">Collapsed</button>
         </div>
-        <div class="iface-hint">Default state of 造句 Sentence Workshop on each card</div>
+        <div class="iface-hint">Default state of Writing Workshop 寫作工坊 on each card</div>
+      </div>
+
+      <div class="iface-group">
+        <div class="iface-group-label">Text Orientation</div>
+        <div class="script-toggle" id="textDirToggle">
+          <button class="script-btn active" id="btnTextHoriz" onclick="setTextDir('horizontal')">Horizontal 橫</button>
+          <button class="script-btn"        id="btnTextVert"  onclick="setTextDir('vertical')">Vertical 直</button>
+        </div>
+        <div class="iface-hint">Chinese text flows left-to-right (horizontal) or top-to-bottom right-to-left (vertical)</div>
       </div>
 
       <div class="iface-group">
@@ -1466,6 +1315,7 @@ main {
       </div>
 
     </div>
+    <button class="acc-close-btn" onclick="closeAccordion()">&times; Close</button>
   </div>
 </div>
 
@@ -1631,9 +1481,9 @@ main {
 
 <script>
 // ── UI MODE ───────────────────────────────────────────────────────────────────
+let langMode  = localStorage.getItem('langMode') || 'en';
+let iconsMode = localStorage.getItem('iconsMode') || 'on';
 let uiMode   = 'en-icon'; // derived — do not set directly
-let langMode  = 'en';  // 'en' | 'zh' | 'both'
-let iconsMode = 'on';  // 'on' | 'off'
 
 function deriveUiMode() {
   if (iconsMode === 'on') {
@@ -1665,6 +1515,8 @@ function updateTogglePill(toggleId) {
 
 function setLangMode(mode) {
   langMode = mode;
+  localStorage.setItem('langMode', mode);
+  if (window.syncPref) syncPref('langMode', mode);
   ['btnLangEn','btnLangZh','btnLangBoth'].forEach(id => {
     const btn = document.getElementById(id);
     if (btn) btn.classList.remove('active');
@@ -1680,6 +1532,8 @@ function setLangMode(mode) {
 
 function setIconsMode(mode) {
   iconsMode = mode;
+  localStorage.setItem('iconsMode', mode);
+  if (window.syncPref) syncPref('iconsMode', mode);
   document.getElementById('btnIconsOn')?.classList.toggle('active', mode === 'on');
   document.getElementById('btnIconsOff')?.classList.toggle('active', mode === 'off');
   uiMode = deriveUiMode();
@@ -1757,8 +1611,8 @@ function chipHTML(l) {
   switch (uiMode) {
     case 'en-icon':  return ico ? `${ico}<span>${l.en}</span>` : `<span>${l.en}</span>`;
     case 'zh-icon':  return ico ? `${ico}<span>${l.zh}</span>` : `<span>${l.zh}</span>`;
-    case 'en-zh':    return `<span>${l.zh} ${l.en}</span>`;
-    case 'all':      return ico ? `${ico}<span>${l.zh} · ${l.en}</span>` : `<span>${l.zh} · ${l.en}</span>`;
+    case 'en-zh':    return `<span>${l.en} ${l.zh}</span>`;
+    case 'all':      return ico ? `${ico}<span>${l.en} ${l.zh}</span>` : `<span>${l.en} ${l.zh}</span>`;
     case 'zh-only':  return `<span>${l.zh}</span>`;
     case 'en-only':  return `<span>${l.en}</span>`;
     case 'icon-only':return ico ? ico : `<span>${l.zh}</span>`;
@@ -1791,8 +1645,8 @@ function rowLabelText(l) {
   switch (uiMode) {
     case 'en-icon':  return `<span class="row-label-text">${l.en}</span>`;
     case 'zh-icon':  return `<span class="row-label-text">${l.zh}</span>`;
-    case 'en-zh':    return `<span class="row-label-text">${l.zh} ${l.en}</span>`;
-    case 'all':      return `<span class="row-label-text">${l.zh} ${l.en}</span>`;
+    case 'en-zh':    return `<span class="row-label-text">${l.en} ${l.zh}</span>`;
+    case 'all':      return `<span class="row-label-text">${l.en} ${l.zh}</span>`;
     case 'zh-only':  return `<span class="row-label-text">${l.zh}</span>`;
     case 'en-only':  return `<span class="row-label-text">${l.en}</span>`;
     case 'icon-only': return icon || `<span class="row-label-text">${l.zh}</span>`;
@@ -1813,7 +1667,7 @@ function metaTagHTML(l) {
   let label = '';
   switch (uiMode) {
     case 'zh-icon': case 'zh-only': label = l.zh; break;
-    case 'en-zh': case 'all': label = l.zh + ' · ' + l.en; break;
+    case 'en-zh': case 'all': label = l.en + ' ' + l.zh; break;
     case 'icon-only': label = ''; break;
     default: label = l.en;
   }
@@ -1845,7 +1699,7 @@ function rerenderLabels() {
   // Update all previews (so All/全部 text matches current mode)
   Object.keys(state).forEach(updatePreview);
   // Update 造句 workshop titles to match current language
-  const zaojuLabel = langMode === 'zh' ? '造句' : langMode === 'both' ? 'Sentence Workshop · 造句' : 'Sentence Workshop';
+  const zaojuLabel = langMode === 'zh' ? '寫作工坊' : langMode === 'both' ? 'Writing Workshop 寫作工坊' : 'Writing Workshop';
   document.querySelectorAll('.zaoju-title').forEach(el => el.textContent = zaojuLabel);
 }
 
@@ -1871,17 +1725,8 @@ let attrFiltersOpen = false;
 function toggleAttrFilters() {
   attrFiltersOpen = !attrFiltersOpen;
   const panel = document.getElementById('attrFilterPanel');
-  if (attrFiltersOpen) {
-    panel.style.overflow = 'hidden'; // ensure hidden while expanding
-    panel.classList.add('open');
-    // Once expanded, allow dropdowns to overflow the panel
-    panel.addEventListener('transitionend', () => {
-      panel.style.overflow = 'visible';
-    }, { once: true });
-  } else {
-    panel.style.overflow = 'hidden'; // lock before collapsing
-    panel.classList.remove('open');
-  }
+  panel.classList.toggle('open', attrFiltersOpen);
+  if (!attrFiltersOpen) closeAllDropdowns();
   document.getElementById('attrFilterTab').classList.toggle('open', attrFiltersOpen);
   document.getElementById('attrFilterArrow').style.transform = attrFiltersOpen ? 'rotate(180deg)' : '';
 }
@@ -1912,6 +1757,14 @@ function toggleAccordion(name) {
   }
 }
 
+function closeAccordion() {
+  ['Scenario','Level','Interface'].forEach(n => {
+    document.getElementById('accPanel' + n)?.classList.remove('open');
+    document.getElementById('accTab'   + n)?.classList.remove('open');
+  });
+  openPanel = null;
+}
+
 // Close accordion when clicking outside
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.acc-header') && !e.target.closest('.acc-panel')) {
@@ -1934,6 +1787,8 @@ function setLevel(level) {
   // Keep hidden select in sync (applyLevelFonts reads it)
   const sel = document.getElementById('levelSelect');
   if (sel) sel.value = level;
+  localStorage.setItem('currentLevel', level);
+  if (window.syncPref) syncPref('currentLevel', level);
   applyLevelFonts(level);
 }
 
@@ -1945,6 +1800,8 @@ function applyScenarioPreset(key) {
     // Highlight active scenario card
     document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
     event.currentTarget.classList.add('active');
+    // Persist active scenario (localStorage only — session-level, not synced to DB)
+    localStorage.setItem('activeScenario', key);
   }
 }
 
@@ -1955,31 +1812,72 @@ function rebuildCustomScenariosGrid() {
   if (customScenarios.length === 0) { grid.style.display = 'none'; return; }
   grid.style.display = 'flex';
   customScenarios.forEach((s, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative';
     const btn = document.createElement('button');
     btn.className = 'scenario-card';
     btn.innerHTML = `<span class="sc-icon">⭐</span><span class="sc-name">${s.name}</span><span class="sc-desc">Custom scenario</span>`;
-    btn.onclick = () => applyScenario(s.filters);
-    grid.appendChild(btn);
+    btn.onclick = () => {
+      applyScenario(s.filters);
+      // Restore saved interface settings if present
+      if (s.settings) {
+        if (s.settings.scriptMode)      setScript(s.settings.scriptMode);
+        if (s.settings.posMode)         setPosMode(s.settings.posMode);
+        if (s.settings.langMode)        setLangMode(s.settings.langMode);
+        if (s.settings.iconsMode)       setIconsMode(s.settings.iconsMode);
+        if (s.settings.pinyinMode)      setPinyinMode(s.settings.pinyinMode);
+        if (s.settings.workshopDefault) setWorkshopDefault(s.settings.workshopDefault);
+        if (s.settings.textDir)         setTextDir(s.settings.textDir);
+        if (s.settings.currentLevel)    setLevel(s.settings.currentLevel);
+        if (s.settings.fontScale)       applyFontScale(s.settings.fontScale);
+      }
+      document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    // Delete button
+    const del = document.createElement('button');
+    del.className = 'sc-delete';
+    del.innerHTML = '&times;';
+    del.title = 'Delete scenario';
+    del.onclick = (e) => { e.stopPropagation(); deleteCustomScenario(i); };
+    wrap.appendChild(btn);
+    wrap.appendChild(del);
+    grid.appendChild(wrap);
   });
 }
 
 
 // ── SCRIPT MODE ───────────────────────────────────────────────────────────────
-let scriptMode      = 'traditional'; // 'traditional' | 'simplified'
-let pinyinMode      = 'on';          // 'on' | 'off'
-let workshopDefault = localStorage.getItem('workshopDefault') || 'collapsed'; // 'expanded' | 'collapsed'
+let scriptMode      = localStorage.getItem('scriptMode') || 'traditional';
+let pinyinMode      = localStorage.getItem('pinyinMode') || 'on';
+let workshopDefault = localStorage.getItem('workshopDefault') || 'collapsed';
+let textDir         = localStorage.getItem('textDir') || 'horizontal';
 
 function setWorkshopDefault(mode) {
   workshopDefault = mode;
   localStorage.setItem('workshopDefault', mode);
+  if (window.syncPref) syncPref('workshopDefault', mode);
   document.getElementById('btnWorkshopExpanded').classList.toggle('active', mode === 'expanded');
   document.getElementById('btnWorkshopCollapsed').classList.toggle('active', mode === 'collapsed');
   updateTogglePill('workshopToggle');
   render();
 }
 
+function setTextDir(mode) {
+  textDir = mode;
+  localStorage.setItem('textDir', mode);
+  if (window.syncPref) syncPref('textDir', mode);
+  document.getElementById('btnTextHoriz').classList.toggle('active', mode === 'horizontal');
+  document.getElementById('btnTextVert').classList.toggle('active', mode === 'vertical');
+  updateTogglePill('textDirToggle');
+  document.getElementById('cardContainer').classList.toggle('vertical-mode', mode === 'vertical');
+  render();
+}
+
 function setPinyinMode(mode) {
   pinyinMode = mode;
+  localStorage.setItem('pinyinMode', mode);
+  if (window.syncPref) syncPref('pinyinMode', mode);
   document.getElementById('btnPinyinOn').classList.toggle('active', mode === 'on');
   document.getElementById('btnPinyinOff').classList.toggle('active', mode === 'off');
   updateTogglePill('pinyinToggle');
@@ -1988,108 +1886,23 @@ function setPinyinMode(mode) {
 
 function setScript(mode) {
   scriptMode = mode;
+  localStorage.setItem('scriptMode', mode);
+  if (window.syncPref) syncPref('scriptMode', mode);
   document.getElementById('btnTrad').classList.toggle('active', mode === 'traditional');
   document.getElementById('btnSimp').classList.toggle('active', mode === 'simplified');
   updateTogglePill('scriptToggle');
   render();
 }
 
-let posMode = 'abbr'; // 'full' | 'abbr' — abbreviation is default next to definitions
-
-// DB name → display name (verb labels use "Verb - [descriptor]" format)
-// DB full name → learner-friendly display name (verb types use "Verb - [descriptor]" format)
-const POS_RENAME = {
-  'Verb':                                 'Verb (all)',
-  'Intransitive Verb':                    'Verb - intransitive',
-  'Process Verb':                         'Verb - process',
-  'Vp-sep / Separable Process Verb':      'Verb - process (sep.)',
-  'Process Verb (Telic)':                 'Verb - process (telic)',
-  'Stative Verb':                         'Verb - stative',
-  'Vs-attr / Stative Verb (Attributive)': 'Verb - stative (attr.)',
-  'Vs-pred / Stative Verb (Predicative)': 'Verb - stative (pred.)',
-  'Vs-sep / Separable Stative Verb':      'Verb - stative (sep.)',
-  'State-Transitive Verb':                'Verb - state-transitive',
-  'Auxiliary Verb':                       'Verb - auxiliary',
-  'V-sep / Separable Verb':               'Verb - separable',
-};
-
-// DB full name → abbreviation
-const POS_ABBR = {
-  'Verb':                                 'V',
-  'Intransitive Verb':                    'Vi',
-  'Process Verb':                         'Vp',
-  'Vp-sep / Separable Process Verb':      'Vp-sep',
-  'Process Verb (Telic)':                 'Vpt',
-  'Stative Verb':                         'Vs',
-  'Vs-attr / Stative Verb (Attributive)': 'Vs-attr',
-  'Vs-pred / Stative Verb (Predicative)': 'Vs-pred',
-  'Vs-sep / Separable Stative Verb':      'Vs-sep',
-  'State-Transitive Verb':                'Vst',
-  'Auxiliary Verb':                       'Vaux',
-  'V-sep / Separable Verb':               'V-sep',
-  'Noun':                                 'N',
-  'Measure Word':                         'M',
-  'Adverb':                               'Adv',
-  'Preposition':                          'Prep',
-  'Conjunction':                          'Conj',
-  'Particle':                             'Ptcl',
-  'Determiner':                           'Det',
-  'Pronoun':                              'Prn',
-  'Number':                               'Num',
-  'Idiomatic Expression':                 'IE',
-  'Phrase':                               'Ph',
-};
-
-// Chinese POS names — shown when learner taps the header or definition POS chip
-const POS_ZH = {
-  'Verb':                                 '動詞（全部）',
-  'Intransitive Verb':                    '不及物動詞',
-  'Process Verb':                         '過程動詞',
-  'Vp-sep / Separable Process Verb':      '離合過程動詞',
-  'Process Verb (Telic)':                 '完結動詞',
-  'Stative Verb':                         '狀態動詞',
-  'Vs-attr / Stative Verb (Attributive)': '狀態動詞（定語）',
-  'Vs-pred / Stative Verb (Predicative)': '狀態動詞（謂語）',
-  'Vs-sep / Separable Stative Verb':      '離合狀態動詞',
-  'State-Transitive Verb':                '狀態及物動詞',
-  'Auxiliary Verb':                       '助動詞',
-  'V-sep / Separable Verb':              '離合詞',
-  'Noun':                                 '名詞',
-  'Measure Word':                         '量詞',
-  'Adverb':                               '副詞',
-  'Preposition':                          '介詞',
-  'Conjunction':                          '連詞',
-  'Particle':                             '助詞',
-  'Determiner':                           '限定詞',
-  'Pronoun':                              '代詞',
-  'Number':                               '數詞',
-  'Idiomatic Expression':                 '成語',
-  'Phrase':                               '詞組',
-};
-
-// Returns the display name for a raw DB POS label
-function posDisplay(raw) {
-  return POS_RENAME[raw] || raw;
-}
-
-function posLabel(raw) {
-  if (posMode === 'abbr') return POS_ABBR[raw] || raw;
-  return posDisplay(raw); // full display name
-}
-
-// POS group membership — selecting 'Verb' matches all verb subtypes
-const POS_GROUPS = {
-  'Verb': Object.keys(POS_ABBR).filter(k => k !== 'Verb' && POS_ABBR[k].startsWith('V')),
-};
-
-function posMatchesFilter(pos, filter) {
-  if (pos === filter) return true;
-  const group = POS_GROUPS[filter];
-  return group ? group.includes(pos) : false;
-}
+let posMode = localStorage.getItem('posMode') || 'abbr';
+</script>
+@include('partials.lexicon._pos-data')
+<script>
 
 function setPosMode(mode) {
   posMode = mode;
+  localStorage.setItem('posMode', mode);
+  if (window.syncPref) syncPref('posMode', mode);
   document.getElementById('btnPosAbbr').classList.toggle('active', mode === 'abbr');
   document.getElementById('btnPosFull').classList.toggle('active', mode === 'full');
   updateTogglePill('posToggle');
@@ -2101,87 +1914,15 @@ function setPosMode(mode) {
   render();
 }
 
-// Language toggle for domain chip and header POS chips.
-// Cycles: preferred language ↔ Chinese.
-// Preferred language defaults to 'en' unless langMode is zh/zh-icon/zh-only.
-function toggleLangChip(e, chip) {
-  e.stopPropagation();
-  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-  const alt = preferred === 'zh' ? 'en' : 'zh';
-  const current = chip.dataset.state || preferred;
-  const next = current === preferred ? alt : preferred;
-  chip.dataset.state = next;
-  chip.textContent = chip.dataset[next] || chip.dataset.en;
-}
-
-// Attribute chip toggle — toggles ALL translatable elements within the chip
-// (both .card-attr-header and .attr-label spans) between preferred language and Chinese.
-function toggleAttrLang(e) {
-  e.stopPropagation();
-  e.preventDefault();
-  const chip = e.currentTarget; // the .card-attr div
-  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-  const alt = preferred === 'zh' ? 'en' : 'zh';
-  chip.querySelectorAll('[data-en][data-zh]').forEach(el => {
-    const current = el.dataset.state || preferred;
-    const next = current === preferred ? alt : preferred;
-    el.dataset.state = next;
-    el.textContent = el.dataset[next] || el.dataset.en;
-  });
-}
-
-// Per-definition POS chip — 3-way cycle: abbr → full EN name → Chinese name → abbr
-function cyclePosChip(e, chip) {
-  e.stopPropagation();
-  e.preventDefault();
-  const order = ['abbr', 'full', 'zh'];
-  const current = chip.dataset.state || 'abbr';
-  const next = order[(order.indexOf(current) + 1) % 3];
-  chip.dataset.state = next;
-  chip.textContent = chip.dataset[next] || chip.dataset.abbr;
-}
-
-// ── FLUENCY LEVEL — font sizes per element ────────────────────────────────────
-// Each level defines rem sizes for: [hanzi-trad, hanzi-simp, pinyin, definition, usage-note, formula, ex-cn, ex-en]
-const LEVEL_FONTS = {
-  beginner:   { hanzi: 3.8, simp: 1.9, pinyin: 1.2, defn: 2.0, note: 1.1, formula: 1.1, exCn: 2.0, exEn: 1.1, scale: 130 },
-  learner:    { hanzi: 3.2, simp: 1.6, pinyin: 1.1, defn: 1.9, note: 1.0, formula: 1.0, exCn: 1.9, exEn: 1.0, scale: 115 },
-  developing: { hanzi: 2.8, simp: 1.4, pinyin: 1.0, defn: 1.5, note: 0.9, formula: 1.0, exCn: 1.8, exEn: 1.0, scale: 100 },
-  advanced:   { hanzi: 2.4, simp: 1.2, pinyin: 0.9, defn: 1.6, note: 0.9, formula: 0.9, exCn: 1.6, exEn: 0.9, scale: 90  },
-  native:     { hanzi: 2.0, simp: 1.0, pinyin: 0.8, defn: 1.4, note: 0.85,formula: 0.85,exCn: 1.4, exEn: 0.85,scale: 85  },
-};
-
-let currentLevel = 'developing';
+let currentLevel = localStorage.getItem('currentLevel') || 'developing';
 let fontScale = 100;
-const FONT_STEPS = [75, 85, 100, 115, 130, 150];
-
-function applyLevelFonts(level) {
-  currentLevel = level;
-  const f = LEVEL_FONTS[level];
-  if (!f) return;
-  // Apply CSS vars on root for live update
-  const r = document.documentElement;
-  r.style.setProperty('--fs-hanzi',   f.hanzi   + 'rem');
-  r.style.setProperty('--fs-simp',    f.simp    + 'rem');
-  r.style.setProperty('--fs-pinyin',  f.pinyin  + 'rem');
-  r.style.setProperty('--fs-defn',    f.defn    + 'rem');
-  r.style.setProperty('--fs-note',    f.note    + 'rem');
-  r.style.setProperty('--fs-formula', f.formula + 'rem');
-  r.style.setProperty('--fs-ex-cn',   f.exCn    + 'rem');
-  r.style.setProperty('--fs-ex-en',   f.exEn    + 'rem');
-  applyFontScale(f.scale);
-}
+</script>
+@include('partials.lexicon._level-fonts')
+<script>
 
 document.getElementById('levelSelect')?.addEventListener('change', function() {
   applyLevelFonts(this.value);
 });
-
-// ── FONT SIZE MANUAL OVERRIDE ─────────────────────────────────────────────────
-function applyFontScale(scale) {
-  fontScale = scale;
-  document.documentElement.style.fontSize = scale + '%';
-  document.getElementById('fontVal').textContent = scale + '%';
-}
 
 document.getElementById('fontUp').addEventListener('click', () => {
   const idx = FONT_STEPS.indexOf(fontScale);
@@ -2192,8 +1933,60 @@ document.getElementById('fontDown').addEventListener('click', () => {
   if (idx > 0) applyFontScale(FONT_STEPS[idx - 1]);
 });
 
-// Init at developing level
-applyLevelFonts('developing');
+// Init at stored level (or default 'developing')
+applyLevelFonts(currentLevel);
+setLevel(currentLevel);
+
+// ── Restore UI toggle states from localStorage ──────────────────────────────
+(function restoreToggles() {
+  // Script
+  if (scriptMode !== 'traditional') {
+    document.getElementById('btnTrad')?.classList.remove('active');
+    document.getElementById('btnSimp')?.classList.add('active');
+  }
+  // POS
+  if (posMode !== 'abbr') {
+    document.getElementById('btnPosAbbr')?.classList.remove('active');
+    document.getElementById('btnPosFull')?.classList.add('active');
+  }
+  // Language
+  if (langMode !== 'en') {
+    document.getElementById('btnLangEn')?.classList.remove('active');
+    var lmap = { zh: 'btnLangZh', both: 'btnLangBoth' };
+    document.getElementById(lmap[langMode])?.classList.add('active');
+    uiMode = deriveUiMode();
+    setSidebarWidth(uiMode);
+  }
+  // Icons
+  if (iconsMode !== 'on') {
+    document.getElementById('btnIconsOn')?.classList.remove('active');
+    document.getElementById('btnIconsOff')?.classList.add('active');
+    uiMode = deriveUiMode();
+    setSidebarWidth(uiMode);
+  }
+  // Pinyin
+  if (pinyinMode !== 'on') {
+    document.getElementById('btnPinyinOn')?.classList.remove('active');
+    document.getElementById('btnPinyinOff')?.classList.add('active');
+    document.getElementById('cardContainer')?.classList.add('no-pinyin');
+  }
+  // Workshop
+  if (workshopDefault !== 'collapsed') {
+    document.getElementById('btnWorkshopCollapsed')?.classList.remove('active');
+    document.getElementById('btnWorkshopExpanded')?.classList.add('active');
+  }
+  // Text direction
+  if (textDir !== 'horizontal') {
+    document.getElementById('btnTextHoriz')?.classList.remove('active');
+    document.getElementById('btnTextVert')?.classList.add('active');
+    document.getElementById('cardContainer')?.classList.add('vertical-mode');
+  }
+  // Update all toggle pills
+  ['scriptToggle','posToggle','langToggle','iconsToggle','pinyinToggle','workshopToggle','textDirToggle'].forEach(function(id) {
+    updateTogglePill(id);
+  });
+  // Note: rerenderLabels() is called later in INIT after state & DOMAIN_GROUPS are defined
+})();
 
 const PREVIEW_ICONS = {
   register:    { literary:'🦋', formal:'🐝', neutral:'🐞', colloquial:'🪲', informal:'🦗', slang:'🕷️' },
@@ -2258,6 +2051,10 @@ document.querySelectorAll('.filter-row').forEach(row => {
       row.classList.add('open');
       drop.classList.add('open');
       openDropdown = group;
+      // Position fixed dropdown beneath the trigger row
+      const rect = row.getBoundingClientRect();
+      drop.style.top = rect.bottom + 'px';
+      drop.style.left = rect.left + 'px';
     }
   });
 });
@@ -2325,6 +2122,28 @@ DOMAIN_GROUPS.forEach(g => g.domains.forEach(d => {
   DOMAIN_LABEL_MAP[d.slug]    = d.label;
   DOMAIN_LABEL_MAP_ZH[d.slug] = d.label_zh || d.label;
 }));
+
+// ── WORD INDEX for sentence segmentation ──
+const WORD_INDEX = {};
+WORDS.forEach(w => {
+  if (w.traditional && !WORD_INDEX[w.traditional]) {
+    WORD_INDEX[w.traditional] = {
+      smartId: w.smart_id,
+      trad:    w.traditional,
+      simp:    w.simplified || w.traditional,
+      pinyin:  w.pinyin || '',
+      pos:     (w.definitions && w.definitions[0]) ? w.definitions[0].pos : '',
+      def:     (w.definitions && w.definitions[0]) ? w.definitions[0].def : (w.definition || ''),
+    };
+  }
+  if (w.simplified && w.simplified !== w.traditional && !WORD_INDEX[w.simplified]) {
+    WORD_INDEX[w.simplified] = WORD_INDEX[w.traditional];
+  }
+});
+
+</script>
+@include('partials.lexicon._segmentation')
+<script>
 
 // Populate domain refine select from DOMAIN_GROUPS (optgroup per group)
 (function() {
@@ -2453,12 +2272,10 @@ function matchWord(w) {
   if (posFilter && !(w.definitions || []).some(d => posMatchesFilter(d.pos, posFilter))) return false;
   // Relative proximity refine: match if word has the selected proximity bucket
   if (relFilter && !(w.relProximity || []).includes(relFilter)) return false;
-  // Domain refine: single-select — matches primary OR secondary domain
-  if (domainFilter && w.domain !== domainFilter && w.secondaryDomain !== domainFilter) return false;
+  // Domain refine: matches any domain across all senses
+  if (domainFilter && !(w.allDomains || []).includes(domainFilter)) return false;
   return true;
 }
-
-const connoClass = { positive: 'conno-pos', neutral: 'conno-neu', negative: 'conno-neg', 'context-dependent': 'conno-ctx' };
 
 function intensityBars(n) {
   const heights = [4, 7, 11, 15, 19];
@@ -2622,8 +2439,8 @@ function renderSavedDeck(wordKey) {
       ${items.map((item, i) => `
         <div class="saved-item">
           <div>
-            <div class="saved-item-cn">${highlightWord(item.cn, {traditional: wordKey, simplified: ''})}</div>
-            <div class="sent-en">${item.en}</div>
+            <div class="saved-item-cn">${segmentedHTML(item.cn, {traditional: wordKey, simplified: ''})}</div>
+            <div class="ex-sent-en">${item.en}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">
             <span class="saved-item-source">${item.source}</span>
@@ -2650,114 +2467,77 @@ function removeSaved(wordKey, idx) {
 }
 
 // ── CARD ATTRIBUTE COLUMN HELPERS ─────────────────────────────────────────────
-const ATTR_LABELS = {
-  register:    { literary:['🦋','Literary'], formal:['🐝','Formal'], neutral:['🐞','Standard'], colloquial:['🪲','Colloquial'], informal:['🦗','Informal'], slang:['🕷️','Slang'] },
-  connotation: { positive:['☀️','Positive'], neutral:['⛅','Neutral'], negative:['⛈️','Negative'], 'context-dependent':['🌦️','Context'] },
-  channel:     { 'spoken-only':['🦎','Spoken Only'], 'spoken-dominant':['🐍','Spoken Dominant'], fluid:['🦜','Fluid'], 'written-dominant':['🦚','Written Dominant'], 'written-only':['🐉','Written Only'] },
-  dimension:   { abstract:['🐙','Abstract'], concrete:['🐢','Concrete'], internal:['🐟','Internal'], external:['🦂','External'], fluid:['🦀','Fluid'] },
-  intensity:   { 1:['🌸','Faint'], 2:['🌼','Mild'], 3:['🪷','Moderate'], 4:['🌻','Strong'], 5:['🌺','Blazing'] },
-  tocfl:       { prep:['🌑','Prep'], entry:['🌒','Entry'], basic:['🌓','Basic'], intermediate:['🌔','Intermediate'], advanced:['🌕','Advanced'], high:['🌖','High'], fluency:['🌝','Fluency'] },
-};
-
-function metaAttrLabel(cat, key) {
-  return ATTR_LABELS[cat]?.[key] || ['', String(key)];
-}
-
-// Shared ZH label lookup for attribute chips (used in both cardAttr and cardAttrMulti)
-const ATTR_ZH = {
-  register:    { literary:'文學體', formal:'正式', neutral:'標準', colloquial:'口語', informal:'非正式', slang:'俚語' },
-  connotation: { positive:'褒義', neutral:'中性', negative:'貶義', 'context-dependent':'隨境' },
-  channel:     { 'spoken-only':'純口語', 'spoken-dominant':'偏口語', fluid:'流動', 'written-dominant':'偏書面', 'written-only':'純書面' },
-  dimension:   { abstract:'抽象', concrete:'具體', internal:'內在', external:'外在', fluid:'流動' },
-  intensity:   { 1:'微', 2:'淡', 3:'中', 4:'濃', 5:'烈' },
-  tocfl:       { prep:'準備', entry:'入門', basic:'基礎', advanced:'高階', high:'精通', fluency:'流利' },
-};
-
-// Chinese header names for attribute chips
-const ATTR_HEADER_ZH = {
-  register: '語域', connotation: '感情色彩', channel: '媒介',
-  dimension: '維度', intensity: '強度', tocfl: '華測',
-};
-
-// Multi-value chip — e.g. Dimension: 🐙 Abstract · 🐢 Concrete
-// Clicking anywhere on the chip toggles header + all values to/from Chinese.
-function cardAttrMulti(cat, keys, header) {
-  const showIcon  = iconsMode === 'on';
-  const showLabel = uiMode !== 'icon-only';
-  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-  const isBoth  = (uiMode === 'all' || uiMode === 'en-zh');
-  const hdrZh   = ATTR_HEADER_ZH[cat] || header;
-  const initHdr = preferred === 'zh' ? hdrZh : isBoth ? `${header} · ${hdrZh}` : header;
-  const valueHTML = keys.map(k => {
-    const [icon, label] = metaAttrLabel(cat, k);
-    const zhLabel = ATTR_ZH[cat]?.[k] || label;
-    const initLabel = preferred === 'zh' ? zhLabel : isBoth ? `${label} · ${zhLabel}` : label;
-    return `<span class="attr-val-item">${showIcon && icon ? `<span class="attr-icon">${icon}</span>` : ''}${showLabel ? `<span class="attr-label" data-en="${label}" data-zh="${zhLabel}" data-state="${preferred}">${initLabel}</span>` : ''}</span>`;
-  }).join('');
-  return `<div class="card-attr attr-${cat}" onclick="toggleAttrLang(event)">
-    <div class="card-attr-header" data-en="${header}" data-zh="${hdrZh}" data-state="${preferred}">${initHdr}</div>
-    <div class="card-attr-value multi">${valueHTML}</div>
-  </div>`;
-}
-
-function cardAttr(cat, key, header, labelPair, extraClass = '') {
-  const [icon, label] = labelPair;
-  const showIcon  = iconsMode === 'on';
-  const showLabel = uiMode !== 'icon-only';
-  const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-  const isBoth  = (uiMode === 'all' || uiMode === 'en-zh');
-  const zhLabel = ATTR_ZH[cat]?.[key] || label;
-  const hdrZh   = ATTR_HEADER_ZH[cat] || header;
-  const initLabel = preferred === 'zh' ? zhLabel : isBoth ? `${label} · ${zhLabel}` : label;
-  const initHdr   = preferred === 'zh' ? hdrZh   : isBoth ? `${header} · ${hdrZh}`  : header;
-  return `<div class="card-attr attr-${cat} ${extraClass}" onclick="toggleAttrLang(event)">
-    <div class="card-attr-header" data-en="${header}" data-zh="${hdrZh}" data-state="${preferred}">${initHdr}</div>
-    <div class="card-attr-value">
-      ${showIcon && icon ? `<span class="attr-icon">${icon}</span>` : ''}
-      ${showLabel ? `<span class="attr-label" data-en="${label}" data-zh="${zhLabel}" data-state="${preferred}">${initLabel}</span>` : ''}
-    </div>
-  </div>`;
-}
+</script>
+@include('partials.lexicon._attr-data')
+@include('partials.lexicon._word-header-js')
+@include('partials.lexicon._example-sentence-js')
+<script>
 
 function renderCard(w, idx) {
   const wordKey = w.traditional;
   const extras = [...(w.extraExamples || []), ...(EXTRA_SENTENCES[wordKey] || [])];
   const allDefaults = [w.example, ...extras];
 
-  const defaultSentsHTML = allDefaults.map((s, i) => `
-    <div class="default-sent">
-      <span class="sent-num">${i + 1}</span>
-      <div class="sent-body">
-        <div class="sent-cn">${highlightWord(s.cn, w)}</div>
-        <div class="sent-en">${s.en}</div>
-      </div>
-      <button class="save-sent-btn" onclick="saveDefault('${wordKey}', ${i})">＋ Save</button>
-    </div>
-  `).join('');
+  // Primary POS for example chips
+  const primaryPosSlug = (w.definitions || [])[0]?.posAbbr || (w.definitions || [])[0]?.pos || '';
+  const primaryPosChip = primaryPosSlug ? (POS_ABBR[primaryPosSlug] || POS_ABBR[primaryPosSlug.toLowerCase()] || primaryPosSlug) : '';
+
+  const defaultSentsHTML = allDefaults.map((s, i) => renderExSentence(s, {
+    pos: primaryPosChip,
+    vertical: textDir === 'vertical',
+    segFn: segmentedHTML,
+    segCtx: w,
+  })).join('');
 
   // Collect all unique POS across definitions for the mobile header summary
   const allPOS = [...new Set((w.definitions || []).map(d => d.pos).filter(Boolean))];
-  // Domain chip HTML (used in card-hdr-mid) — tappable to toggle EN ↔ ZH
+  // Domain chips HTML — two-tier chevron: Primary ⌄ Sec1, Sec2, Sec3
   const domainChipHTML = (() => {
-    const p    = DOMAIN_LABEL_MAP[w.domain];
-    const pZh  = DOMAIN_LABEL_MAP_ZH[w.domain];
-    const s    = w.secondaryDomain ? DOMAIN_LABEL_MAP[w.secondaryDomain]    : null;
-    const sZh  = w.secondaryDomain ? DOMAIN_LABEL_MAP_ZH[w.secondaryDomain] : null;
-    if (!p) return '';
-    const enLabel = [p,   s  ].filter(Boolean).join(' ~ ');
-    const zhLabel = [pZh, sZh].filter(Boolean).join(' ~ ');
+    const pairs = w.domainPairs || [];
+    if (!pairs.length) return '';
+    // Group secondaries by primary
+    const grouped = {};
+    pairs.forEach(d => {
+      if (!d.p) return;
+      if (!grouped[d.p]) grouped[d.p] = [];
+      if (d.s && !grouped[d.p].includes(d.s)) grouped[d.p].push(d.s);
+    });
     const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-    const display   = preferred === 'zh' ? zhLabel : (uiMode === 'all' || uiMode === 'en-zh') ? `${enLabel} · ${zhLabel}` : enLabel;
-    return `<div class="card-domain-row"><span class="card-domain" data-en="${enLabel}" data-zh="${zhLabel}" data-state="${preferred}" onclick="toggleLangChip(event,this)" title="Tap to toggle 中文">${display}</span></div>`;
+    return Object.entries(grouped).map(([p, secs]) => {
+      const pEn = DOMAIN_LABEL_MAP[p]; const pZh = DOMAIN_LABEL_MAP_ZH[p];
+      if (!pEn) return '';
+      if (!secs.length) {
+        const display = preferred === 'zh' ? pZh : (uiMode === 'all' || uiMode === 'en-zh') ? `${pEn} ${pZh}` : pEn;
+        return `<div class="card-domain-row"><span class="card-domain" data-en="${pEn}" data-zh="${pZh}" data-state="${preferred}" onclick="toggleLangChip(event,this)">${display}</span></div>`;
+      }
+      const secEn = secs.map(s => DOMAIN_LABEL_MAP[s]).filter(Boolean).join(', ');
+      const secZh = secs.map(s => DOMAIN_LABEL_MAP_ZH[s]).filter(Boolean).join(', ');
+      const pDisplay = preferred === 'zh' ? pZh : (uiMode === 'all' || uiMode === 'en-zh') ? `${pEn} ${pZh}` : pEn;
+      // Pair each secondary EN label with its ZH translation inline
+      const sDisplay = preferred === 'zh' ? secZh : (uiMode === 'all' || uiMode === 'en-zh')
+        ? secs.map(s => { const en = DOMAIN_LABEL_MAP[s]; const zh = DOMAIN_LABEL_MAP_ZH[s]; return en && zh ? `${en} ${zh}` : (en || ''); }).filter(Boolean).join(', ')
+        : secEn;
+      return `<div class="card-domain-row"><div class="card-domain-stack" data-p-en="${pEn}" data-p-zh="${pZh}" data-s-en="${secEn}" data-s-zh="${secZh}" data-state="${preferred}" onclick="toggleLangChip(event,this)">
+        <span class="card-domain-primary">${pDisplay}</span>
+        <span class="card-domain-chevron">⌄</span>
+        <span class="card-domain-secondary">${sDisplay}</span>
+      </div></div>`;
+    }).filter(Boolean).join('');
   })();
   // Simplified char (different from traditional)
   const simpCharVal = w.traditional !== w.simplified
     ? (scriptMode === 'simplified' ? w.traditional : w.simplified)
     : '';
 
+  // Saved indicator
+  const hasSaved = window.__AUTH && w.senseIds && w.senseIds.some(
+    id => (window.__AUTH.savedSenseIds || []).includes(id)
+  );
+  const savedStarHTML = hasSaved ? '<span class="card-saved-star" title="Saved">&#9733;</span>' : '';
+
   return `
   <div class="word-card" style="animation-delay:${idx * 0.04}s; cursor:pointer;" id="card-${wordKey}" onclick="openCard(event, '${wordKey}')">
-
+    ${savedStarHTML}
     <!-- Zone 1: primary char + optional ⇌ switch icon -->
     <div class="card-hanzi">
       <div class="hanzi-primary-wrap">
@@ -2771,9 +2551,9 @@ function renderCard(w, idx) {
       ${domainChipHTML}
       ${allPOS.length ? `<div class="card-pos-summary">${allPOS.map(p => {
         const enText = `${posDisplay(p)} · ${POS_ABBR[p]||p}`;
-        const zhText = `${POS_ZH[p]||posDisplay(p)} · ${POS_ABBR[p]||p}`;
+        const zhText = `${POS_ZH[p]||posDisplay(p)}`;
         const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-        const display = preferred === 'zh' ? zhText : (uiMode === 'all' || uiMode === 'en-zh') ? `${enText} · ${zhText}` : enText;
+        const display = preferred === 'zh' ? zhText : (uiMode === 'all' || uiMode === 'en-zh') ? `${enText} ${zhText}` : enText;
         return `<span class="card-pos-hdr" data-en="${enText}" data-zh="${zhText}" data-state="${preferred}" onclick="toggleLangChip(event,this)" title="Tap to toggle 中文">${display}</span>`;
       }).join('')}</div>` : ''}
       ${w.pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${w.pinyin}</span></div>` : ''}
@@ -2809,7 +2589,7 @@ function renderCard(w, idx) {
 
     <!-- CARD ACTIONS — save + share -->
     <div class="card-actions">
-      <button class="card-action-btn" onclick="handleSaveToCollection(event, '${wordKey}')" title="Save to collection">＋</button>
+      <button class="card-action-btn${hasSaved ? ' saved' : ''}" onclick="handleSaveToCollection(event, '${wordKey}')" title="${hasSaved ? 'Unsave' : 'Save to collection'}">${hasSaved ? '&#9733;' : '＋'}</button>
       <button class="card-action-btn" onclick="handleShare(event, '${wordKey}')" title="Share this word">↗</button>
     </div>
 
@@ -2817,9 +2597,9 @@ function renderCard(w, idx) {
     <div class="zaoju-panel">
       <div class="zaoju-header">
         <div class="zaoju-title">${
-          langMode === 'zh' ? '造句' :
-          langMode === 'both' ? 'Sentence Workshop · 造句' :
-          'Sentence Workshop'
+          langMode === 'zh' ? '寫作工坊' :
+          langMode === 'both' ? 'Writing Workshop 寫作工坊' :
+          'Writing Workshop'
         }</div>
         <button class="zaoju-toggle" onclick="toggleZaoju('${wordKey}')">${workshopDefault === 'expanded' ? '▴ collapse' : '▾ expand'}</button>
       </div>
@@ -2827,7 +2607,7 @@ function renderCard(w, idx) {
       <div id="zaoju-body-${wordKey}" style="display:${workshopDefault === 'expanded' ? 'flex' : 'none'}; flex-direction:column; gap:0.75rem;">
 
         <!-- Default sentences -->
-        <div class="default-sentences">${defaultSentsHTML}</div>
+        <div class="ex-sentences">${defaultSentsHTML}</div>
 
         <!-- Saved deck -->
         <div id="deck-wrap-${wordKey}">${renderSavedDeck(wordKey)}</div>
@@ -2843,7 +2623,7 @@ function renderCard(w, idx) {
           <div class="ai-instruction">Write your own sentence using <strong style="color:var(--gold)">${w.traditional}</strong>. AI will check grammar, register, and naturalness — then you can save the result.</div>
           <div class="ai-input-row">
             <textarea class="ai-textarea" id="critique-input-${wordKey}" placeholder="在這裡寫你的句子… Write your sentence here…" rows="2"></textarea>
-            <button class="ai-submit-btn" onclick="runCritique('${wordKey}')">分析 Analyse →</button>
+            <button class="ai-submit-btn" onclick="runCritique('${wordKey}')">Analyse 分析 →</button>
           </div>
           <div id="critique-result-${wordKey}"></div>
         </div>
@@ -2853,7 +2633,7 @@ function renderCard(w, idx) {
           <div class="ai-instruction">Ask AI to write a sentence using <strong style="color:var(--gold)">${w.traditional}</strong> around any theme, topic, or subject you love.</div>
           <div class="ai-input-row">
             <input type="text" class="ai-theme-input" id="theme-input-${wordKey}" placeholder="e.g. soccer, cooking, my grandmother, space travel…">
-            <button class="ai-submit-btn" onclick="runTheme('${wordKey}')">生成 Generate →</button>
+            <button class="ai-submit-btn" onclick="runTheme('${wordKey}')">Generate 生成 →</button>
           </div>
           <div id="theme-result-${wordKey}"></div>
         </div>
@@ -2878,35 +2658,174 @@ function toggleZaoju(key) {
   }
 }
 
-function toggleSecondaryChar(e, btn) {
-  e.stopPropagation();
-  const secondary = btn.dataset.secondary;
-  if (!secondary) return;
-  const container = btn.closest('.card-hanzi');
-  const existing = container.querySelector('.hanzi-secondary');
-  if (existing) {
-    existing.classList.add('leaving');
-    existing.addEventListener('animationend', () => existing.remove(), { once: true });
-    btn.style.opacity = '0.45';
-  } else {
-    const span = document.createElement('span');
-    span.className = 'hanzi-secondary entering';
-    span.textContent = secondary;
-    container.appendChild(span);
-    span.addEventListener('animationend', () => span.classList.remove('entering'), { once: true });
-    btn.style.opacity = '1';
-  }
-}
+// toggleSecondaryChar loaded from shared partial
 
 function handleSaveToCollection(e, wordKey) {
   e.stopPropagation();
-  // Phase 2: open collection picker dropdown
-  alert('Collections coming soon — sign up to save words!');
+  if (!window.__AUTH) { window.location.href = '/login'; return; }
+
+  // If popover already open, clicking the button again dismisses it
+  const existing = document.getElementById('srpCollectionPicker');
+  if (existing && existing.dataset.wordKey === wordKey) {
+    srpDismissCollectionPicker();
+    return;
+  }
+
+  const word = WORDS.find(w => w.traditional === wordKey || w.smart_id === wordKey);
+  if (!word || !word.senseIds || !word.senseIds.length) return;
+  const senseId = word.senseIds[0];
+  const btn = e.currentTarget;  // capture before async
+  const isSaved = (window.__AUTH.savedSenseIds || []).includes(senseId);
+
+  if (isSaved) {
+    // Already saved — show collection picker directly
+    srpShowCollectionPicker(wordKey, senseId, btn);
+    return;
+  }
+
+  // Not saved — save first, then show picker
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+  fetch('/api/saved-senses/' + senseId, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.saved) {
+      if (!window.__AUTH.savedSenseIds.includes(senseId)) {
+        window.__AUTH.savedSenseIds.push(senseId);
+      }
+      const card = document.getElementById('card-' + wordKey);
+      if (card) {
+        const star = card.querySelector('.card-saved-star');
+        if (!star) {
+          const s = document.createElement('span');
+          s.className = 'card-saved-star';
+          s.title = 'Saved';
+          s.innerHTML = '&#9733;';
+          card.insertBefore(s, card.firstChild);
+        }
+      }
+      if (btn) { btn.innerHTML = '&#9733;'; btn.title = 'Saved'; btn.classList.add('saved'); }
+      srpShowCollectionPicker(wordKey, senseId, btn);
+    }
+  });
+}
+
+// ── SRP COLLECTION PICKER ──────────────────────────────────────────────────
+var _srpCpDismissHandler = null;
+
+function _srpCsrf() {
+  return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
+function _srpEscHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function srpShowCollectionPicker(wordKey, senseId, anchorBtn) {
+  srpDismissCollectionPicker();
+  const collections = window.__AUTH.collections || [];
+  let html = '<div class="srp-cp-title">Add to collection</div>';
+
+  if (collections.length === 0) {
+    html += '<div class="srp-cp-empty">No collections yet</div>';
+  } else {
+    collections.forEach(c => {
+      const checked = (c.senseIds || []).includes(senseId) ? ' checked' : '';
+      html += `<label class="srp-cp-item">
+        <input type="checkbox"${checked} onchange="srpToggleCollectionSense(${c.id},${senseId},this)">
+        <span>${_srpEscHtml(c.name)}</span></label>`;
+    });
+  }
+
+  html += `<div class="srp-cp-new">
+    <input type="text" id="srpCpNewInput-${senseId}" placeholder="New collection…"
+      onkeydown="if(event.key==='Enter')srpCreateCollection(${senseId},'${wordKey}')">
+    <button onclick="srpCreateCollection(${senseId},'${wordKey}')" title="Create">+</button>
+  </div>`;
+
+  const popover = document.createElement('div');
+  popover.className = 'srp-cp';
+  popover.id = 'srpCollectionPicker';
+  popover.dataset.wordKey = wordKey;
+  popover.innerHTML = html;
+
+  // Anchor to the card-actions div
+  const actionsDiv = anchorBtn ? anchorBtn.closest('.card-actions') : null;
+  if (actionsDiv) {
+    actionsDiv.appendChild(popover);
+  }
+
+  // Click outside to dismiss
+  setTimeout(() => {
+    _srpCpDismissHandler = (e) => {
+      if (!e.target.closest('.srp-cp') && !e.target.closest('.card-action-btn')) {
+        srpDismissCollectionPicker();
+      }
+    };
+    document.addEventListener('click', _srpCpDismissHandler);
+  }, 10);
+}
+
+function srpDismissCollectionPicker() {
+  const el = document.getElementById('srpCollectionPicker');
+  if (el) el.remove();
+  if (_srpCpDismissHandler) {
+    document.removeEventListener('click', _srpCpDismissHandler);
+    _srpCpDismissHandler = null;
+  }
+}
+
+function srpToggleCollectionSense(collectionId, senseId, checkbox) {
+  const method = checkbox.checked ? 'POST' : 'DELETE';
+  fetch('/api/collections/' + collectionId + '/senses/' + senseId, {
+    method: method,
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _srpCsrf() },
+  }).then(() => {
+    const c = (window.__AUTH.collections || []).find(c => c.id === collectionId);
+    if (!c) return;
+    if (checkbox.checked) {
+      if (!(c.senseIds || []).includes(senseId)) c.senseIds.push(senseId);
+    } else {
+      c.senseIds = (c.senseIds || []).filter(id => id !== senseId);
+    }
+  });
+}
+
+function srpCreateCollection(senseId, wordKey) {
+  const input = document.getElementById('srpCpNewInput-' + senseId);
+  if (!input || !input.value.trim()) return;
+  const name = input.value.trim();
+  input.disabled = true;
+
+  fetch('/api/collections', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _srpCsrf() },
+    body: JSON.stringify({ name }),
+  })
+  .then(r => r.json())
+  .then(collection => {
+    return fetch('/api/collections/' + collection.id + '/senses/' + senseId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _srpCsrf() },
+    }).then(() => collection);
+  })
+  .then(collection => {
+    if (!window.__AUTH.collections) window.__AUTH.collections = [];
+    window.__AUTH.collections.push({ id: collection.id, name: collection.name, senseIds: [senseId] });
+    // Find the anchor button and re-show picker
+    const card = document.getElementById('card-' + wordKey);
+    const btn = card ? card.querySelector('.card-action-btn.saved') : null;
+    srpShowCollectionPicker(wordKey, senseId, btn);
+  });
 }
 
 function handleShare(e, wordKey) {
   e.stopPropagation();
-  const word = WORDS.find(w => (w.smart_id || w.traditional) === wordKey);
+  const word = WORDS.find(w => w.traditional === wordKey || w.smart_id === wordKey);
   const text = word ? `${word.traditional} — ${(word.definitions||[])[0]?.def || ''}` : wordKey;
   if (navigator.share) {
     navigator.share({ title: '流動 Living Lexicon', text, url: window.location.href });
@@ -2944,7 +2863,7 @@ function saveDefault(wordKey, sentIdx) {
   const saved = saveToWord(wordKey, { cn: sent.cn, en: sent.en, source: 'Default example' });
   refreshDeckWrap(wordKey);
   // Grey out button
-  const btn = document.querySelector(`#card-${wordKey} .default-sent:nth-child(${sentIdx + 1}) .save-sent-btn`);
+  const btn = document.querySelector(`#card-${wordKey} .ex-sent:nth-child(${sentIdx + 1}) .ex-sent-save`);
   if (btn) { btn.textContent = '✓ Saved'; btn.classList.add('saved'); btn.disabled = true; }
 }
 
@@ -2977,19 +2896,19 @@ async function runCritique(wordKey) {
       <div class="ai-response">
         <div class="ai-response-label" style="color:${verdictColor}">${verdictLabel}</div>
         <div class="ai-response-text">
-          <span class="resp-cn">${highlightWord(data.corrected_cn, w)}</span>
+          <span class="resp-cn">${segmentedHTML(data.corrected_cn, w)}</span>
           <span class="resp-en">${data.corrected_en}</span>
           <span class="resp-note">${data.feedback}</span>
           ${data.register_note ? `<span class="resp-note" style="margin-top:0.2rem">${data.register_note}</span>` : ''}
         </div>
         <div class="ai-response-actions">
-          <button class="save-sent-btn" onclick="saveAIResult('${wordKey}', ${JSON.stringify(data.corrected_cn).replace(/'/g,"\\'")} , ${JSON.stringify(data.corrected_en).replace(/'/g,"\\'")} , 'My sentence (AI verified)')">＋ Save to My Dictionary</button>
+          <button class="ex-sent-save" onclick="saveAIResult('${wordKey}', ${JSON.stringify(data.corrected_cn).replace(/'/g,"\\'")} , ${JSON.stringify(data.corrected_en).replace(/'/g,"\\'")} , 'My sentence (AI verified)')">＋ Save to My Dictionary</button>
         </div>
       </div>`;
   } catch(e) {
     resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Something went wrong. Please try again.</div></div>`;
   }
-  btn.disabled = false; btn.textContent = '分析 Analyse →';
+  btn.disabled = false; btn.textContent = 'Analyse 分析 →';
 }
 
 async function runTheme(wordKey) {
@@ -3013,18 +2932,18 @@ async function runTheme(wordKey) {
       <div class="ai-response">
         <div class="ai-response-label">✦ AI-Generated · Theme: ${theme}</div>
         <div class="ai-response-text">
-          <span class="resp-cn">${highlightWord(data.cn, w)}</span>
+          <span class="resp-cn">${segmentedHTML(data.cn, w)}</span>
           <span class="resp-en">${data.en}</span>
           <span class="resp-note">${data.note}</span>
         </div>
         <div class="ai-response-actions">
-          <button class="save-sent-btn" onclick="saveAIResult('${wordKey}', ${JSON.stringify(data.cn).replace(/'/g,"\\'")} , ${JSON.stringify(data.en).replace(/'/g,"\\'")} , 'AI · ${theme}')">＋ Save to My Dictionary</button>
+          <button class="ex-sent-save" onclick="saveAIResult('${wordKey}', ${JSON.stringify(data.cn).replace(/'/g,"\\'")} , ${JSON.stringify(data.en).replace(/'/g,"\\'")} , 'AI · ${theme}')">＋ Save to My Dictionary</button>
         </div>
       </div>`;
   } catch(e) {
     resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Something went wrong. Please try again.</div></div>`;
   }
-  btn.disabled = false; btn.textContent = '生成 Generate →';
+  btn.disabled = false; btn.textContent = 'Generate 生成 →';
 }
 
 function saveAIResult(wordKey, cn, en, source) {
@@ -3110,6 +3029,7 @@ function clearScenes() {
 
 // Reset
 document.getElementById('resetBtn').addEventListener('click', () => {
+  localStorage.removeItem('activeScenario');
   resetState(); clearScenes(); syncUI(); render();
 });
 
@@ -3173,8 +3093,8 @@ const BUILT_IN_SCENARIOS = {
   creative:   { register: ['literary'],   connotation: [],           channel: ['both'],    dimension: [], intensity: [],          tocfl: [] },
 };
 
-// Custom scenarios stored in memory
-let customScenarios = [];
+// Custom scenarios: restore from localStorage (synced to DB via ui_preferences)
+let customScenarios = JSON.parse(localStorage.getItem('customScenarios') || '[]');
 
 function applyScenario(filters) {
   state = {
@@ -3194,26 +3114,29 @@ function clearScenario() {
   const _ss = document.getElementById('scenarioSelect');
   if (_ss) _ss.value = '';
   document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+  localStorage.removeItem('activeScenario');
   resetState(); syncUI(); render();
 }
 
 function rebuildCustomOptgroup() {
+  // Legacy select-based UI — only run if elements exist
   const og = document.getElementById('customOptgroup');
-  og.innerHTML = '';
-  customScenarios.forEach((s, i) => {
-    const opt = document.createElement('option');
-    opt.value = '__custom__' + i;
-    opt.textContent = '⭐ ' + s.name;
-    og.appendChild(opt);
-  });
-  og.style.display = customScenarios.length ? '' : 'none';
-  rebuildCustomScenariosGrid();
-  // Re-add the "create" option at end (it may have been displaced)
-  const sel = document.getElementById('scenarioSelect');
-  if (sel) {
-    let createOpt = sel.querySelector('[value="__create__"]');
-    if (createOpt) sel.appendChild(createOpt);
+  if (og) {
+    og.innerHTML = '';
+    customScenarios.forEach((s, i) => {
+      const opt = document.createElement('option');
+      opt.value = '__custom__' + i;
+      opt.textContent = '⭐ ' + s.name;
+      og.appendChild(opt);
+    });
+    og.style.display = customScenarios.length ? '' : 'none';
+    const sel = document.getElementById('scenarioSelect');
+    if (sel) {
+      let createOpt = sel.querySelector('[value="__create__"]');
+      if (createOpt) sel.appendChild(createOpt);
+    }
   }
+  rebuildCustomScenariosGrid();
 }
 
 document.getElementById('scenarioSelect')?.addEventListener('change', function() {
@@ -3247,12 +3170,31 @@ function closeSaveDialog() {
 function confirmSaveScenario() {
   const name = document.getElementById('scenarioNameInput').value.trim();
   if (!name) return;
-  customScenarios.push({ name, filters: { ...state } });
+  customScenarios.push({
+    name,
+    filters: { ...state },
+    settings: {
+      scriptMode, posMode, langMode, iconsMode, pinyinMode,
+      workshopDefault, textDir, currentLevel, fontScale
+    }
+  });
+  persistCustomScenarios();
   rebuildCustomOptgroup();
   // Select the newly saved scenario
   const sel = document.getElementById('scenarioSelect');
   if (sel) sel.value = '__custom__' + (customScenarios.length - 1);
   closeSaveDialog();
+}
+
+function persistCustomScenarios() {
+  localStorage.setItem('customScenarios', JSON.stringify(customScenarios));
+  if (window.syncPref) syncPref('customScenarios', JSON.stringify(customScenarios));
+}
+
+function deleteCustomScenario(idx) {
+  customScenarios.splice(idx, 1);
+  persistCustomScenarios();
+  rebuildCustomOptgroup();
 }
 
 // Close dialog on overlay click
@@ -3269,25 +3211,53 @@ document.getElementById('scenarioNameInput').addEventListener('keydown', functio
 // ── OPEN WORD PAGE ───────────────────────────────────────────────────────────
 function openCard(event, wordKey) {
   // Don't navigate if user clicked a button inside the card (save, AI, etc.)
-  if (event.target.closest('button, .ai-workspace, .zaoju-panel, .card-pos, .card-def-row, .card-hanzi, .card-actions')) return;
+  if (event.target.closest('button, .ai-workspace, .zaoju-panel, .seg-popover, .card-pos, .card-def-row, .card-hanzi, .card-actions')) return;
   const word = WORDS.find(w => w.traditional === wordKey || w.smart_id === wordKey);
+  // Clear exploration trail — clicking a search result starts a fresh path
+  sessionStorage.removeItem('lexiconTrail');
   window.location.href = '/lexicon/' + encodeURIComponent(word?.smart_id || wordKey);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+if (customScenarios.length) rebuildCustomOptgroup();
+// Restore active scenario from localStorage
+(function() {
+  const saved = localStorage.getItem('activeScenario');
+  if (saved) {
+    const preset = BUILT_IN_SCENARIOS[saved];
+    if (preset) {
+      applyScenario(preset);
+      const card = document.querySelector('.scenario-card[data-scenario="' + saved + '"]');
+      if (card) card.classList.add('active');
+    }
+  }
+})();
 setSidebarWidth(uiMode);
 rerenderLabels();
 // Sync workshop toggle buttons with persisted preference
 document.getElementById('btnWorkshopExpanded').classList.toggle('active', workshopDefault === 'expanded');
 document.getElementById('btnWorkshopCollapsed').classList.toggle('active', workshopDefault === 'collapsed');
+// Sync text direction toggle with persisted preference
+document.getElementById('btnTextHoriz').classList.toggle('active', textDir === 'horizontal');
+document.getElementById('btnTextVert').classList.toggle('active', textDir === 'vertical');
+if (textDir === 'vertical') document.getElementById('cardContainer').classList.add('vertical-mode');
 // Initialise all sliding pills (no transition on first paint — just snap into position)
-['scriptToggle','posToggle','langToggle','iconsToggle','pinyinToggle','workshopToggle'].forEach(updateTogglePill);
+['scriptToggle','posToggle','langToggle','iconsToggle','pinyinToggle','workshopToggle','textDirToggle'].forEach(updateTogglePill);
 if (INITIAL_SEARCH) {
   const si = document.getElementById('searchInput');
   if (si) si.value = INITIAL_SEARCH;
   searchQuery = INITIAL_SEARCH;
 }
 render();
+
+// Re-render on bfcache restore (back button from IWP)
+window.addEventListener('pageshow', function(e) {
+  if (e.persisted) {
+    const si = document.getElementById('searchInput');
+    if (si && si.value) searchQuery = si.value;
+    render();
+  }
+});
 
 // ── BACK TO TOP ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
@@ -3300,6 +3270,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+@include('partials.lexicon._popover')
+@include('partials.lexicon._preference-sync')
 <button id="backToTop" aria-label="Back to top">⌃</button>
 </body>
 </html>

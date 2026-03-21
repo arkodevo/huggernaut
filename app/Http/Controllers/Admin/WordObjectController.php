@@ -188,11 +188,9 @@ class WordObjectController extends Controller
         }
 
         if ($request->filled('domain')) {
-            $query->whereHas('senses', fn ($s) => $s->where('domain_id', $request->domain));
-        }
-
-        if ($request->filled('secondary_domain')) {
-            $query->whereHas('senses', fn ($s) => $s->where('secondary_domain_id', $request->secondary_domain));
+            $query->whereHas('senses', fn ($s) => $s->whereHas('domains', fn ($d) =>
+                $d->where('designations.id', $request->domain)
+            ));
         }
 
         if ($request->filled('q')) {

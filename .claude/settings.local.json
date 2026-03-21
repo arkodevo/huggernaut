@@ -49,7 +49,24 @@
       "Read(//etc/**)",
       "Bash(pkill -f 'artisan serve')",
       "Bash(curl -s https://www.huggernaut8888.com/lexicon/u6d41 -k)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://www.huggernaut8888.com/lexicon/u6d41_u52d5\" -k)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://www.huggernaut8888.com/lexicon/u6d41_u52d5\" -k)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://www.huggernaut8888.com/lexicon\" -k)",
+      "Bash(wc -l /Users/chuluoyi/Sites/huggernaut/resources/views/lexicon-live.blade.php /Users/chuluoyi/Sites/huggernaut/resources/views/word-detail.blade.php /Users/chuluoyi/Sites/huggernaut/resources/views/partials/lexicon/*.blade.php)",
+      "Bash(php -l /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/ExploreController.php)",
+      "Read(//Users/chuluoyi/Library/Application Support/Claude/local-agent-mode-sessions/skills-plugin/563dac59-d862-43d6-8502-fee7a09e3e32/71d76d03-caa1-4870-8610-ed03edbfae87/skills/xlsx/**)",
+      "Bash(python3:*)",
+      "Bash(curl -sk \"https://www.huggernaut8888.com/lexicon/u6d41_u52d5\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -sk \"https://www.huggernaut8888.com/lexicon\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(php import-domains.php)",
+      "Bash(curl -sk \"https://www.huggernaut8888.com/lexicon/u6d41_u52d5\")",
+      "Bash(curl -sk \"https://www.huggernaut8888.com/lexicon\")",
+      "Bash(curl -sk \"https://www.huggernaut8888.com/lexicon/u6d41\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -sk \"https://www.huggernaut8888.com/lexicon/u6d41\")",
+      "Bash(grep -l \"User\\\\|user\" /Users/chuluoyi/Sites/huggernaut/database/seeders/*.php)",
+      "Bash(grep -l \"Sanctum\\\\|sanctum\" /Users/chuluoyi/Sites/huggernaut/config/*.php)",
+      "Bash(ls -la /Users/chuluoyi/Documents/華語/planning/*.docx)",
+      "Bash(open /Users/chuluoyi/Desktop/lawn-guys-logo.svg)",
+      "Bash(kill 96311)"
     ]
   }
 }

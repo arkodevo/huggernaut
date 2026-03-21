@@ -180,13 +180,19 @@ class FlowClusterSeeder extends Seeder
             'pronunciation_id'    => $pronunciation->id,
             'channel_id'          => $this->designationId($senseData['channel']),
             'connotation_id'      => $this->designationId($senseData['connotation']),
-            'domain_id'           => $this->designationId($senseData['semanticDomainPrimary']),
-            'secondary_domain_id' => $this->designationId($senseData['semanticDomainSecondary']),
             'intensity'           => $senseData['intensity'],
             'tocfl_level_id'      => $tocflId,
             'hsk_level_id'        => $hskId,
             'status'              => 'draft',
         ]);
+
+        // ── Domains (primary + secondary) via pivot ─────────────────────────
+        $primaryDomainId   = $this->designationId($senseData['semanticDomainPrimary']);
+        $secondaryDomainId = $this->designationId($senseData['semanticDomainSecondary']);
+        $domainSync = [];
+        if ($primaryDomainId)   $domainSync[$primaryDomainId]   = ['is_primary' => true,  'sort_order' => 0];
+        if ($secondaryDomainId) $domainSync[$secondaryDomainId] = ['is_primary' => false, 'sort_order' => 1];
+        if ($domainSync) $sense->domains()->sync($domainSync);
 
         // ── word_sense_designations: register (per-sense) + dimensions (entry) ─
 

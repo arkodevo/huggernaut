@@ -36,6 +36,15 @@ class WordSenseController extends Controller
             $sense->designations()->sync($data['designations']);
         }
 
+        // Domains (many-to-many): first = primary, rest = secondary
+        if (! empty($data['domains'])) {
+            $domainSync = [];
+            foreach ($data['domains'] as $i => $domainId) {
+                $domainSync[$domainId] = ['is_primary' => $i === 0, 'sort_order' => $i];
+            }
+            $sense->domains()->sync($domainSync);
+        }
+
         // Inline definitions
         foreach ($data['definitions'] as $def) {
             WordSenseDefinition::create(array_merge($def, ['word_sense_id' => $sense->id]));
@@ -65,6 +74,13 @@ class WordSenseController extends Controller
         $sense->update($data['sense']);
 
         $sense->designations()->sync($data['designations'] ?? []);
+
+        // Domains (many-to-many): first = primary, rest = secondary
+        $domainSync = [];
+        foreach (($data['domains'] ?? []) as $i => $domainId) {
+            $domainSync[$domainId] = ['is_primary' => $i === 0, 'sort_order' => $i];
+        }
+        $sense->domains()->sync($domainSync);
 
         // Replace definitions: delete removed, upsert existing + new
         $keptIds = [];
@@ -110,7 +126,8 @@ class WordSenseController extends Controller
             'connotation_id'    => ['nullable', 'exists:designations,id'],
             'semantic_mode_id'  => ['nullable', 'exists:designations,id'],
             'sensitivity_id'    => ['nullable', 'exists:designations,id'],
-            'domain_id'         => ['nullable', 'exists:designations,id'],
+            'domains'           => ['nullable', 'array'],
+            'domains.*'         => ['exists:designations,id'],
             'tocfl_level_id'    => ['nullable', 'exists:designations,id'],
             'hsk_level_id'      => ['nullable', 'exists:designations,id'],
             'intensity'         => ['nullable', 'integer', 'min:1', 'max:5'],
@@ -131,13 +148,14 @@ class WordSenseController extends Controller
 
         $sense = array_intersect_key($validated, array_flip([
             'pronunciation_id', 'channel_id', 'connotation_id', 'semantic_mode_id',
-            'sensitivity_id', 'domain_id', 'tocfl_level_id', 'hsk_level_id',
+            'sensitivity_id', 'tocfl_level_id', 'hsk_level_id',
             'intensity', 'valency', 'formula', 'usage_note', 'learner_traps', 'status',
         ]));
 
         return [
             'sense'        => $sense,
             'designations' => $validated['designations'] ?? [],
+            'domains'      => $validated['domains']      ?? [],
             'definitions'  => $validated['definitions']  ?? [],
         ];
     }

@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 // The primary lexical unit. 行 = 5 word_senses across 2 pronunciations.
 //
-// Single-select spectrum FKs (channel, connotation, semantic_mode, sensitivity, domain,
+// Single-select spectrum FKs (channel, connotation, semantic_mode, sensitivity,
 // tocfl_level, hsk_level) are direct FKs to designations for query efficiency.
 //
 // Multi-select attributes (register, dimension) live in word_sense_designations pivot.
+// Domains live in word_sense_domains pivot (many-to-many with is_primary flag).
 class WordSense extends Model
 {
     protected $fillable = [
@@ -22,8 +23,6 @@ class WordSense extends Model
         'connotation_id',
         'semantic_mode_id',
         'sensitivity_id',
-        'domain_id',
-        'secondary_domain_id',
         'intensity',
         'valency',
         'formula',
@@ -68,14 +67,34 @@ class WordSense extends Model
         return $this->belongsTo(Designation::class, 'sensitivity_id');
     }
 
-    public function domain(): BelongsTo
+    // ── Domains (many-to-many via word_sense_domains pivot) ──────────────────
+
+    /**
+     * All domains for this sense (primary + secondary), ordered by sort_order.
+     */
+    public function domains(): BelongsToMany
     {
-        return $this->belongsTo(Designation::class, 'domain_id');
+        return $this->belongsToMany(Designation::class, 'word_sense_domains')
+            ->using(WordSenseDomain::class)
+            ->withPivot('is_primary', 'sort_order')
+            ->orderByPivot('sort_order')
+            ->withTimestamps();
     }
 
-    public function secondaryDomain(): BelongsTo
+    /**
+     * Convenience: the single primary domain designation.
+     */
+    public function primaryDomain(): BelongsToMany
     {
-        return $this->belongsTo(Designation::class, 'secondary_domain_id');
+        return $this->domains()->wherePivot('is_primary', true);
+    }
+
+    /**
+     * Convenience: all secondary (non-primary) domain designations.
+     */
+    public function secondaryDomains(): BelongsToMany
+    {
+        return $this->domains()->wherePivot('is_primary', false);
     }
 
     public function tocflLevel(): BelongsTo

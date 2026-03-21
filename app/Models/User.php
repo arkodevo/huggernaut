@@ -35,6 +35,7 @@ class User extends Authenticatable
         'pos_mode',
         'level_framework',
         'filter_attribute_overrides',
+        'ui_preferences',
         'subscription_tier',
         'ai_credits_remaining',
         'ai_credits_reset_at',
@@ -63,6 +64,7 @@ class User extends Authenticatable
             'points_balance'              => 'integer',
             'points_total_earned'         => 'integer',
             'filter_attribute_overrides'  => 'array',
+            'ui_preferences'              => 'array',
         ];
     }
 

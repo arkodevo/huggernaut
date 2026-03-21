@@ -6,6 +6,8 @@ use App\Models\DesignationGroup;
 use App\Models\WordObject;
 use App\Models\WordSense;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 // Serves the live lexicon explorer view.
@@ -46,7 +48,7 @@ class ExploreController extends Controller
     ];
 
     // DB tocfl_level slugs → short form used by JS chips
-    private const TOCFL_SLUG_MAP = [
+    public const TOCFL_SLUG_MAP = [
         'tocfl-prep'     => 'prep',
         'tocfl-entry'    => 'entry',
         'tocfl-basic'    => 'basic',
@@ -83,7 +85,7 @@ class ExploreController extends Controller
 
     // DB POS slugs → full English names matching the demo's POS_ABBR keys
     // (the card toggle system maps full name ↔ abbreviation; slugs alone break it)
-    private const POS_FULL_NAMES = [
+    public const POS_FULL_NAMES = [
         'V'       => 'Verb',
         'Vi'      => 'Intransitive Verb',
         'Vp'      => 'Process Verb',
@@ -119,8 +121,7 @@ class ExploreController extends Controller
                 'channel',
                 'connotation',
                 'tocflLevel',
-                'domain',
-                'secondaryDomain',
+                'domains' => fn ($q) => $q->with(['labels' => fn ($q) => $q->whereIn('language_id', [1, 2])]),
                 'definitions' => fn ($q) => $q->where('language_id', 1)
                                               ->orderBy('sort_order')
                                               ->with('posLabel'),
@@ -163,6 +164,7 @@ class ExploreController extends Controller
             'words'         => $words,
             'initialSearch' => $request->input('q', ''),
             'domainGroups'  => $domainGroups,
+            'authUser'      => $this->authUserPayload(),
         ]);
     }
 
@@ -241,13 +243,27 @@ class ExploreController extends Controller
             'intensity'       => $primary->intensity ?? 2,
             'tocfl'           => $tocflShort,
             'level'           => $tocflNum,
-            'domain'          => $primary->domain?->slug,
-            'secondaryDomain' => $primary->secondaryDomain?->slug,
+            'domain'          => $primary->domains->firstWhere('pivot.is_primary', true)?->slug,
+            'allDomains'      => $senses->flatMap(fn ($s) => $s->domains->pluck('slug'))
+                                    ->unique()->values()->all(),
+            'domainPairs'     => $senses->flatMap(function ($s) {
+                                    $primary = $s->domains->firstWhere('pivot.is_primary', true);
+                                    if (! $primary) return [];
+                                    $secondaries = $s->domains->where('pivot.is_primary', false);
+                                    if ($secondaries->isEmpty()) {
+                                        return [['p' => $primary->slug, 's' => null]];
+                                    }
+                                    return $secondaries->map(fn ($d) => [
+                                        'p' => $primary->slug, 's' => $d->slug,
+                                    ]);
+                                })->unique(fn ($d) => $d['p'] . '~' . ($d['s'] ?? ''))
+                                  ->values()->all(),
             'example'         => $allExamples[0] ?? ['cn' => '', 'en' => ''],
             'extraExamples'   => array_slice($allExamples, 1),
             // Fallbacks for search surface matching
             'usageNote'       => $definitions[0]['usageNote'] ?? '',
             'formula'         => $definitions[0]['formula'] ?? '',
+            'senseIds'        => $senses->pluck('id')->values()->all(),
         ];
     }
 
@@ -264,8 +280,7 @@ class ExploreController extends Controller
                 'connotation',
                 'tocflLevel',
                 'hskLevel',
-                'domain'          => fn ($q) => $q->with(['labels' => fn ($q) => $q->whereIn('language_id', [1, 2])]),
-                'secondaryDomain' => fn ($q) => $q->with(['labels' => fn ($q) => $q->whereIn('language_id', [1, 2])]),
+                'domains'         => fn ($q) => $q->with(['labels' => fn ($q) => $q->whereIn('language_id', [1, 2])]),
                 'definitions'     => fn ($q) => $q->where('language_id', 1)
                                                    ->orderBy('sort_order')
                                                    ->with('posLabel'),
@@ -327,6 +342,7 @@ class ExploreController extends Controller
             'word'      => $shaped,
             'smartId'   => $smartId,
             'wordIndex' => $wordIndex,
+            'authUser'  => $this->authUserPayload(),
         ]);
     }
 
@@ -386,25 +402,21 @@ class ExploreController extends Controller
                 'theme'  => $e->theme,
             ])->values()->all();
 
-            // Domain labels (EN + ZH)
-            $domainShaped = null;
-            if ($sense->domain) {
-                $domainShaped = [
-                    'slug' => $sense->domain->slug,
-                    'en'   => $sense->domain->labels?->firstWhere('language_id', 1)?->label
-                                ?? ucwords(str_replace('-', ' ', $sense->domain->slug)),
-                    'zh'   => $sense->domain->labels?->firstWhere('language_id', 2)?->label,
-                ];
-            }
-            $secondaryDomainShaped = null;
-            if ($sense->secondaryDomain) {
-                $secondaryDomainShaped = [
-                    'slug' => $sense->secondaryDomain->slug,
-                    'en'   => $sense->secondaryDomain->labels?->firstWhere('language_id', 1)?->label
-                                ?? ucwords(str_replace('-', ' ', $sense->secondaryDomain->slug)),
-                    'zh'   => $sense->secondaryDomain->labels?->firstWhere('language_id', 2)?->label,
-                ];
-            }
+            // Domain labels (EN + ZH) — from many-to-many pivot
+            $shapeDomainDesig = fn ($d) => [
+                'slug' => $d->slug,
+                'en'   => $d->labels?->firstWhere('language_id', 1)?->label
+                            ?? ucwords(str_replace('-', ' ', $d->slug)),
+                'zh'   => $d->labels?->firstWhere('language_id', 2)?->label,
+            ];
+
+            $primaryDomain = $sense->domains->firstWhere('pivot.is_primary', true);
+            $domainShaped  = $primaryDomain ? $shapeDomainDesig($primaryDomain) : null;
+
+            $secondaryDomainsShaped = $sense->domains
+                ->where('pivot.is_primary', false)
+                ->map($shapeDomainDesig)
+                ->values()->all();
 
             // Collocations
             $collocations = $sense->collocations->map(fn ($wo) => [
@@ -491,8 +503,8 @@ class ExploreController extends Controller
                 'intensity'       => $sense->intensity ?? 2,
                 'tocfl'           => $tocflShort,
                 'hsk'             => $hskSlug,
-                'domain'          => $domainShaped,
-                'secondaryDomain' => $secondaryDomainShaped,
+                'domain'           => $domainShaped,
+                'secondaryDomains' => $secondaryDomainsShaped,
                 'learnerTraps'    => $sense->learner_traps,
                 'collocations'    => $collocations,
                 'relations'       => $relations,
@@ -532,6 +544,92 @@ class ExploreController extends Controller
             ])->values()->all(),
             'senses'          => $shapedSenses,
             'family'          => $allFamily,
+        ];
+    }
+
+    // ── Related words: beginning with / containing a character ───────────────
+
+    public function relatedWords(string $character): JsonResponse
+    {
+        // Only accept single characters (safety)
+        if (mb_strlen($character) !== 1) {
+            return response()->json(['beginning' => [], 'containing' => []]);
+        }
+
+        $shapeWord = function (WordObject $wo) {
+            $s = $wo->senses->first();
+            if (!$s) return null;
+            return [
+                'traditional' => $wo->traditional,
+                'smartId'     => $wo->smart_id,
+                'pinyin'      => $s->pronunciation?->pronunciation_text ?? '',
+                'pos'         => self::POS_FULL_NAMES[$s->definitions->first()?->posLabel?->slug ?? ''] ?? '',
+                'posAbbr'     => $s->definitions->first()?->posLabel?->slug ?? '',
+                'def'         => $s->definitions->first()?->definition_text ?? '',
+                'tocfl'       => self::TOCFL_SLUG_MAP[$s->tocflLevel?->slug ?? ''] ?? null,
+            ];
+        };
+
+        $baseQuery = fn () => WordObject::with([
+            'senses' => fn ($q) => $q->orderBy('id')->limit(1)->with([
+                'pronunciation',
+                'definitions' => fn ($q) => $q->where('language_id', 1)->orderBy('sort_order')->limit(1)->with('posLabel'),
+                'tocflLevel',
+            ]),
+        ]);
+
+        // Words beginning with the character (multi-char only, excluding exact match)
+        $beginning = $baseQuery()
+            ->where('traditional', 'like', $character . '%')
+            ->where('traditional', '!=', $character)
+            ->limit(20)
+            ->get()
+            ->map($shapeWord)
+            ->filter()
+            ->values()
+            ->all();
+
+        // Words containing the character (not at the start)
+        $containing = $baseQuery()
+            ->where('traditional', 'like', '%' . $character . '%')
+            ->where('traditional', 'not like', $character . '%')
+            ->where('traditional', '!=', $character)
+            ->limit(20)
+            ->get()
+            ->map($shapeWord)
+            ->filter()
+            ->values()
+            ->all();
+
+        return response()->json([
+            'beginning'  => $beginning,
+            'containing' => $containing,
+        ]);
+    }
+
+    // ── Auth payload for client-side __AUTH injection ──────────────────────────
+
+    public function authUserPayload(): ?array
+    {
+        if (! Auth::check()) {
+            return null;
+        }
+
+        $user = Auth::user();
+
+        return [
+            'id'             => $user->id,
+            'name'           => $user->name,
+            'uiPreferences'  => $user->ui_preferences ?? [],
+            'savedSenseIds'  => $user->savedSenses()->pluck('word_sense_id')->all(),
+            'collections'    => $user->collections()
+                ->with('wordSenses:word_senses.id')
+                ->get()
+                ->map(fn ($c) => [
+                    'id'       => $c->id,
+                    'name'     => $c->name,
+                    'senseIds' => $c->wordSenses->pluck('id'),
+                ]),
         ];
     }
 }

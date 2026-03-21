@@ -1,7 +1,8 @@
 @php
     $v = fn(string $field, $default = null) => old($field, $sense?->{$field} ?? $default);
     $selectedDesignations = $sense?->designations->pluck('id')->toArray() ?? [];
-    $singleSelectAttrs = ['channel', 'connotation', 'semantic-mode', 'sensitivity', 'domain', 'tocfl-level', 'hsk-level'];
+    $selectedDomains = $sense?->domains->sortBy('pivot.sort_order')->pluck('id')->toArray() ?? [];
+    $singleSelectAttrs = ['channel', 'connotation', 'semantic-mode', 'sensitivity', 'tocfl-level', 'hsk-level'];
 
     // Build the initial definitions array for Alpine
     $initDefs = ! empty($existingDefs) ? $existingDefs : [[
@@ -73,7 +74,6 @@
                         'connotation'   => 'connotation_id',
                         'semantic-mode' => 'semantic_mode_id',
                         'sensitivity'   => 'sensitivity_id',
-                        'domain'        => 'domain_id',
                         'tocfl-level'   => 'tocfl_level_id',
                         'hsk-level'     => 'hsk_level_id',
                     ];
@@ -95,6 +95,24 @@
             @endforeach
         </div>
     </div>
+
+    {{-- ── Domains (multi-select, first checked = primary) ─────────── --}}
+    @php $domainAttr = $attributes['domain'] ?? null; @endphp
+    @if ($domainAttr)
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+        <h3 class="text-sm font-semibold text-gray-900 mb-4">Domains <span class="text-xs font-normal text-gray-500">(first checked = primary)</span></h3>
+        <div class="grid grid-cols-3 gap-1.5 max-h-64 overflow-y-auto">
+            @foreach ($domainAttr->designations as $des)
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="domains[]" value="{{ $des->id }}"
+                           class="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                           {{ in_array($des->id, old('domains', $selectedDomains)) ? 'checked' : '' }}>
+                    <span class="text-sm text-gray-700">{{ $des->labels->first()?->label ?? $des->slug }}</span>
+                </label>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     {{-- ── Multi-select designations (register, dimension) ─────────── --}}
     <div class="bg-white rounded-xl border border-gray-200 p-5">
