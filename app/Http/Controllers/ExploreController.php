@@ -622,6 +622,9 @@ class ExploreController extends Controller
             'name'           => $user->name,
             'uiPreferences'  => $user->ui_preferences ?? [],
             'savedSenseIds'  => $user->savedSenses()->pluck('word_sense_id')->all(),
+            'savedExamples'  => $user->savedExamples()
+                ->select('id', 'word_sense_id', 'chinese_text', 'english_text', 'ai_verified', 'ai_feedback', 'source_type', 'created_at')
+                ->get(),
             'collections'    => $user->collections()
                 ->with('wordSenses:word_senses.id')
                 ->get()

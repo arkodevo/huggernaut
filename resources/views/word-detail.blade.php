@@ -1586,7 +1586,7 @@ function renderWorkshop(sense, idx) {
       <button class="wd-workshop-tab active" onclick="wdSwitchWorkshopTab('${senseId}','examples',this)">${langText('Default Examples', '預設例句')}</button>
       <button class="wd-workshop-tab" onclick="wdSwitchWorkshopTab('${senseId}','writing',this)">${langText('My Writing', '我的寫作')}</button>
       ${showCommunity ? `<button class="wd-workshop-tab" onclick="wdSwitchWorkshopTab('${senseId}','community',this)">${langText('Community', '社群')}</button>` : ''}
-      <button class="wd-workshop-tab" onclick="wdSwitchWorkshopTab('${senseId}','ai',this)">${langText('AI Feedback', 'AI 回饋')}</button>
+      <button class="wd-workshop-tab" onclick="wdSwitchWorkshopTab('${senseId}','ai',this)">${langText('師父 Feedback', '師父回饋')}</button>
     </div>
     <div class="wd-workshop-content">
       <div class="wd-workshop-panel active" id="wdWsPanel-examples-${senseId}">
@@ -1600,7 +1600,7 @@ function renderWorkshop(sense, idx) {
         <div class="wd-stub">${langText('Community contributions coming soon', '社群內容即將推出')}</div>
       </div>` : ''}
       <div class="wd-workshop-panel" id="wdWsPanel-ai-${senseId}">
-        <div class="wd-stub">${langText('AI writing feedback coming soon', 'AI 寫作回饋即將推出')}</div>
+        <div class="wd-stub">${langText('師父 writing feedback coming soon', '師父寫作回饋即將推出')}</div>
       </div>
     </div>
   </div>`;

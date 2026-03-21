@@ -14,7 +14,7 @@
 <style>
 /* ── HEADER ── */
 header {
-  position: relative; z-index: 10;
+  position: relative; z-index: 250;
   padding: 1rem 2rem 1.1rem;
   border-bottom: 1px solid var(--border);
   display: flex; flex-direction: column; align-items: center;
@@ -906,10 +906,11 @@ main {
   letter-spacing: 0.08em;
 }
 .zaoju-toggle {
-  font-size: 0.81rem; letter-spacing: 0.2em; text-transform: uppercase;
+  font-size: 1.2rem;
   color: var(--dim); cursor: pointer; background: none; border: none;
-  font-family: 'DM Mono', monospace; padding: 0.2rem 0;
+  padding: 0.2rem 0;
   transition: color 0.2s;
+  line-height: 1;
 }
 .zaoju-toggle:hover { color: var(--accent); }
 
@@ -920,6 +921,13 @@ main {
 /* Segmentation + popover styles loaded from shared partial */
 
 /* AI tabs */
+.shifu-writing-area {
+  background: rgba(98,64,200,0.04);
+  border: 1px solid rgba(98,64,200,0.1);
+  border-radius: 2px;
+  padding: 0.75rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
 .ai-tabs {
   display: flex; gap: 0.4rem; flex-wrap: wrap;
 }
@@ -950,13 +958,22 @@ main {
   background: #ffffff;
   border: 1px solid rgba(98,64,200,0.25);
   color: var(--ink); font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: 0.9rem; padding: 0.6rem 0.75rem;
+  font-size: var(--fs-ex-cn, 1.8rem); padding: 0.6rem 0.75rem;
   border-radius: 2px; outline: none; resize: vertical;
   min-height: 60px; line-height: 1.6;
   transition: border-color 0.2s;
 }
-.ai-textarea::placeholder { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: rgba(26,24,40,0.3); }
+.ai-textarea::placeholder { font-family: 'DM Mono', monospace; font-size: 1.3rem; color: rgba(26,24,40,0.3); }
 .ai-textarea:focus { border-color: var(--accent); }
+.ai-textarea.vertical-mode {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.08em;
+  line-height: 1.8;
+  min-height: 18rem; min-width: 100%;
+  resize: horizontal;
+  overflow: auto;
+}
 .ai-theme-input {
   flex: 1; min-width: 160px;
   background: #ffffff;
@@ -968,6 +985,14 @@ main {
 }
 .ai-theme-input::placeholder { color: rgba(26,24,40,0.3); }
 .ai-theme-input:focus { border-color: var(--accent); }
+.ai-pos-select {
+  font-family: 'DM Mono', monospace; font-size: 0.78rem;
+  color: var(--accent); background: var(--tag-bg);
+  border: 1px solid rgba(98,64,200,0.25); border-radius: 2px;
+  padding: 0.35rem 0.6rem; outline: none; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.ai-pos-select:focus { border-color: var(--accent); }
 .ai-submit-btn {
   padding: 0.5rem 1rem; border-radius: 2px;
   border: 1px solid var(--accent);
@@ -994,41 +1019,108 @@ main {
   color: var(--accent);
 }
 .ai-response-text {
-  font-size: 0.72rem; color: var(--text); line-height: 1.7;
+  font-size: 0.9rem; color: var(--text); line-height: 1.7;
 }
-.ai-response-text .resp-cn { font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif; font-size: 0.95rem; color: var(--ink); display: block; margin-bottom: 0.2rem; }
-.ai-response-text .resp-cn .highlight { color: var(--gold); font-weight: 600; }
-.ai-response-text .resp-en { color: var(--dim); font-style: italic; font-size: 0.65rem; display: block; margin-bottom: 0.3rem; }
-.ai-response-text .resp-note { color: var(--dim); font-size: 0.65rem; border-top: 1px solid var(--border); padding-top: 0.3rem; margin-top: 0.1rem; }
+.ai-response-text .resp-cn { font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif; font-size: var(--fs-ex-cn, 1.8rem); color: var(--ink); display: block; margin-bottom: 0.2rem; line-height: 1.5; }
+.vertical-mode .ai-response-text .resp-cn {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.08em;
+  max-height: 18rem;
+  line-height: 1.8;
+  margin-left: auto;
+}
+.ai-response-text .resp-cn .highlight { color: var(--accent); font-weight: 600; }
+.ai-response-text .resp-en { color: var(--dim); font-style: italic; font-size: var(--fs-ex-en, 1rem); display: block; margin-bottom: 0.3rem; }
+.ai-response-text .resp-note { font-family: 'Cormorant Garamond', serif; color: var(--dim); font-size: 0.9rem; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 0.3rem; margin-top: 0.1rem; }
 .ai-response-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 
 /* Saved deck */
 .saved-deck-section {
   margin-top: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  background: rgba(26,138,90,0.04);
-  border: 1px solid rgba(26,138,90,0.2);
-  border-radius: 2px;
 }
 .saved-deck-label {
-  font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
-  color: var(--jade); margin-bottom: 0.4rem; display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem; letter-spacing: 0.08em;
+  color: var(--accent); margin-bottom: 0.4rem; display: block;
 }
-.saved-item {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 0.5rem; padding: 0.3rem 0;
-  border-bottom: 1px solid rgba(26,138,90,0.1);
-  font-size: 0.72rem;
+/* Saved writings use .ex-sent for consistent look with default examples */
+.saved-writing-chips {
+  display: flex; align-items: stretch; gap: 0.4rem;
+  flex-wrap: wrap; margin-bottom: 0.15rem;
 }
-.saved-item:last-child { border-bottom: none; }
-.saved-item-cn { font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif; font-size: 0.85rem; color: var(--ink); }
-.saved-item-source { font-size: 0.55rem; color: var(--dim); white-space: nowrap; }
+.saved-writing-chips .ex-sent-pos,
+.saved-writing-chips .shifu-chip {
+  display: inline-flex; align-items: center;
+  height: 1.5rem; box-sizing: border-box;
+}
+.shifu-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem; letter-spacing: 0.04em;
+  color: var(--accent); background: rgba(98,64,200,0.07);
+  border: 1px solid rgba(98,64,200,0.18);
+  border-radius: 2px; padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+}
+.saved-item-feedback { margin-top: 0.6rem; }
+.saved-item-feedback summary {
+  font-family: 'DM Mono', monospace; font-size: 0.85rem;
+  color: var(--accent); cursor: pointer; user-select: none;
+  list-style: none;
+}
+.saved-item-feedback summary::before { content: '▸ '; }
+.saved-item-feedback[open] summary::before { content: '▾ '; }
+.saved-item-feedback-text {
+  font-family: 'Cormorant Garamond', serif; font-size: 1rem;
+  color: var(--dim); line-height: 1.6;
+  padding: 0.3rem 0 0 0.4rem;
+  border-left: 2px solid rgba(98,64,200,0.15);
+  margin-top: 0.2rem;
+}
+.saved-writing-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 0.4rem; gap: 0.5rem;
+}
+.saved-writing-date {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: var(--dim); opacity: 0.7;
+}
 .remove-btn {
-  font-size: 0.55rem; color: var(--dim); cursor: pointer;
-  background: none; border: none; padding: 0 0.2rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem; color: var(--dim); cursor: pointer;
+  background: none; border: none; padding: 0.2rem 0;
   transition: color 0.2s;
 }
 .remove-btn:hover { color: var(--rose); }
+.delete-confirm {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0.6rem; margin-top: 0.4rem;
+  background: rgba(200,60,60,0.04);
+  border: 1px solid rgba(200,60,60,0.2);
+  border-radius: 2px;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.delete-confirm-msg {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem; color: var(--text); flex: 1;
+}
+.delete-confirm-yes {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: #fff; background: var(--rose);
+  border: none; border-radius: 2px;
+  padding: 0.3rem 0.7rem; cursor: pointer;
+  transition: opacity 0.2s;
+}
+.delete-confirm-yes:hover { opacity: 0.8; }
+.delete-confirm-no {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: var(--dim); background: none;
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.3rem 0.7rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.delete-confirm-no:hover { border-color: var(--accent); color: var(--text); }
 
 /* ── PROFILE PRESETS ── */
 /* profiles-bar removed — merged into scenario-bar */
@@ -2305,7 +2397,16 @@ function saveToWord(key, item) {
 }
 
 function removeFromWord(key, idx) {
-  if (savedDeck[key]) savedDeck[key].splice(idx, 1);
+  if (!savedDeck[key]) return;
+  const item = savedDeck[key][idx];
+  savedDeck[key].splice(idx, 1);
+  // Delete from DB if it has an id
+  if (item && item.id) {
+    fetch('/api/workshop/saved-example/' + item.id, {
+      method: 'DELETE',
+      headers: { 'X-CSRF-TOKEN': _csrf(), 'Accept': 'application/json' },
+    });
+  }
 }
 
 // ── ADDITIONAL DEFAULT SENTENCES PER WORD ─────────────────────────────────────
@@ -2352,48 +2453,128 @@ const EXTRA_SENTENCES = {
   ],
 };
 
-// ── AI CALL ────────────────────────────────────────────────────────────────────
-async function callAI(systemPrompt, userMessage) {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }]
-    })
+// ── AI CALL (server proxy) ──────────────────────────────────────────────────────
+function _csrf() {
+  const el = document.querySelector('meta[name="csrf-token"]');
+  return el ? el.content : '';
+}
+
+async function callWorkshopAPI(endpoint, body) {
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': _csrf(),
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(body),
   });
+  if (response.status === 401) throw new Error('auth_required');
+  if (!response.ok) throw new Error('api_error');
   const data = await response.json();
-  return data.content.map(b => b.text || '').join('');
+  if (data.error) throw new Error('api_error');
+  return data.text;
+}
+
+// ── GUEST AUTH PROMPT ──────────────────────────────────────────────────────────
+function showAuthPrompt(wordKey, context, extraData) {
+  // Stash pending work to localStorage before redirect
+  const pending = { wordKey, context };
+  if (context === 'critique') {
+    const input = document.getElementById(`critique-input-${wordKey}`);
+    const posSelect = document.getElementById(`critique-pos-${wordKey}`);
+    pending.sentence = input ? input.value : '';
+    pending.pos = posSelect ? posSelect.value : '';
+  } else if (context === 'theme') {
+    const input = document.getElementById(`theme-input-${wordKey}`);
+    pending.theme = input ? input.value : '';
+  }
+  localStorage.setItem('ww_pending', JSON.stringify(pending));
+
+  // Show inline prompt in the critique result area
+  const resultEl = document.getElementById(`${context === 'theme' ? 'theme' : 'critique'}-result-${wordKey}`);
+  if (resultEl) {
+    resultEl.innerHTML = `
+      <div class="ai-response" style="text-align:center">
+        <div class="ai-response-text" style="color:var(--accent);font-weight:500">
+          ${langMode === 'zh' ? '登入或註冊帳戶以使用寫作工坊' : 'Log in or create an account to use the Writing Workshop'}
+        </div>
+        <div style="display:flex;gap:0.6rem;justify-content:center;margin-top:0.5rem">
+          <a href="/login" class="ai-submit-btn" style="text-decoration:none;display:inline-block;width:auto">${langMode === 'zh' ? '登入' : 'Log In'}</a>
+          <a href="/register" class="ai-submit-btn" style="text-decoration:none;display:inline-block;width:auto;background:transparent">${langMode === 'zh' ? '註冊' : 'Register'}</a>
+        </div>
+      </div>`;
+  }
+}
+
+// Restore pending workshop data after login redirect
+function restoreWorkshopPending() {
+  const raw = localStorage.getItem('ww_pending');
+  if (!raw || !window.__AUTH) return;
+  try {
+    const pending = JSON.parse(raw);
+    localStorage.removeItem('ww_pending');
+    // Wait for cards to render, then restore
+    setTimeout(() => {
+      const wordKey = pending.wordKey;
+      // Expand the workshop
+      const body = document.getElementById(`zaoju-body-${wordKey}`);
+      if (body) body.style.display = 'flex';
+      const toggleBtn = body?.closest('.zaoju-panel')?.querySelector('.zaoju-toggle');
+      if (toggleBtn) toggleBtn.textContent = '▴';
+
+      if (pending.context === 'critique') {
+        const input = document.getElementById(`critique-input-${wordKey}`);
+        const posSelect = document.getElementById(`critique-pos-${wordKey}`);
+        if (input && pending.sentence) input.value = pending.sentence;
+        if (posSelect && pending.pos) posSelect.value = pending.pos;
+        // Switch to critique tab
+        const tab = document.querySelector(`#tab-critique-${wordKey}`)?.closest('.zaoju-panel')?.querySelector('.ai-tab');
+        if (tab) switchTab(wordKey, 'critique', tab);
+      } else if (pending.context === 'theme') {
+        const input = document.getElementById(`theme-input-${wordKey}`);
+        if (input && pending.theme) input.value = pending.theme;
+        const tabs = document.querySelectorAll(`#zaoju-body-${wordKey} .ai-tab`);
+        if (tabs[1]) switchTab(wordKey, 'theme', tabs[1]);
+      }
+
+      // Scroll to the card
+      const card = document.getElementById(`card-${wordKey}`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  } catch(e) { localStorage.removeItem('ww_pending'); }
 }
 
 // ── AI SYSTEM PROMPTS ──────────────────────────────────────────────────────────
-function getCritiquePrompt(word) {
-  return `You are an expert Chinese language tutor for the Living Lexicon 流動, a precision Chinese vocabulary app focused on fluency, nuance, and expressive accuracy. 
+function getCritiquePrompt(word, intendedPOS) {
+  const posLine = intendedPOS
+    ? `- Intended POS: ${posDisplay(intendedPOS)} (${POS_ABBR[intendedPOS] || intendedPOS}) — the learner intends to use "${word.traditional}" as this part of speech. Evaluate whether their sentence correctly uses it in this role.`
+    : '- Intended POS: not specified';
+  return `You are 師父 (Shifu), the expert Chinese language tutor for the Living Lexicon 流動, a precision Chinese vocabulary app focused on fluency, nuance, and expressive accuracy.
 
 The user has written a sentence using the word "${word.traditional}" (${word.simplified}, ${word.pinyin}) — meaning: ${word.definition}.
 
 Word metadata:
 - Register: ${word.register}
-- Connotation: ${word.connotation}  
+- Connotation: ${word.connotation}
 - Channel: ${word.channel}
 - HSK Level: ${word.level}
 - Syntactic formula: ${word.formula}
+${posLine}
 
-Your task: Evaluate the user's sentence with warmth and precision. Respond ONLY in this exact JSON format (no markdown, no extra text):
+Your task: Evaluate the user's sentence with warmth and precision.${intendedPOS ? ` Pay special attention to whether "${word.traditional}" is used correctly as a ${posDisplay(intendedPOS)}.` : ''} IMPORTANT: The corrected sentence MUST use the EXACT word "${word.traditional}" — do NOT substitute compounds, derivatives, or synonyms. Respond ONLY in this exact JSON format (no markdown, no extra text):
 {
   "verdict": "correct" | "minor_issues" | "needs_work",
-  "corrected_cn": "The corrected Traditional Chinese sentence (use Traditional characters), or the original if already correct",
+  "corrected_cn": "The corrected Traditional Chinese sentence (use Traditional characters, must contain the exact word ${word.traditional}), or the original if already correct",
   "corrected_en": "English translation of the corrected sentence",
   "highlight_word": "${word.traditional}",
-  "feedback": "2-3 sentences of warm, precise feedback in English. Note what was done well. If correcting, explain WHY — grammar, register mismatch, valency error, colocation issue, etc. Be encouraging but intellectually honest.",
+  "feedback": "2-3 sentences of warm, precise feedback in English. Note what was done well. If correcting, explain WHY — grammar, register mismatch, valency error, colocation issue, etc.${intendedPOS ? ` Comment on whether the word is correctly used as a ${posDisplay(intendedPOS)}.` : ''} Be encouraging but intellectually honest.",
   "register_note": "One sentence: does this sentence match the word's register (${word.register})? If not, explain gently."
 }`;
 }
 
 function getThemePrompt(word) {
-  return `You are an expert Chinese language tutor for the Living Lexicon 流動, a precision Chinese vocabulary app.
+  return `You are 師父 (Shifu), the expert Chinese language tutor for the Living Lexicon 流動, a precision Chinese vocabulary app.
 
 Generate a vivid, natural sentence using the word "${word.traditional}" (${word.simplified}) based on the user's requested theme/subject. 
 
@@ -2406,6 +2587,7 @@ Word metadata:
 
 Rules:
 - Use Traditional Chinese characters throughout
+- The sentence MUST use the EXACT word "${word.traditional}" — do NOT substitute compounds, derivatives, or synonyms (e.g. if the word is 流, use 流, not 流淌 or 流動)
 - The sentence must feel natural and engaging, not textbook-dry
 - Match the register precisely (${word.register})
 - Make the headword prominent and natural in context
@@ -2433,34 +2615,62 @@ function highlightWord(text, word) {
 function renderSavedDeck(wordKey) {
   const items = getSavedForWord(wordKey);
   if (!items.length) return '';
+  const w = WORDS.find(w => w.traditional === wordKey);
+  const primaryPOS = w ? ((w.definitions || [])[0]?.posAbbr || (w.definitions || [])[0]?.pos || '') : '';
+  const posChip = primaryPOS ? `<span class="ex-sent-pos">${POS_ABBR[primaryPOS] || primaryPOS}</span>` : '';
+  const vertical = textDir === 'vertical';
+
   return `
     <div class="saved-deck-section" id="deck-${wordKey}">
-      <span class="saved-deck-label">✦ 我的詞典 My Saved Sentences (${items.length})</span>
+      <span class="saved-deck-label">${langMode === 'zh' ? '我的寫作' : langMode === 'both' ? 'My Writings 我的寫作' : 'My Writings'} (${items.length})</span>
+      <div class="ex-sentences">
       ${items.map((item, i) => `
-        <div class="saved-item">
-          <div>
-            <div class="saved-item-cn">${segmentedHTML(item.cn, {traditional: wordKey, simplified: ''})}</div>
-            <div class="ex-sent-en">${item.en}</div>
+        <div class="ex-sent${vertical ? ' vertical' : ''} saved-writing">
+          <div class="saved-writing-chips">
+            ${posChip}
+            ${item.source === '師父 generated' ? '<span class="shifu-chip">🙏 師父 generated</span>' : item.source === '師父 verified' ? '<span class="shifu-chip">👏 師父 verified</span>' : ''}
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">
-            <span class="saved-item-source">${item.source}</span>
-            <button class="remove-btn" onclick="removeSaved('${wordKey}', ${i})">✕</button>
+          <div class="ex-sent-body">
+            <div class="ex-sent-cn">${segmentedHTML(item.cn, {traditional: wordKey, simplified: ''})}</div>
+            <div class="ex-sent-en">${item.en}</div>
+            ${item.feedback ? `<details class="saved-item-feedback"><summary>師父 feedback</summary><div class="saved-item-feedback-text">${item.feedback}</div></details>` : ''}
+            <div class="saved-writing-meta">
+              <span class="saved-writing-date">${item.date || ''}</span>
+              <button class="remove-btn" onclick="confirmDelete(this, '${wordKey}', ${i})">✕ ${langMode === 'zh' ? '刪除' : 'delete'}</button>
+            </div>
           </div>
         </div>
       `).join('')}
+      </div>
     </div>`;
+}
+
+function confirmDelete(btn, wordKey, idx) {
+  const card = btn.closest('.ex-sent');
+  if (!card) return;
+  // Prevent double-confirm
+  if (card.querySelector('.delete-confirm')) return;
+  const bar = document.createElement('div');
+  bar.className = 'delete-confirm';
+  bar.innerHTML = `
+    <span class="delete-confirm-msg">${langMode === 'zh' ? '確定要刪除？' : 'Delete this writing?'}</span>
+    <button class="delete-confirm-yes" onclick="removeSaved('${wordKey}', ${idx})">
+      ${langMode === 'zh' ? '刪除' : 'Delete'}
+    </button>
+    <button class="delete-confirm-no" onclick="this.closest('.delete-confirm').remove()">
+      ${langMode === 'zh' ? '取消' : 'Cancel'}
+    </button>`;
+  card.appendChild(bar);
 }
 
 function removeSaved(wordKey, idx) {
   removeFromWord(wordKey, idx);
-  // Re-render just the saved deck section
   const deckEl = document.getElementById(`deck-${wordKey}`);
   const items = getSavedForWord(wordKey);
   if (deckEl) {
     if (!items.length) {
       deckEl.remove();
     } else {
-      const parent = deckEl.parentElement;
       deckEl.outerHTML = renderSavedDeck(wordKey);
     }
   }
@@ -2601,7 +2811,7 @@ function renderCard(w, idx) {
           langMode === 'both' ? 'Writing Workshop 寫作工坊' :
           'Writing Workshop'
         }</div>
-        <button class="zaoju-toggle" onclick="toggleZaoju('${wordKey}')">${workshopDefault === 'expanded' ? '▴ collapse' : '▾ expand'}</button>
+        <button class="zaoju-toggle" onclick="toggleZaoju('${wordKey}')">${workshopDefault === 'expanded' ? '▴' : '▾'}</button>
       </div>
 
       <div id="zaoju-body-${wordKey}" style="display:${workshopDefault === 'expanded' ? 'flex' : 'none'}; flex-direction:column; gap:0.75rem;">
@@ -2612,17 +2822,23 @@ function renderCard(w, idx) {
         <!-- Saved deck -->
         <div id="deck-wrap-${wordKey}">${renderSavedDeck(wordKey)}</div>
 
-        <!-- AI Tabs -->
+        <!-- 師父 WRITING AREA -->
+        <div class="shifu-writing-area">
+        <span class="saved-deck-label" style="color:var(--accent)">Write with 師父</span>
         <div class="ai-tabs">
-          <button class="ai-tab active" onclick="switchTab('${wordKey}', 'critique', this)">✍️ Write &amp; Get Feedback</button>
-          <button class="ai-tab" onclick="switchTab('${wordKey}', 'theme', this)">🎯 Request a Themed Sentence</button>
+          <button class="ai-tab active" onclick="switchTab('${wordKey}', 'critique', this)">✍️ Write &amp; Get 師父 Feedback</button>
+          <button class="ai-tab" onclick="switchTab('${wordKey}', 'theme', this)">🎯 Ask 師父 to Write</button>
         </div>
 
         <!-- CRITIQUE TAB -->
         <div id="tab-critique-${wordKey}" class="ai-workspace">
-          <div class="ai-instruction">Write your own sentence using <strong style="color:var(--gold)">${w.traditional}</strong>. AI will check grammar, register, and naturalness — then you can save the result.</div>
+          <div class="ai-instruction">Write your own sentence using <strong style="color:var(--accent)">${w.traditional}</strong>. 師父 will check grammar, register, and naturalness — then you can save the result.</div>
           <div class="ai-input-row">
-            <textarea class="ai-textarea" id="critique-input-${wordKey}" placeholder="在這裡寫你的句子… Write your sentence here…" rows="2"></textarea>
+            <select class="ai-pos-select" id="critique-pos-${wordKey}">
+              ${allPOS.length === 1 ? '' : `<option value="">${langMode === 'zh' ? '選擇詞性…' : langMode === 'both' ? 'Select POS… 選擇詞性…' : 'Select POS…'}</option>`}
+              ${allPOS.map(p => `<option value="${p}"${allPOS.length === 1 ? ' selected' : ''}>${POS_ABBR[p] || p} — ${langMode === 'zh' ? (POS_ZH[p] || posDisplay(p)) : posDisplay(p)}</option>`).join('')}
+            </select>
+            <textarea class="ai-textarea${textDir === 'vertical' ? ' vertical-mode' : ''}" id="critique-input-${wordKey}" placeholder="${textDir === 'vertical' ? '在這裡寫…' : '在這裡寫… Write here…'}" rows="2"></textarea>
             <button class="ai-submit-btn" onclick="runCritique('${wordKey}')">Analyse 分析 →</button>
           </div>
           <div id="critique-result-${wordKey}"></div>
@@ -2630,13 +2846,15 @@ function renderCard(w, idx) {
 
         <!-- THEME TAB -->
         <div id="tab-theme-${wordKey}" class="ai-workspace" style="display:none">
-          <div class="ai-instruction">Ask AI to write a sentence using <strong style="color:var(--gold)">${w.traditional}</strong> around any theme, topic, or subject you love.</div>
+          <div class="ai-instruction">Ask 師父 to write using <strong style="color:var(--accent)">${w.traditional}</strong> around any theme, topic, or subject you love.</div>
           <div class="ai-input-row">
             <input type="text" class="ai-theme-input" id="theme-input-${wordKey}" placeholder="e.g. soccer, cooking, my grandmother, space travel…">
             <button class="ai-submit-btn" onclick="runTheme('${wordKey}')">Generate 生成 →</button>
           </div>
           <div id="theme-result-${wordKey}"></div>
         </div>
+
+        </div><!-- /.shifu-writing-area -->
 
       </div>
     </div>
@@ -2654,7 +2872,7 @@ function toggleZaoju(key) {
   const btn = body.closest('.zaoju-panel').querySelector('.zaoju-toggle');
   if (body) {
     body.style.display = zaojuOpen[key] ? 'flex' : 'none';
-    if (btn) btn.textContent = zaojuOpen[key] ? '▴ collapse' : '▾ expand';
+    if (btn) btn.textContent = zaojuOpen[key] ? '▴' : '▾';
   }
 }
 
@@ -2873,24 +3091,33 @@ function refreshDeckWrap(wordKey) {
 }
 
 async function runCritique(wordKey) {
+  if (!window.__AUTH) { showAuthPrompt(wordKey, 'critique'); return; }
   const w = WORDS.find(x => x.traditional === wordKey);
   if (!w) return;
   const input = document.getElementById(`critique-input-${wordKey}`);
+  const posSelect = document.getElementById(`critique-pos-${wordKey}`);
   const resultEl = document.getElementById(`critique-result-${wordKey}`);
   const btn = input.closest('.ai-workspace').querySelector('.ai-submit-btn');
   const sentence = input.value.trim();
-  if (!sentence) { resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Please write a sentence first.</div></div>`; return; }
+  const intendedPOS = posSelect ? posSelect.value : '';
+  if (!sentence) { resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Please write something first.</div></div>`; return; }
 
   btn.disabled = true; btn.textContent = '分析中…';
-  resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--dim);font-style:italic">AI is reading your sentence…</div></div>`;
+  resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--dim);font-style:italic">師父 is reading your writing…</div></div>`;
 
   try {
-    const raw = await callAI(getCritiquePrompt(w), sentence);
+    const senseId = w.senseIds ? w.senseIds[0] : null;
+    const raw = await callWorkshopAPI('/api/workshop/critique', {
+      system_prompt: getCritiquePrompt(w, intendedPOS),
+      sentence: sentence,
+      word_sense_id: senseId,
+    });
     const clean = raw.replace(/```json|```/g, '').trim();
     const data = JSON.parse(clean);
 
     const verdictColor = data.verdict === 'correct' ? 'var(--jade)' : data.verdict === 'minor_issues' ? 'var(--gold)' : 'var(--rose)';
     const verdictLabel = data.verdict === 'correct' ? '✓ Correct' : data.verdict === 'minor_issues' ? '△ Minor issues' : '✗ Needs work';
+    const senseIdAttr = senseId ? `data-sense-id="${senseId}"` : '';
 
     resultEl.innerHTML = `
       <div class="ai-response">
@@ -2902,16 +3129,19 @@ async function runCritique(wordKey) {
           ${data.register_note ? `<span class="resp-note" style="margin-top:0.2rem">${data.register_note}</span>` : ''}
         </div>
         <div class="ai-response-actions">
-          <button class="ex-sent-save" onclick="saveAIResult('${wordKey}', ${JSON.stringify(data.corrected_cn).replace(/'/g,"\\'")} , ${JSON.stringify(data.corrected_en).replace(/'/g,"\\'")} , 'My sentence (AI verified)')">＋ Save to My Dictionary</button>
+          <button class="ex-sent-save" ${senseIdAttr} data-word-key="${wordKey}" data-cn="${data.corrected_cn.replace(/"/g,'&quot;')}" data-en="${data.corrected_en.replace(/"/g,'&quot;')}" data-feedback="${(data.feedback + (data.register_note ? ' ' + data.register_note : '')).replace(/"/g,'&quot;')}" data-ai="1" onclick="saveAIResult(this)">＋ Save Writing</button>
         </div>
       </div>`;
+    setTimeout(() => resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
   } catch(e) {
+    if (e.message === 'auth_required') { showAuthPrompt(wordKey, 'critique'); return; }
     resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Something went wrong. Please try again.</div></div>`;
   }
   btn.disabled = false; btn.textContent = 'Analyse 分析 →';
 }
 
 async function runTheme(wordKey) {
+  if (!window.__AUTH) { showAuthPrompt(wordKey, 'theme'); return; }
   const w = WORDS.find(x => x.traditional === wordKey);
   if (!w) return;
   const input = document.getElementById(`theme-input-${wordKey}`);
@@ -2921,38 +3151,89 @@ async function runTheme(wordKey) {
   if (!theme) { resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Please enter a theme or subject.</div></div>`; return; }
 
   btn.disabled = true; btn.textContent = '生成中…';
-  resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--dim);font-style:italic">Crafting your sentence…</div></div>`;
+  resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--dim);font-style:italic">師父 is crafting your writing…</div></div>`;
 
   try {
-    const raw = await callAI(getThemePrompt(w), `Theme/subject: ${theme}`);
+    const senseId = w.senseIds ? w.senseIds[0] : null;
+    const raw = await callWorkshopAPI('/api/workshop/generate', {
+      system_prompt: getThemePrompt(w),
+      theme: theme,
+      word_sense_id: senseId,
+    });
     const clean = raw.replace(/```json|```/g, '').trim();
     const data = JSON.parse(clean);
+    const senseIdAttr = senseId ? `data-sense-id="${senseId}"` : '';
 
     resultEl.innerHTML = `
       <div class="ai-response">
-        <div class="ai-response-label">✦ AI-Generated · Theme: ${theme}</div>
+        <div class="ai-response-label">✦ 師父 · Theme: ${theme}</div>
         <div class="ai-response-text">
           <span class="resp-cn">${segmentedHTML(data.cn, w)}</span>
           <span class="resp-en">${data.en}</span>
           <span class="resp-note">${data.note}</span>
         </div>
         <div class="ai-response-actions">
-          <button class="ex-sent-save" onclick="saveAIResult('${wordKey}', ${JSON.stringify(data.cn).replace(/'/g,"\\'")} , ${JSON.stringify(data.en).replace(/'/g,"\\'")} , 'AI · ${theme}')">＋ Save to My Dictionary</button>
+          <button class="ex-sent-save" ${senseIdAttr} data-word-key="${wordKey}" data-cn="${data.cn.replace(/"/g,'&quot;')}" data-en="${data.en.replace(/"/g,'&quot;')}" data-feedback="${(data.note || '').replace(/"/g,'&quot;')}" data-ai="1" data-generated="1" onclick="saveAIResult(this)">＋ Save Writing</button>
         </div>
       </div>`;
+    setTimeout(() => resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
   } catch(e) {
+    if (e.message === 'auth_required') { showAuthPrompt(wordKey, 'theme'); return; }
     resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Something went wrong. Please try again.</div></div>`;
   }
   btn.disabled = false; btn.textContent = 'Generate 生成 →';
 }
 
-function saveAIResult(wordKey, cn, en, source) {
-  saveToWord(wordKey, { cn, en, source });
-  refreshDeckWrap(wordKey);
-  // Find and update save button
-  event.target.textContent = '✓ Saved';
-  event.target.classList.add('saved');
-  event.target.disabled = true;
+async function saveAIResult(btn) {
+  const wordKey = btn.dataset.wordKey;
+  const cn = btn.dataset.cn;
+  const en = btn.dataset.en;
+  const feedback = btn.dataset.feedback || '';
+  const aiVerified = btn.dataset.ai === '1';
+  const isGenerated = btn.dataset.generated === '1';
+  const senseId = btn.dataset.senseId;
+  btn.disabled = true; btn.textContent = '…';
+
+  try {
+    const response = await fetch('/api/workshop/save-example', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': _csrf(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        word_sense_id: senseId ? parseInt(senseId) : null,
+        chinese_text: cn,
+        english_text: en,
+        ai_verified: aiVerified,
+        ai_feedback: feedback || null,
+        source_type: isGenerated ? 'generated' : 'learner',
+      }),
+    });
+
+    if (!response.ok) throw new Error('save_failed');
+    const saved = await response.json();
+
+    const source = isGenerated ? '師父 generated' : aiVerified ? '師父 verified' : 'My writing';
+    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    saveToWord(wordKey, { id: saved.id, cn, en, feedback, source, date: today });
+    refreshDeckWrap(wordKey);
+
+    // Close the AI response panel
+    const responseEl = btn.closest('.ai-response');
+    if (responseEl) responseEl.remove();
+
+    // Scroll to the newest writing (last card in deck)
+    const deckEl = document.getElementById(`deck-${wordKey}`);
+    if (deckEl) {
+      const lastCard = deckEl.querySelector('.ex-sent:last-child');
+      setTimeout(() => (lastCard || deckEl).scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+    }
+  } catch(e) {
+    btn.textContent = '✗ Error';
+    setTimeout(() => { btn.textContent = '＋ Save Writing'; btn.disabled = false; }, 2000);
+  }
 }
 
 
@@ -3249,6 +3530,32 @@ if (INITIAL_SEARCH) {
   searchQuery = INITIAL_SEARCH;
 }
 render();
+
+// Hydrate saved deck from DB
+if (window.__AUTH && window.__AUTH.savedExamples && window.__AUTH.savedExamples.length) {
+  window.__AUTH.savedExamples.forEach(ex => {
+    // Find the word that owns this sense
+    const w = WORDS.find(w => (w.senseIds || []).includes(ex.word_sense_id));
+    if (w) {
+      const d = ex.created_at ? new Date(ex.created_at) : null;
+      const dateStr = d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+      const src = ex.source_type === 'generated' ? '師父 generated' : ex.ai_verified ? '師父 verified' : 'My writing';
+      saveToWord(w.traditional, {
+        id: ex.id,
+        cn: ex.chinese_text,
+        en: ex.english_text,
+        feedback: ex.ai_feedback || '',
+        source: src,
+        date: dateStr,
+      });
+    }
+  });
+  // Re-render deck wraps for all words that have saved items
+  Object.keys(savedDeck).forEach(key => refreshDeckWrap(key));
+}
+
+// Restore pending workshop data after login redirect
+restoreWorkshopPending();
 
 // Re-render on bfcache restore (back button from IWP)
 window.addEventListener('pageshow', function(e) {

@@ -17,6 +17,8 @@ class UserSavedExample extends Model
         'chinese_text',
         'english_text',
         'ai_verified',
+        'ai_feedback',
+        'source_type',
         'is_public',
     ];
 

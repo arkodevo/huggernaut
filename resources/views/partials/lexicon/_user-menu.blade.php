@@ -29,8 +29,9 @@
   margin-top: 0.3rem;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 3px; padding: 0.4rem 0;
-  min-width: 120px;
+  min-width: 140px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  z-index: 300;
 }
 .user-menu-dropdown.open { display: block; }
 .user-menu-dropdown a,
@@ -55,6 +56,7 @@
     </span>
     <div class="user-menu-dropdown" id="userDropdown">
       <a href="{{ route('my-words') }}">My Words</a>
+      <a href="{{ route('my-writings') }}">My Writings</a>
       <form method="POST" action="{{ route('logout') }}">
         @csrf
         <button type="submit">Log out</button>

@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY') ?: (function () {
+            // MAMP may export empty env vars — fall back to reading .env directly
+            $envFile = base_path('.env');
+            if (file_exists($envFile)) {
+                foreach (file($envFile) as $line) {
+                    if (str_starts_with(trim($line), 'ANTHROPIC_API_KEY=')) {
+                        return trim(str_replace(['ANTHROPIC_API_KEY=', '"', "'"], '', $line));
+                    }
+                }
+            }
+            return null;
+        })(),
+        'model' => env('ANTHROPIC_MODEL') ?: 'claude-sonnet-4-20250514',
+    ],
+
 ];

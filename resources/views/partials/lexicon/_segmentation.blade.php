@@ -8,7 +8,7 @@
   position: relative;
 }
 .seg-known:hover { border-color: var(--accent); color: var(--accent); }
-.seg-known.highlight { color: var(--gold); font-weight: 600; }
+.seg-known.highlight { color: var(--accent); font-weight: 600; }
 </style>
 <script>
 // Greedy longest-match tokenizer against known vocabulary

@@ -16,8 +16,10 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\PreferenceController;
 use App\Http\Controllers\Api\SavedSenseController;
+use App\Http\Controllers\Api\WorkshopController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\MyWordsController;
+use App\Http\Controllers\MyWritingsController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public ────────────────────────────────────────────────────────────────────
@@ -41,6 +43,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name(
 // ── Learner pages (auth required) ────────────────────────────────────────────
 
 Route::get('/my-words', [MyWordsController::class, 'index'])->name('my-words')->middleware('auth');
+Route::get('/my-writings', [MyWritingsController::class, 'index'])->name('my-writings')->middleware('auth');
 
 // ── Learner API (auth required) ──────────────────────────────────────────────
 
@@ -58,6 +61,12 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::delete('/collections/{collection}', [CollectionController::class, 'destroy']);
     Route::post('/collections/{collection}/senses/{senseId}', [CollectionController::class, 'addSense']);
     Route::delete('/collections/{collection}/senses/{senseId}', [CollectionController::class, 'removeSense']);
+
+    // Workshop (造句) — AI proxy + saved examples
+    Route::post('/workshop/critique', [WorkshopController::class, 'critique']);
+    Route::post('/workshop/generate', [WorkshopController::class, 'generate']);
+    Route::post('/workshop/save-example', [WorkshopController::class, 'saveExample']);
+    Route::delete('/workshop/saved-example/{id}', [WorkshopController::class, 'deleteExample']);
 });
 
 // ── Lexicon explorer (public, no auth) ───────────────────────────────────────

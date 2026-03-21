@@ -56,7 +56,7 @@ function cardAttr(cat, key, header, labelPair, extraClass) {
   const isBoth  = (uiMode === 'all' || uiMode === 'en-zh');
   const zhLabel = ATTR_ZH[cat]?.[key] || label;
   const hdrZh   = ATTR_HEADER_ZH[cat] || header;
-  const initLabel = preferred === 'zh' ? zhLabel : isBoth ? `${label} · ${zhLabel}` : label;
+  const initLabel = preferred === 'zh' ? zhLabel : isBoth ? `${label} ${zhLabel}` : label;
   const initHdr   = preferred === 'zh' ? hdrZh   : isBoth ? `${header} · ${hdrZh}`  : header;
   return `<div class="card-attr attr-${cat} ${extraClass}" onclick="toggleAttrLang(event)">
     <div class="card-attr-header" data-en="${header}" data-zh="${hdrZh}" data-state="${preferred}">${initHdr}</div>
@@ -78,7 +78,7 @@ function cardAttrMulti(cat, keys, header) {
   const valueHTML = keys.map(k => {
     const [icon, label] = metaAttrLabel(cat, k);
     const zhLabel = ATTR_ZH[cat]?.[k] || label;
-    const initLabel = preferred === 'zh' ? zhLabel : isBoth ? `${label} · ${zhLabel}` : label;
+    const initLabel = preferred === 'zh' ? zhLabel : isBoth ? `${label} ${zhLabel}` : label;
     return `<span class="attr-val-item">${showIcon && icon ? `<span class="attr-icon">${icon}</span>` : ''}${showLabel ? `<span class="attr-label" data-en="${label}" data-zh="${zhLabel}" data-state="${preferred}">${initLabel}</span>` : ''}</span>`;
   }).join('');
   return `<div class="card-attr attr-${cat}" onclick="toggleAttrLang(event)">

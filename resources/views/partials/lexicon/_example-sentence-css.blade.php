@@ -25,7 +25,7 @@
   font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
   font-size: var(--fs-ex-cn, 1.8rem); color: var(--ink); line-height: 1.5;
 }
-.ex-sent-cn .highlight { color: var(--gold); font-weight: 600; }
+.ex-sent-cn .highlight { color: var(--accent); font-weight: 600; }
 .ex-sent-en { font-size: var(--fs-ex-en, 1rem); color: var(--dim); }
 .ex-sent-source { font-size: 0.55rem; color: var(--dim); opacity: 0.6; }
 .ex-sent-theme {
@@ -79,6 +79,7 @@
   max-height: 18rem;
   line-height: 1.8;
   margin-bottom: 0.5rem;
+  margin-left: auto;
 }
 .ex-sent.vertical .ex-sent-en {
   writing-mode: horizontal-tb;

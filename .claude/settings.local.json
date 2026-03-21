@@ -66,7 +66,14 @@
       "Bash(grep -l \"Sanctum\\\\|sanctum\" /Users/chuluoyi/Sites/huggernaut/config/*.php)",
       "Bash(ls -la /Users/chuluoyi/Documents/華語/planning/*.docx)",
       "Bash(open /Users/chuluoyi/Desktop/lawn-guys-logo.svg)",
-      "Bash(kill 96311)"
+      "Bash(kill 96311)",
+      "Bash(find /Users/chuluoyi/Sites/huggernaut -type f -name *[Pp]hase* -o -name *AI* -o -name *ai*)",
+      "Bash(find /Users/chuluoyi/Sites/huggernaut -type f \\\\\\(-name *.tsx -o -name *.ts -o -name *.vue \\\\\\))",
+      "Bash(grep -l \"user_saved_examples\" /Users/chuluoyi/Sites/huggernaut/database/migrations/*.php)",
+      "Bash(xargs ls:*)",
+      "Bash(php -l app/Http/Controllers/Api/WorkshopController.php)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -X POST \"https://www.huggernaut8888.com/api/workshop/critique\" -H \"Content-Type: application/json\" -H \"Accept: application/json\" -d '{\"\"system_prompt\"\":\"\"test\"\",\"\"sentence\"\":\"\"test\"\"}' -k)",
+      "Bash(php -l app/Http/Controllers/MyWritingsController.php)"
     ]
   }
 }
