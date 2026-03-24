@@ -36,4 +36,51 @@ body::before {
     radial-gradient(ellipse 50% 60% at 85% 80%, rgba(26,138,90,0.04) 0%, transparent 70%);
   pointer-events: none; z-index: 0;
 }
+/* ── SHARED DELETE CONFIRMATION ── */
+.confirm-delete-bar {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0.6rem; margin-top: 0.4rem;
+  background: rgba(200,60,60,0.04);
+  border: 1px solid rgba(200,60,60,0.2);
+  border-radius: 2px;
+  animation: confirmFadeIn 0.15s ease;
+}
+@keyframes confirmFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.confirm-delete-msg {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem; color: var(--text); flex: 1;
+}
+.confirm-delete-yes {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: #fff; background: var(--rose);
+  border: none; border-radius: 2px;
+  padding: 0.3rem 0.7rem; cursor: pointer;
+  transition: opacity 0.2s;
+}
+.confirm-delete-yes:hover { opacity: 0.8; }
+.confirm-delete-no {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: var(--dim); background: none;
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.3rem 0.7rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.confirm-delete-no:hover { border-color: var(--accent); color: var(--text); }
 </style>
+<script>
+// Shared delete confirmation — call from anywhere
+function showDeleteConfirm(anchorEl, message, onConfirm) {
+  // Don't show if already showing
+  var existing = anchorEl.querySelector('.confirm-delete-bar');
+  if (existing) { existing.remove(); return; }
+  var bar = document.createElement('div');
+  bar.className = 'confirm-delete-bar';
+  bar.innerHTML = '<span class="confirm-delete-msg">' + message + '</span>'
+    + '<button class="confirm-delete-yes">Delete</button>'
+    + '<button class="confirm-delete-no">Cancel</button>';
+  bar.querySelector('.confirm-delete-yes').onclick = function(e) { e.stopPropagation(); bar.remove(); onConfirm(); };
+  bar.querySelector('.confirm-delete-no').onclick = function(e) { e.stopPropagation(); bar.remove(); };
+  bar.onclick = function(e) { e.stopPropagation(); };
+  anchorEl.appendChild(bar);
+}
+</script>

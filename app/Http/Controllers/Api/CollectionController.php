@@ -4,22 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
+use App\Models\UserSavedWord;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CollectionController extends Controller
 {
     public function index(): JsonResponse
     {
         $collections = Auth::user()->collections()
-            ->with('wordSenses:word_senses.id')
+            ->with('wordObjects:word_objects.id')
             ->get()
             ->map(fn ($c) => [
-                'id'       => $c->id,
-                'name'     => $c->name,
-                'name_zh'  => $c->name_zh,
-                'senseIds' => $c->wordSenses->pluck('id'),
+                'id'            => $c->id,
+                'name'          => $c->name,
+                'name_zh'       => $c->name_zh,
+                'wordObjectIds' => $c->wordObjects->pluck('id'),
             ]);
 
         return response()->json($collections);
@@ -68,29 +70,50 @@ class CollectionController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function addSense(Collection $collection, int $senseId): JsonResponse
+    public function addWord(Collection $collection, int $wordObjectId): JsonResponse
     {
         if ($collection->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $maxSort = $collection->wordSenses()->max('collection_sense.sort_order') ?? 0;
+        // Ensure the word is saved (user_saved_words) — adding to a collection implies saving
+        UserSavedWord::firstOrCreate(
+            ['user_id' => Auth::id(), 'word_object_id' => $wordObjectId],
+            ['saved_at' => now()]
+        );
 
-        $collection->wordSenses()->syncWithoutDetaching([
-            $senseId => ['sort_order' => $maxSort + 1, 'added_at' => now()],
+        $maxSort = $collection->wordObjects()->max('collection_word.sort_order') ?? 0;
+
+        $collection->wordObjects()->syncWithoutDetaching([
+            $wordObjectId => ['sort_order' => $maxSort + 1, 'added_at' => now()],
         ]);
 
         return response()->json(['ok' => true]);
     }
 
-    public function removeSense(Collection $collection, int $senseId): JsonResponse
+    public function removeWord(Collection $collection, int $wordObjectId): JsonResponse
     {
         if ($collection->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $collection->wordSenses()->detach($senseId);
+        $collection->wordObjects()->detach($wordObjectId);
 
-        return response()->json(['ok' => true]);
+        // If the word is no longer in ANY of this user's collections, unsave it entirely
+        $unsaved = false;
+        $stillInOther = DB::table('collection_word')
+            ->join('collections', 'collections.id', '=', 'collection_word.collection_id')
+            ->where('collections.user_id', Auth::id())
+            ->where('collection_word.word_object_id', $wordObjectId)
+            ->exists();
+
+        if (!$stillInOther) {
+            UserSavedWord::where('user_id', Auth::id())
+                ->where('word_object_id', $wordObjectId)
+                ->delete();
+            $unsaved = true;
+        }
+
+        return response()->json(['ok' => true, 'unsaved' => $unsaved]);
     }
 }

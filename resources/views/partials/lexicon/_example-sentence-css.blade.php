@@ -76,10 +76,13 @@
   writing-mode: vertical-rl;
   text-orientation: mixed;
   letter-spacing: 0.08em;
-  max-height: 18rem;
+  max-height: 20rem;
+  max-width: 100%;
   line-height: 1.8;
   margin-bottom: 0.5rem;
-  margin-left: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.4rem;
 }
 .ex-sent.vertical .ex-sent-en {
   writing-mode: horizontal-tb;

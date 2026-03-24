@@ -13,6 +13,7 @@
  * @returns {string} HTML
  */
 function renderExSentence(ex, opts = {}) {
+  if (!ex || !ex.cn) return '';
   const vertical = opts.vertical || false;
   const posChip = opts.pos
     ? `<span class="ex-sent-pos">${(typeof POS_ABBR !== 'undefined' && POS_ABBR[opts.pos]) || opts.pos}</span>`

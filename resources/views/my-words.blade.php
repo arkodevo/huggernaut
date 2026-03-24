@@ -8,44 +8,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;700&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 @include('partials.lexicon._foundations')
 <style>
-/* ── HEADER ── */
-.mw-header {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-  padding: 0.8rem 1.2rem;
-  display: flex; align-items: center; gap: 0.6rem;
-}
-.mw-back {
-  font-family: 'DM Mono', monospace; font-size: 0.75rem;
-  color: var(--accent); background: none; border: none;
-  cursor: pointer; text-decoration: none;
-  transition: opacity 0.15s;
-}
-.mw-back:hover { opacity: 0.7; }
-.mw-title {
-  font-family: 'DM Mono', monospace; font-size: 0.7rem;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--dim); flex: 1;
-}
-
 /* ── MAIN ── */
 .mw-main { max-width: 640px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
 
 /* ── SECTION ── */
-.mw-section { margin-bottom: 2rem; }
+.mw-section { margin-bottom: 1.5rem; }
+.mw-section-body {
+  background: var(--surface);
+  border-radius: 0 0 4px 4px;
+  padding: 0.75rem;
+}
 .mw-section-header {
   display: flex; align-items: center; gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 .mw-section-title {
-  font-family: 'DM Mono', monospace; font-size: 0.65rem;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--dim); flex: 1;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--accent); flex: 1;
 }
 .mw-section-count {
-  font-family: 'DM Mono', monospace; font-size: 0.6rem;
-  color: var(--dim); opacity: 0.7;
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: var(--accent); opacity: 0.7;
 }
 .mw-action-btn {
   font-family: 'DM Mono', monospace; font-size: 0.6rem;
@@ -57,20 +41,30 @@
 .mw-action-btn.danger:hover { color: #c44; }
 
 /* ── ENTRIES ── */
-.mw-list { border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+.mw-list { display: flex; flex-direction: column; gap: 0.5rem; }
 .mw-entry {
   display: grid; grid-template-columns: auto 1fr auto;
   gap: 0.5rem; align-items: center;
-  padding: 0.6rem 0.75rem;
-  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 0.85rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
   text-decoration: none; color: var(--ink);
-  transition: background 0.1s;
+  transition: background 0.1s, border-color 0.15s;
 }
-.mw-entry:last-child { border-bottom: none; }
-.mw-entry:hover { background: rgba(0,0,0,0.015); }
+.mw-entry:hover { border-color: rgba(98,64,200,0.25); }
 .mw-hanzi {
-  font-family: 'Noto Serif TC', serif; font-size: 1.3rem;
+  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
+  font-size: 1.3rem;
   font-weight: 400; line-height: 1.2;
+}
+/* ── Vertical mode ── */
+body.vertical-mode .mw-hanzi {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 1.6rem;
+  line-height: 1.6;
+  letter-spacing: 0.08em;
 }
 .mw-mid {
   display: flex; flex-direction: column; gap: 0.15rem;
@@ -107,10 +101,45 @@
 /* ── EMPTY STATE ── */
 .mw-empty {
   font-family: 'DM Mono', monospace; font-size: 0.75rem;
-  color: var(--dim); text-align: center; padding: 2rem 1rem;
+  color: var(--dim); text-align: center; padding: 1.5rem 1rem;
+  background: var(--bg); border-radius: 3px;
 }
 .mw-empty a { color: var(--accent); text-decoration: none; }
 .mw-empty a:hover { text-decoration: underline; }
+
+/* ── ACCORDION ── */
+.mw-accordion-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  cursor: pointer; user-select: none;
+  padding: 0.55rem 0.75rem;
+  background: var(--surface2);
+  border-radius: 4px 4px 0 0;
+}
+.mw-accordion-header.collapsed {
+  border-radius: 4px;
+}
+.mw-accordion-header:hover { opacity: 0.85; }
+.mw-accordion-arrow {
+  font-size: 0.85rem; color: var(--accent);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+/* Arrow content is set via JS: ▼ open, ▲ closed */
+.mw-accordion-body { overflow: hidden; transition: max-height 0.25s ease; }
+.mw-accordion-body.collapsed { display: none; }
+.mw-section-actions {
+  display: flex; gap: 0.5rem; align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+.mw-view-all {
+  font-family: 'DM Mono', monospace; font-size: 0.68rem;
+  color: var(--accent); text-decoration: none;
+  letter-spacing: 0.08em;
+}
+.mw-view-all:hover { text-decoration: underline; }
 
 /* ── INLINE RENAME ── */
 .mw-rename-input {
@@ -125,35 +154,112 @@
 <body>
 <script>
   window.__AUTH = @json($authUser);
-  var MW_SAVED = @json($savedSenses);
+  var MW_SAVED = @json($savedWords);
   var MW_COLLECTIONS = @json($collections);
 </script>
 
-<div class="mw-header">
-  <a href="{{ route('lexicon.index') }}" class="mw-back">&larr; Lexicon</a>
-  <div class="mw-title">My Words</div>
-  @include('partials.lexicon._user-menu')
-</div>
+@include('partials.lexicon._site-header', ['backUrl' => route('lexicon.index'), 'backLabel' => 'Lexicon'])
 
 <div class="mw-main" id="mwMain"></div>
 
 <script>
 var csrf = document.querySelector('meta[name="csrf-token"]').content;
 
+// Apply text direction preference
+var textDir = localStorage.getItem('textDir') || 'horizontal';
+if (textDir === 'vertical') document.body.classList.add('vertical-mode');
+
+// Track accordion state across re-renders
+var _accordionState = {};
+
 function mwRender() {
   var main = document.getElementById('mwMain');
   if (!main) return;
   var html = '';
 
-  // ── All Saved ──
-  html += '<div class="mw-section">';
-  html += '<div class="mw-section-header">';
-  html += '<div class="mw-section-title">All Saved</div>';
-  html += '<span class="mw-section-count">' + MW_SAVED.length + '</span>';
+  // ── Compute uncategorized words (saved but not in any collection) ──
+  var categorizedIds = [];
+  MW_COLLECTIONS.forEach(function(c) {
+    (c.words || []).forEach(function(w) {
+      if (categorizedIds.indexOf(w.wordObjectId) === -1) categorizedIds.push(w.wordObjectId);
+    });
+  });
+  var uncategorized = MW_SAVED.filter(function(s) {
+    return categorizedIds.indexOf(s.wordObjectId) === -1;
+  });
+
+  // ── Open All / Close All ──
+  html += '<div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-bottom:0.5rem">';
+  html += '<button class="mw-action-btn" style="color:var(--accent)" onclick="mwExpandAll()">Open All</button>';
+  html += '<button class="mw-action-btn" onclick="mwCollapseAll()">Close All</button>';
   html += '</div>';
+
+  // ── 1. Uncategorized (accordion, open by default) ──
+  var uncatOpen = _accordionState['uncat'] !== undefined ? _accordionState['uncat'] : (localStorage.getItem('mw_accordion_uncat') !== 'false');
+  html += '<div class="mw-section">';
+  html += '<div class="mw-accordion-header' + (uncatOpen ? '' : ' collapsed') + '" onclick="mwToggleAccordion(\'uncat\', this)">';
+  html += '<div class="mw-section-title">Uncategorized (' + uncategorized.length + ')</div>';
+  html += '<span class="mw-accordion-arrow">' + (uncatOpen ? '▼' : '▲') + '</span>';
+  html += '</div>';
+  html += '<div class="mw-accordion-body' + (uncatOpen ? '' : ' collapsed') + '" id="mwAccordion-uncat">';
+  html += '<div class="mw-section-body">';
 
   if (MW_SAVED.length === 0) {
     html += '<div class="mw-empty">No saved words yet. <a href="{{ route('lexicon.index') }}">Explore the lexicon</a> and tap ☆ to save.</div>';
+  } else if (uncategorized.length === 0) {
+    html += '<div class="mw-empty">All words are in collections.</div>';
+  } else {
+    html += '<div class="mw-list">';
+    uncategorized.forEach(function(s) {
+      html += mwEntryHTML(s);
+    });
+    html += '</div>';
+  }
+  html += '</div></div></div>';
+
+  // ── 2. Collections (accordions, collapsed by default) ──
+  MW_COLLECTIONS.forEach(function(c) {
+    var cKey = 'coll-' + c.id;
+    var cOpen = _accordionState[cKey] !== undefined ? _accordionState[cKey] : (localStorage.getItem('mw_accordion_' + cKey) === 'true');
+    html += '<div class="mw-section" data-collection-id="' + c.id + '">';
+    html += '<div class="mw-accordion-header' + (cOpen ? '' : ' collapsed') + '" onclick="mwToggleAccordion(\'' + cKey + '\', this)">';
+    html += '<div class="mw-section-title" id="mwCollTitle-' + c.id + '">' + escHtml(c.name) + (c.nameZh ? ' · ' + escHtml(c.nameZh) : '') + ' (' + c.words.length + ')</div>';
+    html += '<span class="mw-accordion-arrow">' + (cOpen ? '▼' : '▲') + '</span>';
+    html += '</div>';
+    html += '<div class="mw-accordion-body' + (cOpen ? '' : ' collapsed') + '" id="mwAccordion-' + cKey + '">';
+    html += '<div class="mw-section-body">';
+    html += '<div class="mw-section-actions">';
+    if (c.words.length >= 2) {
+      html += '<a class="mw-action-btn" href="/my-words/test/' + c.id + '" style="color:var(--accent);text-decoration:none">Test</a>';
+    }
+    html += '<button class="mw-action-btn" onclick="event.stopPropagation();mwRenameCollection(' + c.id + ')">Rename</button>';
+    html += '<button class="mw-action-btn danger" onclick="mwDeleteCollection(' + c.id + ')">Delete</button>';
+    html += '</div>';
+
+    if (c.words.length === 0) {
+      html += '<div class="mw-empty">No words in this collection yet.</div>';
+    } else {
+      html += '<div class="mw-list">';
+      c.words.forEach(function(s) {
+        html += mwCollEntryHTML(s, c.id);
+      });
+      html += '</div>';
+    }
+    html += '</div></div></div>';
+  });
+
+  // ── 3. All Saved (accordion, collapsed by default) ──
+  var allOpen = _accordionState['all'] !== undefined ? _accordionState['all'] : (localStorage.getItem('mw_accordion_all') === 'true');
+  html += '<div class="mw-section">';
+  html += '<div class="mw-accordion-header' + (allOpen ? '' : ' collapsed') + '" onclick="mwToggleAccordion(\'all\', this)">';
+  html += '<div class="mw-section-title">All Saved (' + MW_SAVED.length + ')</div>';
+  html += '<span class="mw-accordion-arrow">' + (allOpen ? '▼' : '▲') + '</span>';
+  html += '</div>';
+  html += '<div class="mw-accordion-body' + (allOpen ? '' : ' collapsed') + '" id="mwAccordion-all">';
+  html += '<div class="mw-section-body">';
+
+  if (MW_SAVED.length === 0) {
+    html += '<div class="mw-empty">No saved words yet.</div>';
   } else {
     html += '<div class="mw-list">';
     MW_SAVED.forEach(function(s) {
@@ -161,31 +267,71 @@ function mwRender() {
     });
     html += '</div>';
   }
-  html += '</div>';
-
-  // ── Collections ──
-  MW_COLLECTIONS.forEach(function(c) {
-    html += '<div class="mw-section" data-collection-id="' + c.id + '">';
-    html += '<div class="mw-section-header">';
-    html += '<div class="mw-section-title" id="mwCollTitle-' + c.id + '">' + escHtml(c.name) + (c.nameZh ? ' · ' + escHtml(c.nameZh) : '') + '</div>';
-    html += '<span class="mw-section-count">' + c.senses.length + '</span>';
-    html += '<button class="mw-action-btn" onclick="mwRenameCollection(' + c.id + ')">Rename</button>';
-    html += '<button class="mw-action-btn danger" onclick="mwDeleteCollection(' + c.id + ')">Delete</button>';
-    html += '</div>';
-
-    if (c.senses.length === 0) {
-      html += '<div class="mw-empty">No words in this collection yet.</div>';
-    } else {
-      html += '<div class="mw-list">';
-      c.senses.forEach(function(s) {
-        html += mwCollEntryHTML(s, c.id);
-      });
-      html += '</div>';
-    }
-    html += '</div>';
-  });
+  html += '</div></div></div>';
 
   main.innerHTML = html;
+}
+
+function mwToggleAccordion(key, headerEl) {
+  var body = document.getElementById('mwAccordion-' + key);
+  if (!body) return;
+  var arrow = headerEl.querySelector('.mw-accordion-arrow');
+  var isCollapsed = body.classList.contains('collapsed');
+  if (isCollapsed) {
+    body.classList.remove('collapsed');
+    headerEl.classList.remove('collapsed');
+    if (arrow) arrow.textContent = '▼';
+    _accordionState[key] = true;
+    localStorage.setItem('mw_accordion_' + key, 'true');
+  } else {
+    body.classList.add('collapsed');
+    headerEl.classList.add('collapsed');
+    if (arrow) arrow.textContent = '▲';
+    _accordionState[key] = false;
+    localStorage.setItem('mw_accordion_' + key, 'false');
+  }
+}
+
+function mwExpandAll() {
+  document.querySelectorAll('.mw-accordion-body.collapsed').forEach(function(body) {
+    body.classList.remove('collapsed');
+  });
+  document.querySelectorAll('.mw-accordion-header.collapsed').forEach(function(header) {
+    header.classList.remove('collapsed');
+  });
+  document.querySelectorAll('.mw-accordion-arrow').forEach(function(arrow) {
+    arrow.textContent = '▼';
+  });
+  _accordionState['uncat'] = true;
+  localStorage.setItem('mw_accordion_uncat', 'true');
+  _accordionState['all'] = true;
+  localStorage.setItem('mw_accordion_all', 'true');
+  MW_COLLECTIONS.forEach(function(c) {
+    var cKey = 'coll-' + c.id;
+    _accordionState[cKey] = true;
+    localStorage.setItem('mw_accordion_' + cKey, 'true');
+  });
+}
+
+function mwCollapseAll() {
+  document.querySelectorAll('.mw-accordion-body').forEach(function(body) {
+    body.classList.add('collapsed');
+  });
+  document.querySelectorAll('.mw-accordion-header').forEach(function(header) {
+    header.classList.add('collapsed');
+  });
+  document.querySelectorAll('.mw-accordion-arrow').forEach(function(arrow) {
+    arrow.textContent = '▲';
+  });
+  _accordionState['uncat'] = false;
+  localStorage.setItem('mw_accordion_uncat', 'false');
+  _accordionState['all'] = false;
+  localStorage.setItem('mw_accordion_all', 'false');
+  MW_COLLECTIONS.forEach(function(c) {
+    var cKey = 'coll-' + c.id;
+    _accordionState[cKey] = false;
+    localStorage.setItem('mw_accordion_' + cKey, 'false');
+  });
 }
 
 function mwEntryHTML(s) {
@@ -196,7 +342,7 @@ function mwEntryHTML(s) {
     + '<span class="mw-def">' + escHtml(s.definition) + '</span>'
     + (s.domain ? '<span class="mw-domain-chip">' + escHtml(s.domain) + '</span>' : '')
     + '</div>'
-    + '<button class="mw-unsave" onclick="mwUnsave(event,' + s.senseId + ')" title="Unsave">&#9733;</button>'
+    + '<button class="mw-unsave" onclick="mwUnsave(event,' + s.wordObjectId + ')" title="Unsave">&#9733;</button>'
     + '</a>';
 }
 
@@ -208,35 +354,39 @@ function mwCollEntryHTML(s, collectionId) {
     + '<span class="mw-def">' + escHtml(s.definition) + '</span>'
     + (s.domain ? '<span class="mw-domain-chip">' + escHtml(s.domain) + '</span>' : '')
     + '</div>'
-    + '<button class="mw-remove" onclick="mwRemoveFromCollection(event,' + s.senseId + ',' + collectionId + ')" title="Remove from collection">&times;</button>'
+    + '<button class="mw-remove" onclick="mwRemoveFromCollection(event,' + s.wordObjectId + ',' + collectionId + ')" title="Remove from collection">&times;</button>'
     + '</a>';
 }
 
-function mwRemoveFromCollection(event, senseId, collectionId) {
+function mwRemoveFromCollection(event, wordObjectId, collectionId) {
   event.preventDefault();
   event.stopPropagation();
-  fetch('/api/collections/' + collectionId + '/senses/' + senseId, {
+  fetch('/api/collections/' + collectionId + '/words/' + wordObjectId, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-  }).then(function(r) { return r.json(); }).then(function() {
+  }).then(function(r) { return r.json(); }).then(function(data) {
     var c = MW_COLLECTIONS.find(function(c) { return c.id === collectionId; });
-    if (c) c.senses = c.senses.filter(function(s) { return s.senseId !== senseId; });
+    if (c) c.words = c.words.filter(function(s) { return s.wordObjectId !== wordObjectId; });
+    // If backend confirmed the word is no longer in any collection, remove from All Saved too
+    if (data.unsaved) {
+      MW_SAVED = MW_SAVED.filter(function(s) { return s.wordObjectId !== wordObjectId; });
+    }
     mwRender();
   });
 }
 
-function mwUnsave(event, senseId) {
+function mwUnsave(event, wordObjectId) {
   event.preventDefault();
   event.stopPropagation();
-  fetch('/api/saved-senses/' + senseId, {
+  fetch('/api/saved-words/' + wordObjectId, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
   }).then(function(r) { return r.json(); }).then(function() {
     // Remove from saved
-    MW_SAVED = MW_SAVED.filter(function(s) { return s.senseId !== senseId; });
+    MW_SAVED = MW_SAVED.filter(function(s) { return s.wordObjectId !== wordObjectId; });
     // Remove from collections
     MW_COLLECTIONS.forEach(function(c) {
-      c.senses = c.senses.filter(function(s) { return s.senseId !== senseId; });
+      c.words = c.words.filter(function(s) { return s.wordObjectId !== wordObjectId; });
     });
     mwRender();
   });
@@ -278,13 +428,17 @@ function mwRenameCollection(collectionId) {
 }
 
 function mwDeleteCollection(collectionId) {
-  if (!confirm('Delete this collection? Saved words will remain in your library.')) return;
-  fetch('/api/collections/' + collectionId, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-  }).then(function() {
-    MW_COLLECTIONS = MW_COLLECTIONS.filter(function(c) { return c.id !== collectionId; });
-    mwRender();
+  var section = document.querySelector('[data-collection-id="' + collectionId + '"]');
+  var body = section ? section.querySelector('.mw-section-body') : null;
+  if (!body) return;
+  showDeleteConfirm(body, 'Delete this collection? Words stay in your library.', function() {
+    fetch('/api/collections/' + collectionId, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+    }).then(function() {
+      MW_COLLECTIONS = MW_COLLECTIONS.filter(function(c) { return c.id !== collectionId; });
+      mwRender();
+    });
   });
 }
 
@@ -297,5 +451,6 @@ function escHtml(str) {
 
 mwRender();
 </script>
+@include('partials.lexicon._site-footer')
 </body>
 </html>

@@ -212,6 +212,31 @@ class ExploreController extends Controller
             'usageNote' => $d->usage_note ?? '',
         ]))->values()->all();
 
+        // ── Sense groups: definitions grouped by sense with per-sense attributes ──
+        // Used by the SRP card to render attribute chips under each sense block.
+
+        $senseGroups = $senses->map(function ($s) {
+            $registerDes = $s->designations
+                ->first(fn ($d) => in_array($d->slug, self::REGISTER_SLUGS));
+            $dimensionDes = $s->designations
+                ->filter(fn ($d) => in_array($d->slug, self::DIMENSION_SLUGS));
+
+            return [
+                'definitions' => $s->definitions->map(fn ($d) => [
+                    'pos'       => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
+                    'def'       => $d->definition_text,
+                    'formula'   => $d->formula ?? '',
+                    'usageNote' => $d->usage_note ?? '',
+                ])->values()->all(),
+                'register'    => self::REGISTER_MAP[$registerDes?->slug ?? 'standard'] ?? 'neutral',
+                'connotation' => $s->connotation?->slug ?? 'neutral',
+                'channel'     => self::CHANNEL_MAP[$s->channel?->slug ?? 'fluid'] ?? ($s->channel?->slug ?? 'fluid'),
+                'dimension'   => $dimensionDes->map(fn ($d) => self::DIMENSION_MAP[$d->slug] ?? $d->slug)->values()->all(),
+                'intensity'   => $s->intensity ?? 2,
+                'tocfl'       => $s->tocflLevel?->slug ? (self::TOCFL_SLUG_MAP[$s->tocflLevel->slug] ?? null) : null,
+            ];
+        })->values()->all();
+
         // ── Examples: one per sense, first becomes w.example, rest are extras ─
 
         $allExamples = $senses
@@ -228,11 +253,13 @@ class ExploreController extends Controller
             ->filter()->unique()->values()->all();
 
         return [
+            'wordObjectId'    => $word->id,
             'smart_id'        => $word->smart_id,
             'traditional'     => $word->traditional,
             'simplified'      => $word->simplified ?? $word->traditional,
             'pinyin'          => $primary->pronunciation?->pronunciation_text ?? '',
             'definitions'     => $definitions,
+            'senseGroups'     => $senseGroups,
             'relProximity'    => $relProximity,
             'family'          => new \stdClass(), // word family tree — Phase 1
             'definition'      => $definitions[0]['def'] ?? '',
@@ -524,6 +551,7 @@ class ExploreController extends Controller
         $allFamily = array_map(fn ($items) => array_values($items), $allFamily);
 
         return [
+            'wordObjectId'    => $word->id,
             'traditional'     => $word->traditional,
             'simplified'      => $word->simplified ?? $word->traditional,
             'smartId'         => $word->smart_id,
@@ -621,17 +649,18 @@ class ExploreController extends Controller
             'id'             => $user->id,
             'name'           => $user->name,
             'uiPreferences'  => $user->ui_preferences ?? [],
-            'savedSenseIds'  => $user->savedSenses()->pluck('word_sense_id')->all(),
+            'savedWordIds'   => $user->savedWords()->pluck('word_object_id')->all(),
+            'fluencyLevel'   => $user->fluency_level,
             'savedExamples'  => $user->savedExamples()
-                ->select('id', 'word_sense_id', 'chinese_text', 'english_text', 'ai_verified', 'ai_feedback', 'source_type', 'created_at')
+                ->select('id', 'word_sense_id', 'chinese_text', 'english_text', 'original_chinese_text', 'ai_verified', 'ai_feedback', 'source_type', 'assessed_level', 'assessed_mastery', 'mastery_guidance', 'created_at')
                 ->get(),
             'collections'    => $user->collections()
-                ->with('wordSenses:word_senses.id')
+                ->with('wordObjects:word_objects.id')
                 ->get()
                 ->map(fn ($c) => [
-                    'id'       => $c->id,
-                    'name'     => $c->name,
-                    'senseIds' => $c->wordSenses->pluck('id'),
+                    'id'            => $c->id,
+                    'name'          => $c->name,
+                    'wordObjectIds' => $c->wordObjects->pluck('id'),
                 ]),
         ];
     }

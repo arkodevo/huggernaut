@@ -8,29 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;600;700&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 @include('partials.lexicon._foundations')
 @include('partials.lexicon._example-sentence-css')
+@include('partials.lexicon._workshop-css')
 <style>
-/* ── HEADER ── */
-.mwr-header {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-  padding: 0.8rem 1.2rem;
-  display: flex; align-items: center; gap: 0.6rem;
-  overflow: visible;
-}
-.mwr-back {
-  font-family: 'DM Mono', monospace; font-size: 0.75rem;
-  color: var(--accent); background: none; border: none;
-  cursor: pointer; text-decoration: none;
-  transition: opacity 0.15s;
-}
-.mwr-back:hover { opacity: 0.7; }
-.mwr-title {
-  font-family: 'DM Mono', monospace; font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  color: var(--accent); flex: 1;
-}
-
 /* ── MAIN ── */
 .mwr-main { max-width: 640px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
 
@@ -54,11 +33,7 @@
 }
 
 /* ── WRITING-SPECIFIC OVERRIDES ── */
-.mwr-card-top {
-  display: flex; flex-direction: row; gap: 0.6rem;
-  align-items: flex-start;
-  padding-top: 0.3rem;
-}
+/* .mwr-card-top styled in list container section */
 .mwr-card-meta-col {
   display: flex; flex-direction: column; gap: 0.15rem;
   justify-content: center; min-height: 100%;
@@ -70,10 +45,10 @@
 }
 .mwr-word-link {
   font-family: 'BiauKai', 'STKaiti', 'KaiTi', serif;
-  font-size: var(--fs-ex-cn, 1.8rem); color: var(--accent);
-  text-decoration: none; font-weight: 600;
+  font-size: 2.2rem; color: var(--ink);
+  text-decoration: none; font-weight: 400;
   transition: opacity 0.15s;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 .mwr-word-link:hover { opacity: 0.7; }
 .mwr-pinyin {
@@ -139,20 +114,9 @@
 }
 .mwr-delete-btn:hover { color: var(--rose); }
 
-/* ── DELETE CONFIRM ── */
-.delete-confirm {
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.5rem 0.6rem; margin-top: 0.4rem;
-  background: rgba(200,60,60,0.04);
-  border: 1px solid rgba(200,60,60,0.2);
-  border-radius: 2px;
-  animation: fadeIn 0.15s ease;
-}
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-.delete-confirm-msg {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 0.9rem; color: var(--text); flex: 1;
-}
+/* ── DELETE CONFIRM — uses shared .confirm-delete-* from _foundations ── */
+/* Legacy aliases kept for backward compat */
+.delete-confirm { /* now uses shared .confirm-delete-bar */ }
 .delete-confirm-yes {
   font-family: 'DM Mono', monospace; font-size: 0.72rem;
   color: #fff; background: var(--rose);
@@ -167,6 +131,34 @@
   padding: 0.3rem 0.7rem; cursor: pointer;
 }
 .delete-confirm-no:hover { border-color: var(--accent); color: var(--text); }
+
+/* ── LIST CONTAINER ── */
+.mwr-list {
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+.mwr-list .ex-sent.saved-writing {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.6rem 0.75rem;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.mwr-list .ex-sent.saved-writing:hover {
+  border-color: rgba(98,64,200,0.25);
+}
+/* Hero header (word, POS, pinyin, chips) */
+.mwr-card-top {
+  display: flex; flex-direction: row; gap: 0.6rem;
+  align-items: flex-start;
+}
+/* Content body (translation, feedback, meta) — white bg inset */
+.mwr-card-body {
+  background: var(--bg);
+  border-radius: 3px;
+  padding: 0.6rem 0.75rem;
+  margin-top: 0.5rem;
+}
 
 /* ── EMPTY STATE ── */
 .mwr-empty {
@@ -220,22 +212,18 @@
   var textDir = localStorage.getItem('textDir') || 'horizontal';
 </script>
 
-<div class="mwr-header">
-  <a href="{{ route('lexicon.index') }}" class="mwr-back">&larr; Lexicon</a>
-  <div class="mwr-title">My Writings 我的寫作</div>
-  @include('partials.lexicon._user-menu')
-</div>
+@include('partials.lexicon._site-header', ['backUrl' => route('lexicon.index'), 'backLabel' => 'Lexicon'])
 
 <div class="mwr-main">
   @if($writings->total() === 0)
     <div class="mwr-empty">
-      No writings yet. <a href="{{ route('lexicon.index') }}">Explore the lexicon</a> and use the Writing Workshop to create your first one.
+      No writings yet. <a href="{{ route('lexicon.index') }}">Explore the lexicon</a> and use the Writing Conservatory to create your first one.
     </div>
   @else
     <input type="text" class="mwr-search" id="mwrSearch" placeholder="Search writings…" oninput="mwrFilter()">
     <div class="mwr-count" id="mwrCount">{{ $writings->total() }} {{ $writings->total() === 1 ? 'writing' : 'writings' }}</div>
 
-    <div class="ex-sentences" id="mwrList">
+    <div class="ex-sentences mwr-list" id="mwrList">
       @foreach($writings as $w)
         <div class="ex-sent saved-writing" id="mwr-card-{{ $w['id'] }}" data-search="{{ mb_strtolower($w['chinese_text'] . ' ' . $w['english_text'] . ' ' . $w['traditional']) }}" data-id="{{ $w['id'] }}" data-word="{{ $w['traditional'] }}">
           <div class="mwr-card-top">
@@ -251,19 +239,40 @@
                   <span class="shifu-chip">👏 師父 verified</span>
                 @endif
               </div>
+              @if(!empty($w['assessed_level']) || !empty($w['assessed_mastery']))
+                <div class="saved-writing-chips ws-assess-row">
+                  @if(!empty($w['assessed_level']))
+                    @php
+                      $lvlMap = ['beginner'=>['🌱','Beginner','初學'],'learner'=>['🌿','Learner','學習'],'developing'=>['🍃','Developing','發展'],'advanced'=>['🌳','Advanced','進階'],'fluent'=>['🀄','Fluent','流利']];
+                      $lv = $lvlMap[$w['assessed_level']] ?? null;
+                    @endphp
+                    @if($lv)
+                      <span class="ws-level-chip">{{ $lv[0] }} {{ $lv[1] }}</span>
+                    @endif
+                  @endif
+                  @if(!empty($w['assessed_mastery']))
+                    @php
+                      $mstMap = ['seed'=>['🌱','Seed','播'],'sprout'=>['🌿','Sprout','萌'],'bud'=>['🌸','Bud','蕾'],'flower'=>['🌼','Flower','綻'],'fruit'=>['🍎','Fruit','熟']];
+                      $ms = $mstMap[$w['assessed_mastery']] ?? null;
+                    @endphp
+                    @if($ms)
+                      <span class="ws-mastery-chip">{{ $ms[0] }} {{ $ms[1] }}</span>
+                    @endif
+                  @endif
+                </div>
+              @endif
               @if($w['pinyin'])
                 <div class="mwr-pinyin">{{ $w['pinyin'] }}</div>
               @endif
             </div>
           </div>
-          <hr class="mwr-divider">
-          <div class="ex-sent-body">
+          <div class="mwr-card-body">
             <div class="ex-sent-cn" data-word="{{ $w['traditional'] }}">{{ $w['chinese_text'] }}</div>
             <div class="ex-sent-en">{{ $w['english_text'] }}</div>
             @if($w['ai_feedback'])
               <details class="saved-item-feedback">
                 <summary>師父 feedback</summary>
-                <div class="saved-item-feedback-text">{{ $w['ai_feedback'] }}</div>
+                <div class="saved-item-feedback-text">{{ $w['ai_feedback'] }}@if(!empty($w['mastery_guidance']))<div class="ws-mastery-guidance" style="margin-top:0.4rem;color:var(--accent)"><strong>Growth tip:</strong> {{ $w['mastery_guidance'] }}</div>@endif</div>
               </details>
             @endif
             <div class="mwr-meta">
@@ -358,5 +367,6 @@ function mwrDelete(id, btn) {
   });
 }
 </script>
+@include('partials.lexicon._site-footer')
 </body>
 </html>

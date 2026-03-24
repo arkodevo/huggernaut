@@ -34,6 +34,7 @@ class User extends Authenticatable
         'script_preference',
         'pos_mode',
         'level_framework',
+        'fluency_level',
         'filter_attribute_overrides',
         'ui_preferences',
         'subscription_tier',
@@ -89,14 +90,14 @@ class User extends Authenticatable
 
     // ── Saved content ─────────────────────────────────────────────────────────
 
-    public function savedSenses(): HasMany
+    public function savedWords(): HasMany
     {
-        return $this->hasMany(UserSavedSense::class);
+        return $this->hasMany(UserSavedWord::class);
     }
 
-    public function savedWordSenses(): BelongsToMany
+    public function savedWordObjects(): BelongsToMany
     {
-        return $this->belongsToMany(WordSense::class, 'user_saved_senses')
+        return $this->belongsToMany(WordObject::class, 'user_saved_words')
             ->withPivot('personal_note', 'saved_at')
             ->withTimestamps();
     }

@@ -11,22 +11,10 @@
 @include('partials.lexicon._definition-css')
 @include('partials.lexicon._word-header-css')
 @include('partials.lexicon._example-sentence-css')
+@include('partials.lexicon._workshop-css')
 <style>
-/* ── HEADER ── */
-header {
-  position: relative; z-index: 250;
-  padding: 1rem 2rem 1.1rem;
-  border-bottom: 1px solid var(--border);
-  display: flex; flex-direction: column; align-items: center;
-  gap: 0.65rem;
-}
-header > .user-menu {
-  position: absolute; right: 1rem; top: 0.85rem;
-}
-.logo-tag {
-  font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase;
-  color: var(--accent); opacity: 0.7;
-}
+/* ── HEADER (uses shared _site-header partial) ── */
+.site-header + .search-bar-wrap { padding-top: 0.75rem; }
 
 /* ── SCENARIO BUTTONS ── */
 .scenario-select {
@@ -731,7 +719,7 @@ main {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 2px;
-  padding: 1.2rem 1.4rem;
+  padding: 0.6rem 0.75rem;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0 0.75rem;
@@ -745,6 +733,85 @@ main {
 }
 .word-card:hover { border-color: rgba(98,64,200,0.25); transform: translateY(-1px); }
 
+/* ── SENTENCE SEARCH CARDS ── */
+.sentence-results-header {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: var(--dim);
+  margin-bottom: 0.5rem;
+}
+.sentence-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.sentence-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.6rem 0.75rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 0.75rem;
+  align-items: start;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  animation: cardIn 0.25s ease both;
+}
+.sentence-card:hover { border-color: rgba(98,64,200,0.25); transform: translateY(-1px); }
+.sentence-card--unknown { opacity: 0.5; cursor: default; }
+.sentence-card--unknown:hover { border-color: var(--border); transform: none; }
+.sentence-card-char {
+  font-family: BiauKai, STKaiti, KaiTi, '楷體-繁', 'Noto Serif TC', serif;
+  font-size: var(--fs-char, 2.6rem);
+  line-height: 1.15;
+  color: var(--ink);
+}
+.sentence-mode .results-refine { display: none !important; }
+.sentence-mode .results-count { display: none !important; }
+.sentence-mode .scenario-bar { display: none !important; }
+.sentence-mode .filter-strip { display: none !important; }
+.sentence-card-char.vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.08em;
+}
+.sentence-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-top: 0.2rem;
+}
+.sentence-card-def {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.sentence-card-def .card-pos {
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+.sentence-card-def-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.sentence-card-def--dim {
+  color: var(--dim);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+.sentence-card-pinyin {
+  margin-top: 0.15rem;
+}
+.sentence-card-pinyin .pinyin {
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+
 /* Character display, domain, POS summary, pinyin styles loaded from shared partial */
 .card-divider {
   grid-column: 1 / -1;
@@ -753,6 +820,19 @@ main {
 }
 .card-body { grid-column: 1 / -1; }
 .card-meta { grid-column: 1 / -1; }
+
+/* Sense block: groups definitions + their attribute chips per sense */
+.card-sense-block + .card-sense-block {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+}
+/* Per-sense attribute chips: slightly smaller spacing than standalone card-meta */
+.card-meta.card-meta-sense {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: none;
+}
 
 /* Pinyin off — hide all pronunciation rows without re-rendering */
 #cardContainer.no-pinyin .card-pinyin-row { display: none; }
@@ -777,10 +857,27 @@ main {
   border-top: 1px solid var(--border);
 }
 
-/* Card action buttons — save + share */
+/* Card hero actions — save + share beneath pinyin */
+.card-hero-actions {
+  display: flex; gap: 0.5rem; margin-top: 0.35rem;
+  position: relative;
+}
+.card-hero-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.8rem; height: 2.2rem;
+  background: var(--surface); border: 1.5px solid var(--accent);
+  border-radius: 4px; cursor: pointer;
+  font-size: 1.3rem; color: var(--accent);
+  transition: all 0.15s; opacity: 0.6;
+}
+.card-hero-btn:hover { opacity: 1; background: rgba(98,64,200,0.06); }
+.card-hero-btn.saved { color: var(--accent); opacity: 1; background: rgba(98,64,200,0.08); }
+
+/* Legacy card action buttons (kept for reference) */
 .card-actions {
   grid-column: 1 / -1;
-  display: flex; gap: 0.5rem;
+  display: none; /* moved to hero */
+  gap: 0.5rem;
   padding-top: 0.6rem; margin-top: 0.5rem;
   border-top: 1px solid var(--border);
 }
@@ -797,9 +894,9 @@ main {
 }
 .card-action-btn.saved { color: var(--accent); border-color: var(--accent); }
 /* Collection picker popover (SRP) */
-.card-actions { position: relative; }
+.card-hero-actions { position: relative; }
 .srp-cp {
-  position: absolute; bottom: 100%; right: 0; z-index: 200;
+  position: absolute; top: 100%; left: 0; z-index: 200;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 3px; min-width: 200px; padding: 0.4rem 0;
   box-shadow: 0 8px 28px rgba(0,0,0,0.12);
@@ -841,13 +938,9 @@ main {
   color: var(--accent); cursor: pointer; padding: 0; line-height: 1;
 }
 
-.word-card:hover::after {
-  content: '↗ Open word page';
-  position: absolute; top: 0.5rem; right: 0.75rem;
-  font-size: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--accent); opacity: 0.6;
-  pointer-events: none;
-}
+/* Character in hero is the IWP link — show pointer on hover */
+.card-hanzi { cursor: pointer; transition: opacity 0.15s; }
+.card-hanzi:hover { opacity: 0.7; }
 .word-card { position: relative; }
 .card-saved-star {
   position: absolute; top: 0.45rem; right: 0.5rem;
@@ -887,240 +980,7 @@ main {
 }
 .empty-state small { display: block; font-size: 0.6rem; font-style: normal; font-family: 'DM Mono', monospace; margin-top: 0.5rem; letter-spacing: 0.2em; }
 
-/* ── 造句 SENTENCE WORKSHOP ── */
-.zaoju-panel {
-  grid-column: 1 / -1;
-  margin: 0.75rem -1.4rem -1.2rem;
-  background: rgba(98,64,200,0.04);
-  border-top: 1px solid rgba(98,64,200,0.1);
-  padding: 0.75rem 1.4rem 1.2rem;
-  display: flex; flex-direction: column; gap: 0.75rem;
-  border-radius: 0 0 2px 2px;
-}
-.zaoju-header {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
-}
-.zaoju-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.81rem; color: var(--accent);
-  letter-spacing: 0.08em;
-}
-.zaoju-toggle {
-  font-size: 1.2rem;
-  color: var(--dim); cursor: pointer; background: none; border: none;
-  padding: 0.2rem 0;
-  transition: color 0.2s;
-  line-height: 1;
-}
-.zaoju-toggle:hover { color: var(--accent); }
-
-/* Default sentences */
-/* Example sentence styles loaded from shared partial (_example-sentence-css) */
-
-/* ── Sentence segmentation: clickable word spans ── */
-/* Segmentation + popover styles loaded from shared partial */
-
-/* AI tabs */
-.shifu-writing-area {
-  background: rgba(98,64,200,0.04);
-  border: 1px solid rgba(98,64,200,0.1);
-  border-radius: 2px;
-  padding: 0.75rem;
-  display: flex; flex-direction: column; gap: 0.6rem;
-}
-.ai-tabs {
-  display: flex; gap: 0.4rem; flex-wrap: wrap;
-}
-.ai-tab {
-  padding: 0.4rem 0.75rem; border-radius: 2px;
-  border: 1px solid var(--border);
-  font-family: 'DM Mono', monospace; font-size: 1rem;
-  color: var(--dim); background: transparent; cursor: pointer;
-  transition: all 0.18s;
-}
-.ai-tab:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
-.ai-tab.active { border-color: var(--accent); background: var(--tag-bg); color: var(--accent); }
-
-/* AI input areas */
-.ai-workspace {
-  display: flex; flex-direction: column; gap: 0.6rem;
-  padding: 0.75rem;
-  background: #f0eef8;
-  border: 1px solid rgba(98,64,200,0.15);
-  border-radius: 2px;
-}
-.ai-instruction {
-  font-size: 0.81rem; color: var(--dim); line-height: 1.6;
-}
-.ai-input-row { display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch; }
-.ai-textarea {
-  flex: 1; min-width: 200px;
-  background: #ffffff;
-  border: 1px solid rgba(98,64,200,0.25);
-  color: var(--ink); font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: var(--fs-ex-cn, 1.8rem); padding: 0.6rem 0.75rem;
-  border-radius: 2px; outline: none; resize: vertical;
-  min-height: 60px; line-height: 1.6;
-  transition: border-color 0.2s;
-}
-.ai-textarea::placeholder { font-family: 'DM Mono', monospace; font-size: 1.3rem; color: rgba(26,24,40,0.3); }
-.ai-textarea:focus { border-color: var(--accent); }
-.ai-textarea.vertical-mode {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  letter-spacing: 0.08em;
-  line-height: 1.8;
-  min-height: 18rem; min-width: 100%;
-  resize: horizontal;
-  overflow: auto;
-}
-.ai-theme-input {
-  flex: 1; min-width: 160px;
-  background: #ffffff;
-  border: 1px solid rgba(98,64,200,0.25);
-  color: var(--ink); font-family: 'DM Mono', monospace;
-  font-size: 0.72rem; padding: 0.5rem 0.75rem;
-  border-radius: 2px; outline: none;
-  transition: border-color 0.2s;
-}
-.ai-theme-input::placeholder { color: rgba(26,24,40,0.3); }
-.ai-theme-input:focus { border-color: var(--accent); }
-.ai-pos-select {
-  font-family: 'DM Mono', monospace; font-size: 0.78rem;
-  color: var(--accent); background: var(--tag-bg);
-  border: 1px solid rgba(98,64,200,0.25); border-radius: 2px;
-  padding: 0.35rem 0.6rem; outline: none; cursor: pointer;
-  transition: border-color 0.2s;
-}
-.ai-pos-select:focus { border-color: var(--accent); }
-.ai-submit-btn {
-  padding: 0.5rem 1rem; border-radius: 2px;
-  border: 1px solid var(--accent);
-  background: var(--tag-bg); color: var(--accent);
-  font-family: 'DM Mono', monospace; font-size: 0.81rem;
-  letter-spacing: 0.1em; cursor: pointer;
-  transition: all 0.2s; white-space: nowrap;
-  width: 100%;
-}
-.ai-submit-btn:hover { background: rgba(155,127,240,0.2); }
-.ai-submit-btn:disabled { opacity: 0.4; cursor: wait; }
-
-/* AI response */
-.ai-response {
-  padding: 0.65rem 0.75rem;
-  background: rgba(98,64,200,0.04);
-  border: 1px solid rgba(98,64,200,0.15);
-  border-radius: 2px;
-  display: flex; flex-direction: column; gap: 0.4rem;
-  animation: cardIn 0.2s ease both;
-}
-.ai-response-label {
-  font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
-  color: var(--accent);
-}
-.ai-response-text {
-  font-size: 0.9rem; color: var(--text); line-height: 1.7;
-}
-.ai-response-text .resp-cn { font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif; font-size: var(--fs-ex-cn, 1.8rem); color: var(--ink); display: block; margin-bottom: 0.2rem; line-height: 1.5; }
-.vertical-mode .ai-response-text .resp-cn {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  letter-spacing: 0.08em;
-  max-height: 18rem;
-  line-height: 1.8;
-  margin-left: auto;
-}
-.ai-response-text .resp-cn .highlight { color: var(--accent); font-weight: 600; }
-.ai-response-text .resp-en { color: var(--dim); font-style: italic; font-size: var(--fs-ex-en, 1rem); display: block; margin-bottom: 0.3rem; }
-.ai-response-text .resp-note { font-family: 'Cormorant Garamond', serif; color: var(--dim); font-size: 0.9rem; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 0.3rem; margin-top: 0.1rem; }
-.ai-response-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-
-/* Saved deck */
-.saved-deck-section {
-  margin-top: 0.5rem;
-}
-.saved-deck-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.78rem; letter-spacing: 0.08em;
-  color: var(--accent); margin-bottom: 0.4rem; display: block;
-}
-/* Saved writings use .ex-sent for consistent look with default examples */
-.saved-writing-chips {
-  display: flex; align-items: stretch; gap: 0.4rem;
-  flex-wrap: wrap; margin-bottom: 0.15rem;
-}
-.saved-writing-chips .ex-sent-pos,
-.saved-writing-chips .shifu-chip {
-  display: inline-flex; align-items: center;
-  height: 1.5rem; box-sizing: border-box;
-}
-.shifu-chip {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem; letter-spacing: 0.04em;
-  color: var(--accent); background: rgba(98,64,200,0.07);
-  border: 1px solid rgba(98,64,200,0.18);
-  border-radius: 2px; padding: 0.1rem 0.45rem;
-  white-space: nowrap;
-}
-.saved-item-feedback { margin-top: 0.6rem; }
-.saved-item-feedback summary {
-  font-family: 'DM Mono', monospace; font-size: 0.85rem;
-  color: var(--accent); cursor: pointer; user-select: none;
-  list-style: none;
-}
-.saved-item-feedback summary::before { content: '▸ '; }
-.saved-item-feedback[open] summary::before { content: '▾ '; }
-.saved-item-feedback-text {
-  font-family: 'Cormorant Garamond', serif; font-size: 1rem;
-  color: var(--dim); line-height: 1.6;
-  padding: 0.3rem 0 0 0.4rem;
-  border-left: 2px solid rgba(98,64,200,0.15);
-  margin-top: 0.2rem;
-}
-.saved-writing-meta {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-top: 0.4rem; gap: 0.5rem;
-}
-.saved-writing-date {
-  font-family: 'DM Mono', monospace; font-size: 0.62rem;
-  color: var(--dim); opacity: 0.7;
-}
-.remove-btn {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.65rem; color: var(--dim); cursor: pointer;
-  background: none; border: none; padding: 0.2rem 0;
-  transition: color 0.2s;
-}
-.remove-btn:hover { color: var(--rose); }
-.delete-confirm {
-  display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.5rem 0.6rem; margin-top: 0.4rem;
-  background: rgba(200,60,60,0.04);
-  border: 1px solid rgba(200,60,60,0.2);
-  border-radius: 2px;
-  animation: fadeIn 0.15s ease;
-}
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-.delete-confirm-msg {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 0.9rem; color: var(--text); flex: 1;
-}
-.delete-confirm-yes {
-  font-family: 'DM Mono', monospace; font-size: 0.72rem;
-  color: #fff; background: var(--rose);
-  border: none; border-radius: 2px;
-  padding: 0.3rem 0.7rem; cursor: pointer;
-  transition: opacity 0.2s;
-}
-.delete-confirm-yes:hover { opacity: 0.8; }
-.delete-confirm-no {
-  font-family: 'DM Mono', monospace; font-size: 0.72rem;
-  color: var(--dim); background: none;
-  border: 1px solid var(--border); border-radius: 2px;
-  padding: 0.3rem 0.7rem; cursor: pointer;
-  transition: all 0.2s;
-}
-.delete-confirm-no:hover { border-color: var(--accent); color: var(--text); }
+/* ── Workshop styles: loaded from shared partial _workshop-css ── */
 
 /* ── PROFILE PRESETS ── */
 /* profiles-bar removed — merged into scenario-bar */
@@ -1145,9 +1005,7 @@ main {
   /* Results panel tighter on small screens */
   .results-panel { padding: 1rem; }
 
-  /* Sentence workshop tabs: full-width stacked */
-  .ai-tabs { flex-direction: column; }
-  .ai-tab  { width: 100%; text-align: center; }
+  /* Workshop responsive rules now in shared partial */
 }
 
 @media (min-width: 701px) {
@@ -1164,13 +1022,14 @@ main {
     gap: 0 1.2rem;
   }
   .card-hanzi {
-    grid-column: 1; grid-row: 1 / 4;  /* span hdr-mid + body + meta rows */
+    grid-column: 1; grid-row: 1 / 3;  /* span hdr-mid + body rows */
     border-right: 1px solid var(--border);
     padding-right: 1.2rem;
   }
   .card-hdr-mid    { grid-column: 2; grid-row: 1; }
   .card-body       { grid-column: 2; grid-row: 2; }
-  .card-meta       { grid-column: 2; grid-row: 3; grid-template-columns: repeat(3, 1fr); }
+  /* Per-sense meta chips now live inside card-body; 3-col grid on desktop */
+  .card-meta.card-meta-sense { grid-template-columns: repeat(3, 1fr); }
   .card-divider    { display: none; }
   /* Restore domain chip to normal inline size */
   .card-hdr-mid .card-domain {
@@ -1185,19 +1044,15 @@ main {
   .card-pos-hdr {
     display: inline-block; width: auto;
   }
-  /* Workshop submit buttons: constrain width on desktop */
-  .ai-submit-btn {
-    width: auto; max-width: 280px;
-  }
+  /* Workshop submit btn responsive now in shared partial */
 }
 </style>
 </head>
 <body>
 <script>window.__AUTH = @json($authUser);</script>
 
-<header>
-  <div class="logo-tag">流動 · Living Lexicon</div>
-  @include('partials.lexicon._user-menu')
+@include('partials.lexicon._site-header')
+<div class="search-bar-wrap" style="text-align:center;padding:0.5rem 1rem;">
   <input
     id="searchInput"
     type="text"
@@ -1205,7 +1060,7 @@ main {
     style="font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 0.8rem;border:1px solid rgba(0,0,0,0.15);border-radius:2px;width:min(320px,calc(100vw - 3rem));background:var(--surface);color:var(--text);outline:none;"
     oninput="searchQuery=this.value;render();"
   />
-</header>
+</div>
 
 <!-- SCENARIO PRESETS -->
 <!-- SCENARIO BAR -->
@@ -1361,12 +1216,12 @@ main {
       </div>
 
       <div class="iface-group">
-        <div class="iface-group-label">Icons</div>
+        <div class="iface-group-label">Symbols</div>
         <div class="script-toggle" id="iconsToggle">
           <button class="script-btn active" id="btnIconsOn"  onclick="setIconsMode('on')">On</button>
           <button class="script-btn"        id="btnIconsOff" onclick="setIconsMode('off')">Off</button>
         </div>
-        <div class="iface-hint">Nature emoji on filter chips and word card attribute tags</div>
+        <div class="iface-hint">Nature symbols on filter chips and word card attribute tags</div>
       </div>
 
       <div class="iface-group">
@@ -1384,7 +1239,7 @@ main {
           <button class="script-btn"        id="btnWorkshopExpanded"  onclick="setWorkshopDefault('expanded')">Expanded</button>
           <button class="script-btn active" id="btnWorkshopCollapsed" onclick="setWorkshopDefault('collapsed')">Collapsed</button>
         </div>
-        <div class="iface-hint">Default state of Writing Workshop 寫作工坊 on each card</div>
+        <div class="iface-hint">Default state of Writing Conservatory 寫作院 on each card</div>
       </div>
 
       <div class="iface-group">
@@ -1791,7 +1646,7 @@ function rerenderLabels() {
   // Update all previews (so All/全部 text matches current mode)
   Object.keys(state).forEach(updatePreview);
   // Update 造句 workshop titles to match current language
-  const zaojuLabel = langMode === 'zh' ? '寫作工坊' : langMode === 'both' ? 'Writing Workshop 寫作工坊' : 'Writing Workshop';
+  const zaojuLabel = langMode === 'zh' ? '寫作院' : langMode === 'both' ? 'Writing Conservatory 寫作院' : 'Writing Conservatory';
   document.querySelectorAll('.zaoju-title').forEach(el => el.textContent = zaojuLabel);
 }
 
@@ -2324,6 +2179,18 @@ function levelLabel(v) {
 // Returns a word object if ANY of its surfaces match the query string.
 // POS is not a filter — a match on any definition row returns the whole word.
 let searchQuery = '';
+// Pre-fill search from URL ?q= (e.g. returning from IWP sentence breadcrumb)
+(function() {
+  const urlQ = new URLSearchParams(window.location.search).get('q');
+  if (urlQ) {
+    searchQuery = urlQ;
+    requestAnimationFrame(function() {
+      const input = document.getElementById('searchInput');
+      if (input) input.value = urlQ;
+      if (typeof render === 'function') render();
+    });
+  }
+})();
 
 function wordMatchesSearch(w) {
   if (!searchQuery.trim()) return true;
@@ -2383,32 +2250,6 @@ function intensityBars(n) {
   }</div>`;
 }
 
-// ── SAVED DECK (in-memory) ─────────────────────────────────────────────────────
-const savedDeck = {}; // { wordKey: [{cn, en, source}] }
-
-function getSavedForWord(key) { return savedDeck[key] || []; }
-
-function saveToWord(key, item) {
-  if (!savedDeck[key]) savedDeck[key] = [];
-  // Avoid duplicates
-  if (savedDeck[key].some(s => s.cn === item.cn)) return false;
-  savedDeck[key].push(item);
-  return true;
-}
-
-function removeFromWord(key, idx) {
-  if (!savedDeck[key]) return;
-  const item = savedDeck[key][idx];
-  savedDeck[key].splice(idx, 1);
-  // Delete from DB if it has an id
-  if (item && item.id) {
-    fetch('/api/workshop/saved-example/' + item.id, {
-      method: 'DELETE',
-      headers: { 'X-CSRF-TOKEN': _csrf(), 'Accept': 'application/json' },
-    });
-  }
-}
-
 // ── ADDITIONAL DEFAULT SENTENCES PER WORD ─────────────────────────────────────
 const EXTRA_SENTENCES = {
   "擴大": [
@@ -2453,234 +2294,39 @@ const EXTRA_SENTENCES = {
   ],
 };
 
-// ── AI CALL (server proxy) ──────────────────────────────────────────────────────
+// ── _csrf kept for non-workshop usage ──
 function _csrf() {
   const el = document.querySelector('meta[name="csrf-token"]');
   return el ? el.content : '';
 }
-
-async function callWorkshopAPI(endpoint, body) {
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-TOKEN': _csrf(),
-      'Accept': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  if (response.status === 401) throw new Error('auth_required');
-  if (!response.ok) throw new Error('api_error');
-  const data = await response.json();
-  if (data.error) throw new Error('api_error');
-  return data.text;
-}
-
-// ── GUEST AUTH PROMPT ──────────────────────────────────────────────────────────
-function showAuthPrompt(wordKey, context, extraData) {
-  // Stash pending work to localStorage before redirect
-  const pending = { wordKey, context };
-  if (context === 'critique') {
-    const input = document.getElementById(`critique-input-${wordKey}`);
-    const posSelect = document.getElementById(`critique-pos-${wordKey}`);
-    pending.sentence = input ? input.value : '';
-    pending.pos = posSelect ? posSelect.value : '';
-  } else if (context === 'theme') {
-    const input = document.getElementById(`theme-input-${wordKey}`);
-    pending.theme = input ? input.value : '';
-  }
-  localStorage.setItem('ww_pending', JSON.stringify(pending));
-
-  // Show inline prompt in the critique result area
-  const resultEl = document.getElementById(`${context === 'theme' ? 'theme' : 'critique'}-result-${wordKey}`);
-  if (resultEl) {
-    resultEl.innerHTML = `
-      <div class="ai-response" style="text-align:center">
-        <div class="ai-response-text" style="color:var(--accent);font-weight:500">
-          ${langMode === 'zh' ? '登入或註冊帳戶以使用寫作工坊' : 'Log in or create an account to use the Writing Workshop'}
-        </div>
-        <div style="display:flex;gap:0.6rem;justify-content:center;margin-top:0.5rem">
-          <a href="/login" class="ai-submit-btn" style="text-decoration:none;display:inline-block;width:auto">${langMode === 'zh' ? '登入' : 'Log In'}</a>
-          <a href="/register" class="ai-submit-btn" style="text-decoration:none;display:inline-block;width:auto;background:transparent">${langMode === 'zh' ? '註冊' : 'Register'}</a>
-        </div>
-      </div>`;
-  }
-}
-
-// Restore pending workshop data after login redirect
-function restoreWorkshopPending() {
-  const raw = localStorage.getItem('ww_pending');
-  if (!raw || !window.__AUTH) return;
-  try {
-    const pending = JSON.parse(raw);
-    localStorage.removeItem('ww_pending');
-    // Wait for cards to render, then restore
-    setTimeout(() => {
-      const wordKey = pending.wordKey;
-      // Expand the workshop
-      const body = document.getElementById(`zaoju-body-${wordKey}`);
-      if (body) body.style.display = 'flex';
-      const toggleBtn = body?.closest('.zaoju-panel')?.querySelector('.zaoju-toggle');
-      if (toggleBtn) toggleBtn.textContent = '▴';
-
-      if (pending.context === 'critique') {
-        const input = document.getElementById(`critique-input-${wordKey}`);
-        const posSelect = document.getElementById(`critique-pos-${wordKey}`);
-        if (input && pending.sentence) input.value = pending.sentence;
-        if (posSelect && pending.pos) posSelect.value = pending.pos;
-        // Switch to critique tab
-        const tab = document.querySelector(`#tab-critique-${wordKey}`)?.closest('.zaoju-panel')?.querySelector('.ai-tab');
-        if (tab) switchTab(wordKey, 'critique', tab);
-      } else if (pending.context === 'theme') {
-        const input = document.getElementById(`theme-input-${wordKey}`);
-        if (input && pending.theme) input.value = pending.theme;
-        const tabs = document.querySelectorAll(`#zaoju-body-${wordKey} .ai-tab`);
-        if (tabs[1]) switchTab(wordKey, 'theme', tabs[1]);
-      }
-
-      // Scroll to the card
-      const card = document.getElementById(`card-${wordKey}`);
-      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 300);
-  } catch(e) { localStorage.removeItem('ww_pending'); }
-}
-
-// ── AI SYSTEM PROMPTS ──────────────────────────────────────────────────────────
-function getCritiquePrompt(word, intendedPOS) {
-  const posLine = intendedPOS
-    ? `- Intended POS: ${posDisplay(intendedPOS)} (${POS_ABBR[intendedPOS] || intendedPOS}) — the learner intends to use "${word.traditional}" as this part of speech. Evaluate whether their sentence correctly uses it in this role.`
-    : '- Intended POS: not specified';
-  return `You are 師父 (Shifu), the expert Chinese language tutor for the Living Lexicon 流動, a precision Chinese vocabulary app focused on fluency, nuance, and expressive accuracy.
-
-The user has written a sentence using the word "${word.traditional}" (${word.simplified}, ${word.pinyin}) — meaning: ${word.definition}.
-
-Word metadata:
-- Register: ${word.register}
-- Connotation: ${word.connotation}
-- Channel: ${word.channel}
-- HSK Level: ${word.level}
-- Syntactic formula: ${word.formula}
-${posLine}
-
-Your task: Evaluate the user's sentence with warmth and precision.${intendedPOS ? ` Pay special attention to whether "${word.traditional}" is used correctly as a ${posDisplay(intendedPOS)}.` : ''} IMPORTANT: The corrected sentence MUST use the EXACT word "${word.traditional}" — do NOT substitute compounds, derivatives, or synonyms. Respond ONLY in this exact JSON format (no markdown, no extra text):
-{
-  "verdict": "correct" | "minor_issues" | "needs_work",
-  "corrected_cn": "The corrected Traditional Chinese sentence (use Traditional characters, must contain the exact word ${word.traditional}), or the original if already correct",
-  "corrected_en": "English translation of the corrected sentence",
-  "highlight_word": "${word.traditional}",
-  "feedback": "2-3 sentences of warm, precise feedback in English. Note what was done well. If correcting, explain WHY — grammar, register mismatch, valency error, colocation issue, etc.${intendedPOS ? ` Comment on whether the word is correctly used as a ${posDisplay(intendedPOS)}.` : ''} Be encouraging but intellectually honest.",
-  "register_note": "One sentence: does this sentence match the word's register (${word.register})? If not, explain gently."
-}`;
-}
-
-function getThemePrompt(word) {
-  return `You are 師父 (Shifu), the expert Chinese language tutor for the Living Lexicon 流動, a precision Chinese vocabulary app.
-
-Generate a vivid, natural sentence using the word "${word.traditional}" (${word.simplified}) based on the user's requested theme/subject. 
-
-Word metadata:
-- Register: ${word.register} — STRICTLY match this register in your sentence
-- Connotation: ${word.connotation}
-- Channel: ${word.channel}
-- HSK Level: ${word.level}
-- Syntactic formula: ${word.formula}
-
-Rules:
-- Use Traditional Chinese characters throughout
-- The sentence MUST use the EXACT word "${word.traditional}" — do NOT substitute compounds, derivatives, or synonyms (e.g. if the word is 流, use 流, not 流淌 or 流動)
-- The sentence must feel natural and engaging, not textbook-dry
-- Match the register precisely (${word.register})
-- Make the headword prominent and natural in context
-- The sentence should connect emotionally to the user's theme
-
-Respond ONLY in this exact JSON format (no markdown, no extra text):
-{
-  "cn": "The Traditional Chinese sentence",
-  "en": "Natural English translation",
-  "note": "One sentence explaining why this sentence fits the theme and demonstrates the word's nuance well"
-}`;
-}
-
-// ── RENDER CARD WITH 造句 ──────────────────────────────────────────────────────
-function highlightWord(text, word) {
-  // Highlight the headword in a sentence
-  const variants = [word.traditional, word.simplified].filter(Boolean);
-  let result = text;
-  variants.forEach(v => {
-    result = result.split(v).join(`<span class="highlight">${v}</span>`);
-  });
-  return result;
-}
-
-function renderSavedDeck(wordKey) {
-  const items = getSavedForWord(wordKey);
-  if (!items.length) return '';
-  const w = WORDS.find(w => w.traditional === wordKey);
-  const primaryPOS = w ? ((w.definitions || [])[0]?.posAbbr || (w.definitions || [])[0]?.pos || '') : '';
-  const posChip = primaryPOS ? `<span class="ex-sent-pos">${POS_ABBR[primaryPOS] || primaryPOS}</span>` : '';
-  const vertical = textDir === 'vertical';
-
-  return `
-    <div class="saved-deck-section" id="deck-${wordKey}">
-      <span class="saved-deck-label">${langMode === 'zh' ? '我的寫作' : langMode === 'both' ? 'My Writings 我的寫作' : 'My Writings'} (${items.length})</span>
-      <div class="ex-sentences">
-      ${items.map((item, i) => `
-        <div class="ex-sent${vertical ? ' vertical' : ''} saved-writing">
-          <div class="saved-writing-chips">
-            ${posChip}
-            ${item.source === '師父 generated' ? '<span class="shifu-chip">🙏 師父 generated</span>' : item.source === '師父 verified' ? '<span class="shifu-chip">👏 師父 verified</span>' : ''}
-          </div>
-          <div class="ex-sent-body">
-            <div class="ex-sent-cn">${segmentedHTML(item.cn, {traditional: wordKey, simplified: ''})}</div>
-            <div class="ex-sent-en">${item.en}</div>
-            ${item.feedback ? `<details class="saved-item-feedback"><summary>師父 feedback</summary><div class="saved-item-feedback-text">${item.feedback}</div></details>` : ''}
-            <div class="saved-writing-meta">
-              <span class="saved-writing-date">${item.date || ''}</span>
-              <button class="remove-btn" onclick="confirmDelete(this, '${wordKey}', ${i})">✕ ${langMode === 'zh' ? '刪除' : 'delete'}</button>
-            </div>
-          </div>
-        </div>
-      `).join('')}
-      </div>
-    </div>`;
-}
-
-function confirmDelete(btn, wordKey, idx) {
-  const card = btn.closest('.ex-sent');
-  if (!card) return;
-  // Prevent double-confirm
-  if (card.querySelector('.delete-confirm')) return;
-  const bar = document.createElement('div');
-  bar.className = 'delete-confirm';
-  bar.innerHTML = `
-    <span class="delete-confirm-msg">${langMode === 'zh' ? '確定要刪除？' : 'Delete this writing?'}</span>
-    <button class="delete-confirm-yes" onclick="removeSaved('${wordKey}', ${idx})">
-      ${langMode === 'zh' ? '刪除' : 'Delete'}
-    </button>
-    <button class="delete-confirm-no" onclick="this.closest('.delete-confirm').remove()">
-      ${langMode === 'zh' ? '取消' : 'Cancel'}
-    </button>`;
-  card.appendChild(bar);
-}
-
-function removeSaved(wordKey, idx) {
-  removeFromWord(wordKey, idx);
-  const deckEl = document.getElementById(`deck-${wordKey}`);
-  const items = getSavedForWord(wordKey);
-  if (deckEl) {
-    if (!items.length) {
-      deckEl.remove();
-    } else {
-      deckEl.outerHTML = renderSavedDeck(wordKey);
-    }
-  }
-}
+// ── Workshop functions (callWorkshopAPI, showAuthPrompt, restoreWorkshopPending,
+//    getCritiquePrompt, getThemePrompt, renderSavedDeck, confirmDelete, removeSaved)
+//    now live in shared partial _workshop-js ──
 
 // ── CARD ATTRIBUTE COLUMN HELPERS ─────────────────────────────────────────────
 </script>
 @include('partials.lexicon._attr-data')
 @include('partials.lexicon._word-header-js')
 @include('partials.lexicon._example-sentence-js')
+@include('partials.lexicon._workshop-js')
+<script>
+// Legacy aliases for code referencing old function names
+const savedDeck = wsSavedDeck;
+function getSavedForWord(key) { return wsGetSaved(key); }
+function saveToWord(key, item) { return wsSaveToWord(key, item); }
+function removeFromWord(key, idx) { return wsRemoveFromWord(key, idx); }
+function refreshDeckWrap(wordKey) { wsRefreshDeck(wordKey); }
+
+// Workshop adapter: look up word data from WORDS array
+window.wsGetWordData = function(wordKey) {
+  return typeof WORDS !== 'undefined' ? WORDS.find(w => w.traditional === wordKey) : null;
+};
+window.wsResolveWordKey = function(ex) {
+  if (typeof WORDS === 'undefined') return null;
+  const w = WORDS.find(w => (w.senseIds || []).includes(ex.word_sense_id) || w.wordObjectId === ex.word_object_id);
+  return w ? w.traditional : null;
+};
+</script>
 <script>
 
 function renderCard(w, idx) {
@@ -2697,7 +2343,7 @@ function renderCard(w, idx) {
     vertical: textDir === 'vertical',
     segFn: segmentedHTML,
     segCtx: w,
-  })).join('');
+  })).join('') || `<div class="wd-stub">${langMode === 'zh' ? '尚無例句。' : langMode === 'both' ? 'No examples yet. 尚無例句。' : 'No examples yet.'}</div>`;
 
   // Collect all unique POS across definitions for the mobile header summary
   const allPOS = [...new Set((w.definitions || []).map(d => d.pos).filter(Boolean))];
@@ -2740,16 +2386,16 @@ function renderCard(w, idx) {
     : '';
 
   // Saved indicator
-  const hasSaved = window.__AUTH && w.senseIds && w.senseIds.some(
-    id => (window.__AUTH.savedSenseIds || []).includes(id)
-  );
-  const savedStarHTML = hasSaved ? '<span class="card-saved-star" title="Saved">&#9733;</span>' : '';
+  const hasSaved = window.__AUTH && w.wordObjectId && (window.__AUTH.savedWordIds || []).includes(w.wordObjectId);
+  const heroActionsHTML = window.__AUTH ? '<div class="card-hero-actions">'
+    + '<button class="card-hero-btn' + (hasSaved ? ' saved' : '') + '" onclick="handleSaveToCollection(event, \'' + wordKey + '\')" title="' + (hasSaved ? 'Unsave' : 'Save') + '">' + (hasSaved ? '&#9733;' : '&#9734;') + '</button>'
+    + '<button class="card-hero-btn" onclick="handleShare(event, \'' + wordKey + '\')" title="Share">↗</button>'
+    + '</div>' : '';
 
   return `
   <div class="word-card" style="animation-delay:${idx * 0.04}s; cursor:pointer;" id="card-${wordKey}" onclick="openCard(event, '${wordKey}')">
-    ${savedStarHTML}
     <!-- Zone 1: primary char + optional ⇌ switch icon -->
-    <div class="card-hanzi">
+    <div class="card-hanzi" onclick="event.stopPropagation(); window.location.href='/lexicon/${encodeURIComponent(w.smart_id)}';" title="Open word page">
       <div class="hanzi-primary-wrap">
         <span class="hanzi-char">${scriptMode === 'simplified' ? w.simplified : w.traditional}</span>
         ${simpCharVal ? `<button class="script-switch-btn" data-secondary="${simpCharVal}" onclick="toggleSecondaryChar(event,this)" title="Reveal ${scriptMode === 'simplified' ? 'traditional' : 'simplified'}">⇌</button>` : ''}
@@ -2767,114 +2413,48 @@ function renderCard(w, idx) {
         return `<span class="card-pos-hdr" data-en="${enText}" data-zh="${zhText}" data-state="${preferred}" onclick="toggleLangChip(event,this)" title="Tap to toggle 中文">${display}</span>`;
       }).join('')}</div>` : ''}
       ${w.pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${w.pinyin}</span></div>` : ''}
+      ${heroActionsHTML}
     </div>
 
     <!-- Divider (mobile only) -->
     <hr class="card-divider">
 
-    <!-- Definitions — full-width on mobile, col 2 on desktop -->
+    <!-- Definitions + per-sense attribute chips — full-width on mobile, col 2 on desktop -->
     <div class="card-body">
-      ${(w.definitions || [{ pos: w.pos, def: w.definition }]).map(d => {
-          const fml = d.formula || '';
-          const fmlDisplay = scriptMode === 'simplified' && w.traditional !== w.simplified ? fml.replace(w.traditional, w.simplified) : fml;
-          return `
-          <div class="card-def-row">
-            ${d.pos ? `<span class="card-pos" data-abbr="${POS_ABBR[d.pos] || d.pos}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" title="Tap to cycle: abbr → EN → 中文" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}</span>` : ''}
-            <span class="card-definition">${d.def}</span>
-          </div>
-          ${fmlDisplay ? `<div class="card-formula">${fmlDisplay}</div>` : ''}
-          ${d.usageNote ? `<div class="card-usage-note">${d.usageNote}</div>` : ''}`;
-        }).join('')}
+      ${(w.senseGroups || []).map((sg, sIdx) => {
+          const defsHTML = (sg.definitions || []).map(d => {
+            const fml = d.formula || '';
+            const fmlDisplay = scriptMode === 'simplified' && w.traditional !== w.simplified ? fml.replace(w.traditional, w.simplified) : fml;
+            return `
+            <div class="card-def-row">
+              ${d.pos ? `<span class="card-pos" data-abbr="${POS_ABBR[d.pos] || d.pos}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" title="Tap to cycle: abbr → EN → 中文" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}</span>` : ''}
+              <span class="card-definition">${d.def}</span>
+            </div>
+            ${fmlDisplay ? `<div class="card-formula">${fmlDisplay}</div>` : ''}
+            ${d.usageNote ? `<div class="card-usage-note">${d.usageNote}</div>` : ''}`;
+          }).join('');
+
+          const metaHTML = `<div class="card-meta card-meta-sense">
+            ${cardAttr('register',    sg.register,    'Register',    metaAttrLabel('register', sg.register))}
+            ${cardAttr('connotation', sg.connotation, 'Connotation', metaAttrLabel('connotation', sg.connotation), connoClass[sg.connotation])}
+            ${cardAttr('channel',     sg.channel,     'Channel',     metaAttrLabel('channel', sg.channel))}
+            ${(sg.dimension||[]).length ? cardAttrMulti('dimension', sg.dimension, 'Dimension') : ''}
+            ${sg.intensity ? cardAttr('intensity', sg.intensity, 'Intensity', metaAttrLabel('intensity', sg.intensity)) : ''}
+            ${sg.tocfl ? cardAttr('tocfl', sg.tocfl, 'TOCFL', metaAttrLabel('tocfl', sg.tocfl)) : ''}
+          </div>`;
+
+          return `<div class="card-sense-block">${defsHTML}${metaHTML}</div>`;
+      }).join('')}
     </div>
 
-    <!-- Meta attribute chips — full-width on mobile, col 2 on desktop -->
-    <div class="card-meta">
-      ${cardAttr('register',    w.register,    'Register',    metaAttrLabel('register', w.register))}
-      ${cardAttr('connotation', w.connotation, 'Connotation', metaAttrLabel('connotation', w.connotation), connoClass[w.connotation])}
-      ${cardAttr('channel',     w.channel,     'Channel',     metaAttrLabel('channel', w.channel))}
-      ${(w.dimension||[]).length ? cardAttrMulti('dimension', w.dimension, 'Dimension') : ''}
-      ${w.intensity ? cardAttr('intensity', w.intensity, 'Intensity', metaAttrLabel('intensity', w.intensity)) : ''}
-      ${w.tocfl ? cardAttr('tocfl', w.tocfl, 'TOCFL', metaAttrLabel('tocfl', w.tocfl)) : ''}
-    </div>
-
-    <!-- CARD ACTIONS — save + share -->
-    <div class="card-actions">
-      <button class="card-action-btn${hasSaved ? ' saved' : ''}" onclick="handleSaveToCollection(event, '${wordKey}')" title="${hasSaved ? 'Unsave' : 'Save to collection'}">${hasSaved ? '&#9733;' : '＋'}</button>
-      <button class="card-action-btn" onclick="handleShare(event, '${wordKey}')" title="Share this word">↗</button>
-    </div>
-
-    <!-- 造句 PANEL -->
-    <div class="zaoju-panel">
-      <div class="zaoju-header">
-        <div class="zaoju-title">${
-          langMode === 'zh' ? '寫作工坊' :
-          langMode === 'both' ? 'Writing Workshop 寫作工坊' :
-          'Writing Workshop'
-        }</div>
-        <button class="zaoju-toggle" onclick="toggleZaoju('${wordKey}')">${workshopDefault === 'expanded' ? '▴' : '▾'}</button>
-      </div>
-
-      <div id="zaoju-body-${wordKey}" style="display:${workshopDefault === 'expanded' ? 'flex' : 'none'}; flex-direction:column; gap:0.75rem;">
-
-        <!-- Default sentences -->
-        <div class="ex-sentences">${defaultSentsHTML}</div>
-
-        <!-- Saved deck -->
-        <div id="deck-wrap-${wordKey}">${renderSavedDeck(wordKey)}</div>
-
-        <!-- 師父 WRITING AREA -->
-        <div class="shifu-writing-area">
-        <span class="saved-deck-label" style="color:var(--accent)">Write with 師父</span>
-        <div class="ai-tabs">
-          <button class="ai-tab active" onclick="switchTab('${wordKey}', 'critique', this)">✍️ Write &amp; Get 師父 Feedback</button>
-          <button class="ai-tab" onclick="switchTab('${wordKey}', 'theme', this)">🎯 Ask 師父 to Write</button>
-        </div>
-
-        <!-- CRITIQUE TAB -->
-        <div id="tab-critique-${wordKey}" class="ai-workspace">
-          <div class="ai-instruction">Write your own sentence using <strong style="color:var(--accent)">${w.traditional}</strong>. 師父 will check grammar, register, and naturalness — then you can save the result.</div>
-          <div class="ai-input-row">
-            <select class="ai-pos-select" id="critique-pos-${wordKey}">
-              ${allPOS.length === 1 ? '' : `<option value="">${langMode === 'zh' ? '選擇詞性…' : langMode === 'both' ? 'Select POS… 選擇詞性…' : 'Select POS…'}</option>`}
-              ${allPOS.map(p => `<option value="${p}"${allPOS.length === 1 ? ' selected' : ''}>${POS_ABBR[p] || p} — ${langMode === 'zh' ? (POS_ZH[p] || posDisplay(p)) : posDisplay(p)}</option>`).join('')}
-            </select>
-            <textarea class="ai-textarea${textDir === 'vertical' ? ' vertical-mode' : ''}" id="critique-input-${wordKey}" placeholder="${textDir === 'vertical' ? '在這裡寫…' : '在這裡寫… Write here…'}" rows="2"></textarea>
-            <button class="ai-submit-btn" onclick="runCritique('${wordKey}')">Analyse 分析 →</button>
-          </div>
-          <div id="critique-result-${wordKey}"></div>
-        </div>
-
-        <!-- THEME TAB -->
-        <div id="tab-theme-${wordKey}" class="ai-workspace" style="display:none">
-          <div class="ai-instruction">Ask 師父 to write using <strong style="color:var(--accent)">${w.traditional}</strong> around any theme, topic, or subject you love.</div>
-          <div class="ai-input-row">
-            <input type="text" class="ai-theme-input" id="theme-input-${wordKey}" placeholder="e.g. soccer, cooking, my grandmother, space travel…">
-            <button class="ai-submit-btn" onclick="runTheme('${wordKey}')">Generate 生成 →</button>
-          </div>
-          <div id="theme-result-${wordKey}"></div>
-        </div>
-
-        </div><!-- /.shifu-writing-area -->
-
-      </div>
-    </div>
+    <!-- 造句 PANEL (shared) -->
+    ${wsRenderPanel(wordKey, w, { allPOS, defaultExamplesHTML: defaultSentsHTML })}
   </div>`;
 }
 
-// ── ZAOJU INTERACTIONS ─────────────────────────────────────────────────────────
-const zaojuOpen = {};
-
-function toggleZaoju(key) {
-  // Initialise from default if first toggle on this card
-  if (zaojuOpen[key] === undefined) zaojuOpen[key] = workshopDefault === 'expanded';
-  zaojuOpen[key] = !zaojuOpen[key];
-  const body = document.getElementById(`zaoju-body-${key}`);
-  const btn = body.closest('.zaoju-panel').querySelector('.zaoju-toggle');
-  if (body) {
-    body.style.display = zaojuOpen[key] ? 'flex' : 'none';
-    if (btn) btn.textContent = zaojuOpen[key] ? '▴' : '▾';
-  }
-}
+// ── Workshop toggle/interactions now in shared partial _workshop-js ──
+// Legacy alias
+function toggleZaoju(key) { wsTogglePanel(key); }
 
 // toggleSecondaryChar loaded from shared partial
 
@@ -2890,28 +2470,28 @@ function handleSaveToCollection(e, wordKey) {
   }
 
   const word = WORDS.find(w => w.traditional === wordKey || w.smart_id === wordKey);
-  if (!word || !word.senseIds || !word.senseIds.length) return;
-  const senseId = word.senseIds[0];
+  if (!word || !word.wordObjectId) return;
+  const wordObjectId = word.wordObjectId;
   const btn = e.currentTarget;  // capture before async
-  const isSaved = (window.__AUTH.savedSenseIds || []).includes(senseId);
+  const isSaved = (window.__AUTH.savedWordIds || []).includes(wordObjectId);
 
   if (isSaved) {
     // Already saved — show collection picker directly
-    srpShowCollectionPicker(wordKey, senseId, btn);
+    srpShowCollectionPicker(wordKey, wordObjectId, btn);
     return;
   }
 
   // Not saved — save first, then show picker
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-  fetch('/api/saved-senses/' + senseId, {
+  fetch('/api/saved-words/' + wordObjectId, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
   })
   .then(r => r.json())
   .then(data => {
     if (data.saved) {
-      if (!window.__AUTH.savedSenseIds.includes(senseId)) {
-        window.__AUTH.savedSenseIds.push(senseId);
+      if (!window.__AUTH.savedWordIds.includes(wordObjectId)) {
+        window.__AUTH.savedWordIds.push(wordObjectId);
       }
       const card = document.getElementById('card-' + wordKey);
       if (card) {
@@ -2925,7 +2505,7 @@ function handleSaveToCollection(e, wordKey) {
         }
       }
       if (btn) { btn.innerHTML = '&#9733;'; btn.title = 'Saved'; btn.classList.add('saved'); }
-      srpShowCollectionPicker(wordKey, senseId, btn);
+      srpShowCollectionPicker(wordKey, wordObjectId, btn);
     }
   });
 }
@@ -2943,26 +2523,30 @@ function _srpEscHtml(str) {
   return d.innerHTML;
 }
 
-function srpShowCollectionPicker(wordKey, senseId, anchorBtn) {
+function srpShowCollectionPicker(wordKey, wordObjectId, anchorBtn) {
   srpDismissCollectionPicker();
   const collections = window.__AUTH.collections || [];
-  let html = '<div class="srp-cp-title">Add to collection</div>';
+  const inAnyCollection = collections.some(c => (c.wordObjectIds || []).includes(wordObjectId));
+  let html = '<div class="srp-cp-title">Manage collections</div>';
 
-  if (collections.length === 0) {
-    html += '<div class="srp-cp-empty">No collections yet</div>';
-  } else {
-    collections.forEach(c => {
-      const checked = (c.senseIds || []).includes(senseId) ? ' checked' : '';
-      html += `<label class="srp-cp-item">
-        <input type="checkbox"${checked} onchange="srpToggleCollectionSense(${c.id},${senseId},this)">
-        <span>${_srpEscHtml(c.name)}</span></label>`;
-    });
-  }
+  // Uncategorized option
+  const uncatChecked = !inAnyCollection ? ' checked' : '';
+  html += `<label class="srp-cp-item srp-cp-uncat">
+    <input type="checkbox" id="srpCpUncat-${wordObjectId}"${uncatChecked} onchange="srpHandleUncategorized(this,${wordObjectId},'${wordKey}')">
+    <span>Uncategorized</span></label>`;
+
+  // Collection list
+  collections.forEach(c => {
+    const checked = (c.wordObjectIds || []).includes(wordObjectId) ? ' checked' : '';
+    html += `<label class="srp-cp-item">
+      <input type="checkbox"${checked} onchange="srpToggleCollectionWord(${c.id},${wordObjectId},this)">
+      <span>${_srpEscHtml(c.name)}</span></label>`;
+  });
 
   html += `<div class="srp-cp-new">
-    <input type="text" id="srpCpNewInput-${senseId}" placeholder="New collection…"
-      onkeydown="if(event.key==='Enter')srpCreateCollection(${senseId},'${wordKey}')">
-    <button onclick="srpCreateCollection(${senseId},'${wordKey}')" title="Create">+</button>
+    <input type="text" id="srpCpNewInput-${wordObjectId}" placeholder="New collection…"
+      onkeydown="if(event.key==='Enter')srpCreateCollection(${wordObjectId},'${wordKey}')">
+    <button onclick="srpCreateCollection(${wordObjectId},'${wordKey}')" title="Create">+</button>
   </div>`;
 
   const popover = document.createElement('div');
@@ -2971,8 +2555,8 @@ function srpShowCollectionPicker(wordKey, senseId, anchorBtn) {
   popover.dataset.wordKey = wordKey;
   popover.innerHTML = html;
 
-  // Anchor to the card-actions div
-  const actionsDiv = anchorBtn ? anchorBtn.closest('.card-actions') : null;
+  // Anchor to the card-hero-actions div
+  const actionsDiv = anchorBtn ? anchorBtn.closest('.card-hero-actions') : null;
   if (actionsDiv) {
     actionsDiv.appendChild(popover);
   }
@@ -2997,24 +2581,55 @@ function srpDismissCollectionPicker() {
   }
 }
 
-function srpToggleCollectionSense(collectionId, senseId, checkbox) {
+function srpToggleCollectionWord(collectionId, wordObjectId, checkbox) {
   const method = checkbox.checked ? 'POST' : 'DELETE';
-  fetch('/api/collections/' + collectionId + '/senses/' + senseId, {
+  fetch('/api/collections/' + collectionId + '/words/' + wordObjectId, {
     method: method,
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _srpCsrf() },
-  }).then(() => {
+  }).then(r => r.json()).then(data => {
     const c = (window.__AUTH.collections || []).find(c => c.id === collectionId);
     if (!c) return;
     if (checkbox.checked) {
-      if (!(c.senseIds || []).includes(senseId)) c.senseIds.push(senseId);
+      if (!(c.wordObjectIds || []).includes(wordObjectId)) c.wordObjectIds.push(wordObjectId);
+      // Uncheck Uncategorized
+      const uncat = document.getElementById('srpCpUncat-' + wordObjectId);
+      if (uncat) uncat.checked = false;
     } else {
-      c.senseIds = (c.senseIds || []).filter(id => id !== senseId);
+      c.wordObjectIds = (c.wordObjectIds || []).filter(id => id !== wordObjectId);
+      // Check if still in any collection
+      const inAny = (window.__AUTH.collections || []).some(col => (col.wordObjectIds || []).includes(wordObjectId));
+      if (!inAny) {
+        const uncat = document.getElementById('srpCpUncat-' + wordObjectId);
+        if (uncat) uncat.checked = true;
+      }
     }
   });
 }
 
-function srpCreateCollection(senseId, wordKey) {
-  const input = document.getElementById('srpCpNewInput-' + senseId);
+function srpHandleUncategorized(checkbox, wordObjectId, wordKey) {
+  if (!checkbox.checked) {
+    // Unchecking Uncategorized with no collections = unsave entirely
+    const inAny = (window.__AUTH.collections || []).some(c => (c.wordObjectIds || []).includes(wordObjectId));
+    if (!inAny) {
+      fetch('/api/saved-words/' + wordObjectId, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _srpCsrf() },
+      }).then(r => r.json()).then(() => {
+        window.__AUTH.savedWordIds = (window.__AUTH.savedWordIds || []).filter(id => id !== wordObjectId);
+        // Update star button
+        const card = document.getElementById('card-' + wordKey);
+        if (card) {
+          const heroBtn = card.querySelector('.card-hero-btn.saved');
+          if (heroBtn) { heroBtn.classList.remove('saved'); heroBtn.innerHTML = '&#9734;'; heroBtn.title = 'Save'; }
+        }
+        srpDismissCollectionPicker();
+      });
+    }
+  }
+}
+
+function srpCreateCollection(wordObjectId, wordKey) {
+  const input = document.getElementById('srpCpNewInput-' + wordObjectId);
   if (!input || !input.value.trim()) return;
   const name = input.value.trim();
   input.disabled = true;
@@ -3026,18 +2641,18 @@ function srpCreateCollection(senseId, wordKey) {
   })
   .then(r => r.json())
   .then(collection => {
-    return fetch('/api/collections/' + collection.id + '/senses/' + senseId, {
+    return fetch('/api/collections/' + collection.id + '/words/' + wordObjectId, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _srpCsrf() },
     }).then(() => collection);
   })
   .then(collection => {
     if (!window.__AUTH.collections) window.__AUTH.collections = [];
-    window.__AUTH.collections.push({ id: collection.id, name: collection.name, senseIds: [senseId] });
+    window.__AUTH.collections.push({ id: collection.id, name: collection.name, wordObjectIds: [wordObjectId] });
     // Find the anchor button and re-show picker
     const card = document.getElementById('card-' + wordKey);
     const btn = card ? card.querySelector('.card-action-btn.saved') : null;
-    srpShowCollectionPicker(wordKey, senseId, btn);
+    srpShowCollectionPicker(wordKey, wordObjectId, btn);
   });
 }
 
@@ -3056,187 +2671,6 @@ function handleShare(e, wordKey) {
     });
   }
 }
-
-function switchTab(wordKey, tab, btn) {
-  const critiqueEl = document.getElementById(`tab-critique-${wordKey}`);
-  const themeEl = document.getElementById(`tab-theme-${wordKey}`);
-  const tabs = btn.closest('.ai-tabs').querySelectorAll('.ai-tab');
-  tabs.forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  if (tab === 'critique') {
-    critiqueEl.style.display = 'flex';
-    themeEl.style.display = 'none';
-  } else {
-    critiqueEl.style.display = 'none';
-    themeEl.style.display = 'flex';
-  }
-}
-
-function saveDefault(wordKey, sentIdx) {
-  const w = WORDS.find(x => x.traditional === wordKey);
-  if (!w) return;
-  const extras = EXTRA_SENTENCES[wordKey] || [];
-  const allDefaults = [w.example, ...extras];
-  const sent = allDefaults[sentIdx];
-  const saved = saveToWord(wordKey, { cn: sent.cn, en: sent.en, source: 'Default example' });
-  refreshDeckWrap(wordKey);
-  // Grey out button
-  const btn = document.querySelector(`#card-${wordKey} .ex-sent:nth-child(${sentIdx + 1}) .ex-sent-save`);
-  if (btn) { btn.textContent = '✓ Saved'; btn.classList.add('saved'); btn.disabled = true; }
-}
-
-function refreshDeckWrap(wordKey) {
-  const wrap = document.getElementById(`deck-wrap-${wordKey}`);
-  if (wrap) wrap.innerHTML = renderSavedDeck(wordKey);
-}
-
-async function runCritique(wordKey) {
-  if (!window.__AUTH) { showAuthPrompt(wordKey, 'critique'); return; }
-  const w = WORDS.find(x => x.traditional === wordKey);
-  if (!w) return;
-  const input = document.getElementById(`critique-input-${wordKey}`);
-  const posSelect = document.getElementById(`critique-pos-${wordKey}`);
-  const resultEl = document.getElementById(`critique-result-${wordKey}`);
-  const btn = input.closest('.ai-workspace').querySelector('.ai-submit-btn');
-  const sentence = input.value.trim();
-  const intendedPOS = posSelect ? posSelect.value : '';
-  if (!sentence) { resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Please write something first.</div></div>`; return; }
-
-  btn.disabled = true; btn.textContent = '分析中…';
-  resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--dim);font-style:italic">師父 is reading your writing…</div></div>`;
-
-  try {
-    const senseId = w.senseIds ? w.senseIds[0] : null;
-    const raw = await callWorkshopAPI('/api/workshop/critique', {
-      system_prompt: getCritiquePrompt(w, intendedPOS),
-      sentence: sentence,
-      word_sense_id: senseId,
-    });
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const data = JSON.parse(clean);
-
-    const verdictColor = data.verdict === 'correct' ? 'var(--jade)' : data.verdict === 'minor_issues' ? 'var(--gold)' : 'var(--rose)';
-    const verdictLabel = data.verdict === 'correct' ? '✓ Correct' : data.verdict === 'minor_issues' ? '△ Minor issues' : '✗ Needs work';
-    const senseIdAttr = senseId ? `data-sense-id="${senseId}"` : '';
-
-    resultEl.innerHTML = `
-      <div class="ai-response">
-        <div class="ai-response-label" style="color:${verdictColor}">${verdictLabel}</div>
-        <div class="ai-response-text">
-          <span class="resp-cn">${segmentedHTML(data.corrected_cn, w)}</span>
-          <span class="resp-en">${data.corrected_en}</span>
-          <span class="resp-note">${data.feedback}</span>
-          ${data.register_note ? `<span class="resp-note" style="margin-top:0.2rem">${data.register_note}</span>` : ''}
-        </div>
-        <div class="ai-response-actions">
-          <button class="ex-sent-save" ${senseIdAttr} data-word-key="${wordKey}" data-cn="${data.corrected_cn.replace(/"/g,'&quot;')}" data-en="${data.corrected_en.replace(/"/g,'&quot;')}" data-feedback="${(data.feedback + (data.register_note ? ' ' + data.register_note : '')).replace(/"/g,'&quot;')}" data-ai="1" onclick="saveAIResult(this)">＋ Save Writing</button>
-        </div>
-      </div>`;
-    setTimeout(() => resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
-  } catch(e) {
-    if (e.message === 'auth_required') { showAuthPrompt(wordKey, 'critique'); return; }
-    resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Something went wrong. Please try again.</div></div>`;
-  }
-  btn.disabled = false; btn.textContent = 'Analyse 分析 →';
-}
-
-async function runTheme(wordKey) {
-  if (!window.__AUTH) { showAuthPrompt(wordKey, 'theme'); return; }
-  const w = WORDS.find(x => x.traditional === wordKey);
-  if (!w) return;
-  const input = document.getElementById(`theme-input-${wordKey}`);
-  const resultEl = document.getElementById(`theme-result-${wordKey}`);
-  const btn = input.closest('.ai-workspace').querySelector('.ai-submit-btn');
-  const theme = input.value.trim();
-  if (!theme) { resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Please enter a theme or subject.</div></div>`; return; }
-
-  btn.disabled = true; btn.textContent = '生成中…';
-  resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--dim);font-style:italic">師父 is crafting your writing…</div></div>`;
-
-  try {
-    const senseId = w.senseIds ? w.senseIds[0] : null;
-    const raw = await callWorkshopAPI('/api/workshop/generate', {
-      system_prompt: getThemePrompt(w),
-      theme: theme,
-      word_sense_id: senseId,
-    });
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const data = JSON.parse(clean);
-    const senseIdAttr = senseId ? `data-sense-id="${senseId}"` : '';
-
-    resultEl.innerHTML = `
-      <div class="ai-response">
-        <div class="ai-response-label">✦ 師父 · Theme: ${theme}</div>
-        <div class="ai-response-text">
-          <span class="resp-cn">${segmentedHTML(data.cn, w)}</span>
-          <span class="resp-en">${data.en}</span>
-          <span class="resp-note">${data.note}</span>
-        </div>
-        <div class="ai-response-actions">
-          <button class="ex-sent-save" ${senseIdAttr} data-word-key="${wordKey}" data-cn="${data.cn.replace(/"/g,'&quot;')}" data-en="${data.en.replace(/"/g,'&quot;')}" data-feedback="${(data.note || '').replace(/"/g,'&quot;')}" data-ai="1" data-generated="1" onclick="saveAIResult(this)">＋ Save Writing</button>
-        </div>
-      </div>`;
-    setTimeout(() => resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
-  } catch(e) {
-    if (e.message === 'auth_required') { showAuthPrompt(wordKey, 'theme'); return; }
-    resultEl.innerHTML = `<div class="ai-response"><div class="ai-response-text" style="color:var(--rose)">Something went wrong. Please try again.</div></div>`;
-  }
-  btn.disabled = false; btn.textContent = 'Generate 生成 →';
-}
-
-async function saveAIResult(btn) {
-  const wordKey = btn.dataset.wordKey;
-  const cn = btn.dataset.cn;
-  const en = btn.dataset.en;
-  const feedback = btn.dataset.feedback || '';
-  const aiVerified = btn.dataset.ai === '1';
-  const isGenerated = btn.dataset.generated === '1';
-  const senseId = btn.dataset.senseId;
-  btn.disabled = true; btn.textContent = '…';
-
-  try {
-    const response = await fetch('/api/workshop/save-example', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': _csrf(),
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        word_sense_id: senseId ? parseInt(senseId) : null,
-        chinese_text: cn,
-        english_text: en,
-        ai_verified: aiVerified,
-        ai_feedback: feedback || null,
-        source_type: isGenerated ? 'generated' : 'learner',
-      }),
-    });
-
-    if (!response.ok) throw new Error('save_failed');
-    const saved = await response.json();
-
-    const source = isGenerated ? '師父 generated' : aiVerified ? '師父 verified' : 'My writing';
-    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    saveToWord(wordKey, { id: saved.id, cn, en, feedback, source, date: today });
-    refreshDeckWrap(wordKey);
-
-    // Close the AI response panel
-    const responseEl = btn.closest('.ai-response');
-    if (responseEl) responseEl.remove();
-
-    // Scroll to the newest writing (last card in deck)
-    const deckEl = document.getElementById(`deck-${wordKey}`);
-    if (deckEl) {
-      const lastCard = deckEl.querySelector('.ex-sent:last-child');
-      setTimeout(() => (lastCard || deckEl).scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
-    }
-  } catch(e) {
-    btn.textContent = '✗ Error';
-    setTimeout(() => { btn.textContent = '＋ Save Writing'; btn.disabled = false; }, 2000);
-  }
-}
-
-
 
 function buildActiveTags() {
   const tags = [];
@@ -3262,6 +2696,111 @@ function buildActiveTags() {
   return items.map(t => `<span class="active-filter-tag removable" data-group="${t.group}" data-val="${t.val}" title="Click to remove">${t.html}<span class="tag-remove">✕</span></span>`).join('');
 }
 
+// ── SENTENCE SEARCH: detect if input is a sentence vs a word ──
+function isSentenceInput(query) {
+  if (!query.trim()) return false;
+  const q = query.trim();
+  // If exact match in WORD_INDEX, it's a word
+  if (WORD_INDEX[q]) return false;
+  // If any WORDS entry matches traditional or simplified, it's a word search
+  if (WORDS.some(w => w.traditional === q || w.simplified === q)) return false;
+  // Segment it — if 2+ segments with at least 1 known, it's a sentence
+  const segs = segmentSentence(q);
+  return segs.length >= 2 && segs.some(s => s.known);
+}
+
+function renderSentenceResults(query) {
+  const segs = segmentSentence(query.trim());
+  const knownCount = segs.filter(s => s.known).length;
+  const totalCount = segs.length;
+  const vertical = textDir === 'vertical';
+
+  const headerLang = langMode === 'zh' ? `共 ${totalCount} 個詞 · ${knownCount} 個在詞典中` :
+    `${totalCount} words from sentence · ${knownCount} in lexicon`;
+
+  let html = `<div class="sentence-results-header">${headerLang}</div>`;
+  html += `<div class="sentence-results">`;
+  segs.forEach(seg => {
+    if (seg.known) {
+      // Find the full word object
+      const w = WORDS.find(wd => wd.traditional === seg.text || wd.simplified === seg.text);
+      if (w) {
+        html += renderSentenceCard(w, seg, vertical);
+      } else {
+        // Known in WORD_INDEX but not in full WORDS array (shouldn't happen but safe fallback)
+        html += renderSentenceKnownMini(seg, vertical);
+      }
+    } else {
+      html += renderUnknownCard(seg.text, vertical);
+    }
+  });
+  html += `</div>`;
+  return html;
+}
+
+function sentenceNavTo(smartId, label, sentenceQuery) {
+  // Store sentence context so IWP breadcrumb can link back
+  sessionStorage.setItem('lexiconSentence', sentenceQuery);
+  // Build abbreviated sentence label: 「first…last」
+  const q = sentenceQuery.trim();
+  const first = q.charAt(0);
+  const last = q.charAt(q.length - 1);
+  const sentenceLabel = q.length > 2 ? '\u300C' + first + '\u2026' + last + '\u300D' : '\u300C' + q + '\u300D';
+  // Reset trail and push sentence as origin
+  sessionStorage.setItem('lexiconTrail', JSON.stringify([
+    { smartId: '__sentence__', label: sentenceLabel, sentence: sentenceQuery },
+    { smartId: smartId, label: label }
+  ]));
+  window.location.href = '/lexicon/' + encodeURIComponent(smartId);
+}
+
+function renderSentenceCard(w, seg, vertical) {
+  const charDisplay = scriptMode === 'simplified' ? (w.simplified || w.traditional) : w.traditional;
+  const smartId = w.smart_id;
+  const sentenceQ = searchQuery.trim().replace(/'/g, "\\'");
+
+  // All POS + definition lines
+  const allDefs = (w.senseGroups || []).flatMap(sg => sg.definitions || []);
+  const defsHTML = allDefs.map(d => {
+    const posChip = d.pos ? `<span class="card-pos" style="pointer-events:none">${POS_ABBR[d.pos] || d.pos}</span>` : '';
+    return `<div class="sentence-card-def">${posChip} <span class="sentence-card-def-text">${d.def}</span></div>`;
+  }).join('');
+
+  const pinyinHTML = w.pinyin ? `<div class="sentence-card-pinyin"><span class="pinyin">${w.pinyin}</span></div>` : '';
+
+  return `
+  <div class="sentence-card" onclick="sentenceNavTo('${smartId}', '${charDisplay.replace(/'/g, "\\'")}', '${sentenceQ}')">
+    <div class="sentence-card-char${vertical ? ' vertical' : ''}">${charDisplay}</div>
+    <div class="sentence-card-body">
+      ${defsHTML}
+      ${pinyinHTML}
+    </div>
+  </div>`;
+}
+
+function renderSentenceKnownMini(seg, vertical) {
+  const d = seg.data;
+  const posChip = d.pos ? `<span class="card-pos" style="pointer-events:none">${POS_ABBR[d.pos] || d.pos}</span>` : '';
+  return `
+  <div class="sentence-card" onclick="window.location.href='/lexicon/${encodeURIComponent(d.smartId)}'">
+    <div class="sentence-card-char${vertical ? ' vertical' : ''}">${seg.text}</div>
+    <div class="sentence-card-body">
+      <div class="sentence-card-def">${posChip} <span class="sentence-card-def-text">${d.def || ''}</span></div>
+      ${d.pinyin ? `<div class="sentence-card-pinyin"><span class="pinyin">${d.pinyin}</span></div>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderUnknownCard(text, vertical) {
+  return `
+  <div class="sentence-card sentence-card--unknown">
+    <div class="sentence-card-char${vertical ? ' vertical' : ''}">${text}</div>
+    <div class="sentence-card-body">
+      <div class="sentence-card-def sentence-card-def--dim">${langMode === 'zh' ? '尚未收錄' : 'Not yet in lexicon'}</div>
+    </div>
+  </div>`;
+}
+
 function render() {
   rerenderLabels();
   const container = document.getElementById('cardContainer');
@@ -3285,6 +2824,20 @@ function render() {
     return;
   }
 
+  // ── SENTENCE DETECTION ──
+  if (hasQuery && !hasFilter && isSentenceInput(searchQuery)) {
+    document.body.classList.add('sentence-mode');
+    const segs = segmentSentence(searchQuery.trim());
+    const knownCount = segs.filter(s => s.known).length;
+    countEl.textContent = '';
+    if (countQuery) countQuery.textContent = '';
+    tagsEl.innerHTML = '';
+    container.innerHTML = renderSentenceResults(searchQuery);
+    return;
+  }
+  document.body.classList.remove('sentence-mode');
+
+  // ── NORMAL WORD SEARCH ──
   const matched = WORDS.filter(matchWord);
   countEl.textContent = matched.length;
   if (countQuery) countQuery.innerHTML = searchQuery.trim() ? ` for <em>"${searchQuery.trim()}"</em>` : '';
@@ -3492,7 +3045,7 @@ document.getElementById('scenarioNameInput').addEventListener('keydown', functio
 // ── OPEN WORD PAGE ───────────────────────────────────────────────────────────
 function openCard(event, wordKey) {
   // Don't navigate if user clicked a button inside the card (save, AI, etc.)
-  if (event.target.closest('button, .ai-workspace, .zaoju-panel, .seg-popover, .card-pos, .card-def-row, .card-hanzi, .card-actions')) return;
+  if (event.target.closest('button, .ws-ai-workspace, .ws-panel, .seg-popover, .card-pos, .card-def-row, .card-hanzi, .card-hero-actions, .card-actions')) return;
   const word = WORDS.find(w => w.traditional === wordKey || w.smart_id === wordKey);
   // Clear exploration trail — clicking a search result starts a fresh path
   sessionStorage.removeItem('lexiconTrail');
@@ -3531,31 +3084,12 @@ if (INITIAL_SEARCH) {
 }
 render();
 
-// Hydrate saved deck from DB
-if (window.__AUTH && window.__AUTH.savedExamples && window.__AUTH.savedExamples.length) {
-  window.__AUTH.savedExamples.forEach(ex => {
-    // Find the word that owns this sense
-    const w = WORDS.find(w => (w.senseIds || []).includes(ex.word_sense_id));
-    if (w) {
-      const d = ex.created_at ? new Date(ex.created_at) : null;
-      const dateStr = d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-      const src = ex.source_type === 'generated' ? '師父 generated' : ex.ai_verified ? '師父 verified' : 'My writing';
-      saveToWord(w.traditional, {
-        id: ex.id,
-        cn: ex.chinese_text,
-        en: ex.english_text,
-        feedback: ex.ai_feedback || '',
-        source: src,
-        date: dateStr,
-      });
-    }
-  });
-  // Re-render deck wraps for all words that have saved items
-  Object.keys(savedDeck).forEach(key => refreshDeckWrap(key));
-}
+// Hydrate saved deck from DB (shared partial)
+wsHydrateSavedDeck();
+Object.keys(wsSavedDeck).forEach(key => wsRefreshDeck(key));
 
 // Restore pending workshop data after login redirect
-restoreWorkshopPending();
+wsRestorePending();
 
 // Re-render on bfcache restore (back button from IWP)
 window.addEventListener('pageshow', function(e) {
@@ -3580,5 +3114,6 @@ document.addEventListener('DOMContentLoaded', function () {
 @include('partials.lexicon._popover')
 @include('partials.lexicon._preference-sync')
 <button id="backToTop" aria-label="Back to top">⌃</button>
+@include('partials.lexicon._site-footer')
 </body>
 </html>

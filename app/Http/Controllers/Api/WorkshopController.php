@@ -31,12 +31,12 @@ class WorkshopController extends Controller
             return response()->json(['error' => 'AI request failed'], 502);
         }
 
-        // Log usage
+        // Log usage (user_id nullable for guests)
         AiUsageLog::create([
-            'user_id'      => Auth::id(),
+            'user_id'       => Auth::id(),
             'word_sense_id' => $request->input('word_sense_id'),
-            'request_type' => 'feedback',
-            'credits_used' => 1,
+            'request_type'  => 'feedback',
+            'credits_used'  => 1,
         ]);
 
         $text = collect($result['content'] ?? [])
@@ -66,10 +66,10 @@ class WorkshopController extends Controller
         }
 
         AiUsageLog::create([
-            'user_id'      => Auth::id(),
+            'user_id'       => Auth::id(),
             'word_sense_id' => $request->input('word_sense_id'),
-            'request_type' => 'generation',
-            'credits_used' => 1,
+            'request_type'  => 'generation',
+            'credits_used'  => 1,
         ]);
 
         $text = collect($result['content'] ?? [])
@@ -85,23 +85,33 @@ class WorkshopController extends Controller
     public function saveExample(Request $request): JsonResponse
     {
         $request->validate([
-            'word_sense_id' => ['required', 'integer', 'exists:word_senses,id'],
-            'chinese_text'  => ['required', 'string', 'max:2000'],
-            'english_text'  => ['required', 'string', 'max:2000'],
-            'ai_verified'   => ['boolean'],
-            'ai_feedback'   => ['nullable', 'string', 'max:5000'],
-            'source_type'   => ['nullable', 'string', 'in:learner,generated'],
+            'word_sense_id'    => ['required', 'integer', 'exists:word_senses,id'],
+            'word_object_id'   => ['nullable', 'integer', 'exists:word_objects,id'],
+            'chinese_text'     => ['required', 'string', 'max:2000'],
+            'english_text'     => ['required', 'string', 'max:2000'],
+            'ai_verified'      => ['boolean'],
+            'ai_feedback'      => ['nullable', 'string', 'max:5000'],
+            'original_chinese_text' => ['nullable', 'string', 'max:2000'],
+            'source_type'      => ['nullable', 'string', 'in:learner,generated'],
+            'assessed_level'   => ['nullable', 'string', 'in:beginner,learner,developing,advanced,fluent'],
+            'assessed_mastery' => ['nullable', 'string', 'in:seed,sprout,bud,flower,fruit'],
+            'mastery_guidance' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $example = UserSavedExample::create([
-            'user_id'       => Auth::id(),
-            'word_sense_id' => $request->input('word_sense_id'),
-            'chinese_text'  => $request->input('chinese_text'),
-            'english_text'  => $request->input('english_text'),
-            'ai_verified'   => $request->boolean('ai_verified', false),
-            'ai_feedback'   => $request->input('ai_feedback'),
-            'source_type'   => $request->input('source_type', 'learner'),
-            'is_public'     => false,
+            'user_id'          => Auth::id(),
+            'word_sense_id'    => $request->input('word_sense_id'),
+            'word_object_id'   => $request->input('word_object_id'),
+            'chinese_text'     => $request->input('chinese_text'),
+            'english_text'     => $request->input('english_text'),
+            'original_chinese_text' => $request->input('original_chinese_text'),
+            'ai_verified'      => $request->boolean('ai_verified', false),
+            'ai_feedback'      => $request->input('ai_feedback'),
+            'source_type'      => $request->input('source_type', 'learner'),
+            'assessed_level'   => $request->input('assessed_level'),
+            'assessed_mastery' => $request->input('assessed_mastery'),
+            'mastery_guidance' => $request->input('mastery_guidance'),
+            'is_public'        => false,
         ]);
 
         return response()->json($example, 201);
@@ -117,6 +127,22 @@ class WorkshopController extends Controller
             ->delete();
 
         return response()->json(['deleted' => (bool) $deleted]);
+    }
+
+    /**
+     * Update the authenticated user's fluency level.
+     */
+    public function updateFluencyLevel(Request $request): JsonResponse
+    {
+        $request->validate([
+            'fluency_level' => ['required', 'string', 'in:beginner,learner,developing,advanced,fluent'],
+        ]);
+
+        $user = Auth::user();
+        $user->fluency_level = $request->input('fluency_level');
+        $user->save();
+
+        return response()->json(['fluency_level' => $user->fluency_level]);
     }
 
     /**

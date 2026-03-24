@@ -42,8 +42,11 @@ class MyWritingsController extends Controller
                 'english_text' => $ex->english_text,
                 'ai_verified'  => $ex->ai_verified,
                 'ai_feedback'  => $ex->ai_feedback,
-                'source_type'  => $ex->source_type ?? 'learner',
-                'created_at'   => $ex->created_at->format('M j, Y'),
+                'source_type'      => $ex->source_type ?? 'learner',
+                'assessed_level'   => $ex->assessed_level,
+                'assessed_mastery' => $ex->assessed_mastery,
+                'mastery_guidance'  => $ex->mastery_guidance,
+                'created_at'       => $ex->created_at->format('M j, Y'),
             ];
         });
 

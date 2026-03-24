@@ -32,6 +32,15 @@ class Collection extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function wordObjects(): BelongsToMany
+    {
+        return $this->belongsToMany(WordObject::class, 'collection_word')
+            ->withPivot('sort_order', 'mastery_level', 'added_at')
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
+    }
+
+    // Legacy — kept for backward compatibility during transition
     public function wordSenses(): BelongsToMany
     {
         return $this->belongsToMany(WordSense::class, 'collection_sense')

@@ -16,7 +16,9 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\PreferenceController;
 use App\Http\Controllers\Api\SavedSenseController;
+use App\Http\Controllers\Api\SavedWordController;
 use App\Http\Controllers\Api\WorkshopController;
+use App\Http\Controllers\CollectionTestController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\MyWordsController;
 use App\Http\Controllers\MyWritingsController;
@@ -44,6 +46,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name(
 
 Route::get('/my-words', [MyWordsController::class, 'index'])->name('my-words')->middleware('auth');
 Route::get('/my-writings', [MyWritingsController::class, 'index'])->name('my-writings')->middleware('auth');
+Route::get('/my-words/test/{collection}', [CollectionTestController::class, 'show'])->name('my-words.test')->middleware('auth');
 
 // ── Learner API (auth required) ──────────────────────────────────────────────
 
@@ -51,22 +54,39 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::get('/preferences', [PreferenceController::class, 'index']);
     Route::patch('/preferences', [PreferenceController::class, 'update']);
 
-    Route::get('/saved-senses', [SavedSenseController::class, 'index']);
-    Route::post('/saved-senses/{senseId}', [SavedSenseController::class, 'toggle']);
-    Route::patch('/saved-senses/{senseId}/note', [SavedSenseController::class, 'updateNote']);
+    // Word-level saves (replaces sense-level)
+    Route::get('/saved-words', [SavedWordController::class, 'index']);
+    Route::post('/saved-words/{wordObjectId}', [SavedWordController::class, 'toggle']);
+    Route::delete('/saved-words/{wordObjectId}', [SavedWordController::class, 'destroy']);
+    Route::patch('/saved-words/{wordObjectId}/note', [SavedWordController::class, 'updateNote']);
 
+    // Collections (word-level)
     Route::get('/collections', [CollectionController::class, 'index']);
     Route::post('/collections', [CollectionController::class, 'store']);
     Route::patch('/collections/{collection}', [CollectionController::class, 'update']);
     Route::delete('/collections/{collection}', [CollectionController::class, 'destroy']);
-    Route::post('/collections/{collection}/senses/{senseId}', [CollectionController::class, 'addSense']);
-    Route::delete('/collections/{collection}/senses/{senseId}', [CollectionController::class, 'removeSense']);
+    Route::post('/collections/{collection}/words/{wordObjectId}', [CollectionController::class, 'addWord']);
+    Route::delete('/collections/{collection}/words/{wordObjectId}', [CollectionController::class, 'removeWord']);
 
-    // Workshop (造句) — AI proxy + saved examples
-    Route::post('/workshop/critique', [WorkshopController::class, 'critique']);
-    Route::post('/workshop/generate', [WorkshopController::class, 'generate']);
+    // Workshop (造句) — save & delete require auth
     Route::post('/workshop/save-example', [WorkshopController::class, 'saveExample']);
     Route::delete('/workshop/saved-example/{id}', [WorkshopController::class, 'deleteExample']);
+
+    // Fluency level (profile setting for 師父)
+    Route::put('/user/fluency-level', [WorkshopController::class, 'updateFluencyLevel']);
+
+    // Collection testing
+    Route::post('/collection-tests', [CollectionTestController::class, 'store']);
+    Route::post('/collection-tests/{test}/answers', [CollectionTestController::class, 'storeAnswer']);
+    Route::post('/collection-tests/{test}/complete', [CollectionTestController::class, 'complete']);
+    Route::post('/collection-tests/usage-check', [CollectionTestController::class, 'usageCheck']);
+});
+
+// Workshop AI proxy — open to guests so they can try before signing up
+// Rate-limited: 10 requests/minute per IP to prevent abuse
+Route::prefix('api')->middleware('throttle:10,1')->group(function () {
+    Route::post('/workshop/critique', [WorkshopController::class, 'critique']);
+    Route::post('/workshop/generate', [WorkshopController::class, 'generate']);
 });
 
 // ── Lexicon explorer (public, no auth) ───────────────────────────────────────

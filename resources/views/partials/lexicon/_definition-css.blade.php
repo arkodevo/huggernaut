@@ -1,6 +1,6 @@
 {{-- Shared POS chip, definition, formula, usage note styles --}}
 <style>
-.card-def-row { display: block; }
+.card-def-row { display: block; margin-bottom: 0.3rem; }
 .card-def-row + .card-def-row { margin-top: 0.4rem; }
 
 .card-pos {
@@ -26,6 +26,7 @@
 
 .card-usage-note {
   font-size: var(--fs-note, 0.9rem); color: var(--dim); line-height: 1.5;
+  margin-top: 0.45rem;
 }
 
 .card-formula {
@@ -35,6 +36,6 @@
   padding: 0.3rem 0.6rem; border-radius: 2px;
   color: var(--accent);
   font-family: 'DM Mono', monospace;
-  display: inline-block; margin-top: 0.15rem;
+  display: inline-block; margin-top: 0.5rem;
 }
 </style>

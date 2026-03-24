@@ -14,11 +14,16 @@ class UserSavedExample extends Model
     protected $fillable = [
         'user_id',
         'word_sense_id',
+        'word_object_id',
         'chinese_text',
         'english_text',
+        'original_chinese_text',
         'ai_verified',
         'ai_feedback',
         'source_type',
+        'assessed_level',
+        'assessed_mastery',
+        'mastery_guidance',
         'is_public',
     ];
 
@@ -38,5 +43,10 @@ class UserSavedExample extends Model
     public function wordSense(): BelongsTo
     {
         return $this->belongsTo(WordSense::class);
+    }
+
+    public function wordObject(): BelongsTo
+    {
+        return $this->belongsTo(WordObject::class);
     }
 }

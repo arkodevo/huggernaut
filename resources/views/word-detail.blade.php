@@ -11,28 +11,22 @@
 @include('partials.lexicon._definition-css')
 @include('partials.lexicon._word-header-css')
 @include('partials.lexicon._example-sentence-css')
+@include('partials.lexicon._workshop-css')
 <style>
 /* ── WD PREFIX STYLES ── */
 
-/* Sticky header */
+/* IWP settings header (below shared site header) */
 .wd-header {
-  position: sticky; top: 0; z-index: 100;
+  position: sticky; top: 0; z-index: 90;
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
-  padding: 0.6rem 1rem;
+  padding: 0.4rem 1rem;
   display: flex; flex-direction: column; gap: 0.4rem;
 }
 .wd-header-top {
   display: flex; align-items: center; gap: 0.6rem;
 }
-.wd-back-btn {
-  font-family: 'DM Mono', monospace; font-size: 0.75rem;
-  color: var(--accent); background: none; border: none;
-  cursor: pointer; padding: 0.2rem 0;
-  transition: opacity 0.15s;
-}
-.wd-back-btn:hover { opacity: 0.7; }
 .wd-breadcrumb {
   font-size: 0.65rem; color: var(--dim);
   letter-spacing: 0.05em;
@@ -50,14 +44,14 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 2px;
-  padding: 1rem 1.2rem;
+  padding: 0.5rem 0.6rem;
   margin-top: 5px;
 }
 .wd-header-char .hanzi-char {
-  font-size: 2.4rem;
+  font-size: var(--fs-hanzi, 2.8rem);
 }
 .wd-header-char .hanzi-secondary {
-  font-size: calc(2.4rem * 0.65);
+  font-size: calc(2.8rem * 0.65);
 }
 .wd-header-char .script-switch-btn {
   font-size: 1rem; padding: 0.25rem 0;
@@ -238,41 +232,81 @@
 .wd-sense {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
   border-radius: 2px;
-  padding: 1rem 1.2rem;
-  display: flex; flex-direction: column; gap: 0.75rem;
+  padding: 0.5rem 0.6rem 0.5rem 0.6rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.wd-sense.wd-sense-single {
+  border: none; background: none;
+  padding: 0 0.75rem;
+  margin-top: 0;
+}
+/* Single-sense: hero flows into sense content as one continuous card */
+body.wd-single-sense .wd-header {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+body.wd-single-sense .wd-header-char {
+  border-bottom: none;
+  border-radius: 2px 2px 0 0;
+  margin-bottom: 0;
+}
+body.wd-single-sense .wd-main {
+  padding-top: 0;
+}
+body.wd-single-sense .wd-sense-single {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 2px 2px;
+  padding: 0.5rem 0.6rem 0.75rem 0.6rem;
+}
+/* Multi-sense: tighten gap between hero and first sense */
+body.wd-multi-sense .wd-main {
+  padding-top: 0.6rem;
+}
+body.wd-multi-sense .wd-header {
+  border-bottom: none;
 }
 .wd-sense-header {
   display: flex; flex-direction: column; gap: 0.4rem;
-  position: relative;
 }
-.wd-sense-badge {
+.wd-sense-stripe {
+  background: var(--accent);
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.75rem;
+  margin: -0.5rem -0.6rem 0.25rem -0.6rem;
+}
+/* ── HERO ACTIONS (star + share beneath pinyin) ── */
+.wd-hero-actions {
+  display: flex; gap: 0.5rem; margin-top: 0.35rem;
+}
+.wd-save-btn, .wd-share-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 1.6rem; height: 1.6rem;
-  font-size: 0.72rem; font-weight: 500;
-  color: white; background: var(--accent);
-  border-radius: 50%;
-  flex-shrink: 0;
+  width: 2.8rem; height: 2.2rem;
+  background: var(--surface); border: 1.5px solid var(--accent);
+  border-radius: 4px; cursor: pointer;
+  font-size: 1.3rem; color: var(--accent);
+  transition: all 0.15s; opacity: 0.6;
 }
-.wd-save-btn {
-  font-size: 1.1rem; background: none; border: none;
-  cursor: pointer; color: var(--dim); padding: 0 0.2rem;
-  transition: color 0.15s; flex-shrink: 0;
-  line-height: 1;
-}
-.wd-save-btn:hover { color: var(--gold); }
-.wd-save-btn.saved { color: var(--gold); }
+.wd-save-btn:hover, .wd-share-btn:hover { opacity: 1; background: rgba(98,64,200,0.06); }
+.wd-save-btn.saved { color: var(--accent); opacity: 1; background: rgba(98,64,200,0.08); }
 
 /* Collection picker popover */
 .wd-cp {
-  position: absolute; top: 2rem; left: 0; z-index: 200;
+  position: absolute; top: 100%; left: 0; z-index: 200;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 3px; min-width: 200px; padding: 0.4rem 0;
   box-shadow: 0 8px 28px rgba(0,0,0,0.12);
   animation: wdCpIn 0.15s ease;
   max-height: 50vh; overflow-y: auto;
 }
+.wd-hero-actions { position: relative; }
 @keyframes wdCpIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
 .wd-cp-title {
   font-family: 'DM Mono', monospace; font-size: 0.6rem;
@@ -336,8 +370,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.4rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border);
+  padding-top: 0.3rem;
 }
 
 /* ── EXAMPLES ── */
@@ -478,68 +511,7 @@
   font-size: 0.55rem; color: var(--gold);
 }
 
-/* ── WORKSHOP ── */
-.wd-workshop {
-  background: rgba(98,64,200,0.04);
-  border: 1px solid rgba(98,64,200,0.1);
-  border-radius: 2px;
-  padding: 0.75rem 1rem;
-  display: flex; flex-direction: column; gap: 0.6rem;
-}
-.wd-workshop-header {
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem;
-}
-.wd-workshop-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.78rem; color: var(--accent);
-  letter-spacing: 0.08em;
-}
-.wd-workshop-tabs {
-  display: flex; gap: 0.3rem; flex-wrap: wrap;
-}
-.wd-workshop-tab {
-  padding: 0.35rem 0.65rem; border-radius: 2px;
-  border: 1px solid var(--border);
-  font-family: 'DM Mono', monospace; font-size: 0.72rem;
-  color: var(--dim); background: transparent; cursor: pointer;
-  transition: all 0.18s;
-}
-.wd-workshop-tab:hover { border-color: rgba(98,64,200,0.3); color: var(--text); }
-.wd-workshop-tab.active { border-color: var(--accent); background: var(--tag-bg); color: var(--accent); }
-.wd-workshop-content {
-  display: flex; flex-direction: column; gap: 0.5rem;
-}
-.wd-workshop-panel { display: none; flex-direction: column; gap: 0.5rem; }
-.wd-workshop-panel.active { display: flex; }
-
-/* My Writing textarea */
-.wd-writing-area {
-  background: #fff;
-  border: 1px solid rgba(98,64,200,0.25);
-  color: var(--ink);
-  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: 1.1rem; padding: 0.6rem 0.75rem;
-  border-radius: 2px; outline: none; resize: vertical;
-  min-height: 80px; line-height: 1.6;
-  transition: border-color 0.2s;
-}
-.wd-writing-area::placeholder { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: rgba(26,24,40,0.3); }
-.wd-writing-area:focus { border-color: var(--accent); }
-.wd-writing-area.vertical-mode {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  min-height: 200px; min-width: 100%;
-  resize: horizontal;
-}
-.wd-save-writing-btn {
-  align-self: flex-start;
-  padding: 0.4rem 0.8rem; border-radius: 2px;
-  border: 1px solid var(--accent);
-  background: var(--tag-bg); color: var(--accent);
-  font-family: 'DM Mono', monospace; font-size: 0.72rem;
-  cursor: pointer; transition: all 0.2s;
-}
-.wd-save-writing-btn:hover { background: rgba(155,127,240,0.2); }
+/* ── Workshop styles: loaded from shared partial _workshop-css ── */
 
 /* Stub panels */
 .wd-stub {
@@ -605,31 +577,37 @@
 
 /* ── SECTION WRAPPERS ── */
 .wd-section {
-  border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
+  border: 1px solid var(--border);
 }
 .wd-section-toggle {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.65rem 1rem;
-  cursor: pointer; background: transparent; border: none;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer; background: var(--surface2); border: none;
   width: 100%; text-align: left;
   font-family: 'DM Mono', monospace;
-  font-size: 0.72rem; letter-spacing: 0.08em;
-  color: var(--dim);
-  transition: color 0.15s, background 0.15s;
+  font-size: 0.81rem; letter-spacing: 0.08em;
+  color: var(--accent);
+  transition: opacity 0.15s;
+  border-radius: 4px;
 }
-.wd-section-toggle:hover { color: var(--text); background: rgba(98,64,200,0.04); }
+.wd-section-toggle[aria-expanded="true"] {
+  border-radius: 4px 4px 0 0;
+}
+.wd-section-toggle:hover { opacity: 0.85; }
 .wd-section-body {
   display: none;
   flex-direction: column; gap: 0.75rem;
-  padding: 1rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  border-radius: 0 0 4px 4px;
 }
 .wd-section-body.open {
   display: flex;
 }
 .wd-section-arrow {
-  font-size: 0.65rem; transition: transform 0.2s; display: inline-block;
+  font-size: 0.85rem; color: var(--accent);
 }
 .wd-section-stub {
   font-family: 'Cormorant Garamond', serif;
@@ -641,6 +619,7 @@
 /* ── RESPONSIVE ── */
 @media (min-width: 768px) {
   .wd-main { padding: 1.5rem 2rem; }
+  body.wd-single-sense .wd-main { padding-top: 0; }
   .wd-attrs { grid-template-columns: repeat(3, 1fr); }
 }
 </style>
@@ -651,12 +630,13 @@
 <!-- Popover (singleton) -->
 @include('partials.lexicon._popover')
 
-<!-- Sticky Header -->
+<!-- Shared Header -->
+@include('partials.lexicon._site-header', ['backUrl' => route('lexicon.index'), 'backLabel' => 'Lexicon'])
+
+<!-- Sticky IWP Settings Header -->
 <div class="wd-header" id="wdHeader">
   <div class="wd-header-top">
-    <button class="wd-back-btn" onclick="goBack()">&larr; Back</button>
     <div class="wd-breadcrumb" id="wdBreadcrumb"></div>
-    @include('partials.lexicon._user-menu')
     <button class="wd-gear-btn" id="wdGearBtn" onclick="wdToggleGear()" title="Settings">&#9881;</button>
   </div>
 
@@ -683,7 +663,7 @@
         </div>
 
         <div class="iface-group">
-          <div class="iface-group-label">ICONS</div>
+          <div class="iface-group-label">SYMBOLS</div>
           <div class="wd-toggle" id="wdIconsToggle">
             <button class="wd-toggle-btn active" id="wdBtnIconsOn" onclick="wdSetIcons('on')">On</button>
             <button class="wd-toggle-btn" id="wdBtnIconsOff" onclick="wdSetIcons('off')">Off</button>
@@ -901,6 +881,51 @@ window.onSegNavigate = function(smartId, trad) {
 @include('partials.lexicon._segmentation')
 @include('partials.lexicon._word-header-js')
 @include('partials.lexicon._example-sentence-js')
+@include('partials.lexicon._workshop-js')
+<script>
+// Workshop adapter for IWP: look up word data from WORD global
+window.wsGetWordData = function(wordKey) {
+  if (typeof WORD === 'undefined') return null;
+  // For IWP, wordKey may be the traditional character or a sense-specific key (e.g. '流_s42')
+  if (WORD.traditional === wordKey) {
+    // Single-sense or generic lookup — return first sense data
+    const s = (WORD.senses || [])[0];
+    if (!s) return WORD;
+    return Object.assign({}, WORD, { senseId: s.id, senseIds: [s.id], wordObjectId: WORD.wordObjectId, definitions: s.definitions || [] });
+  }
+  // Match sense-specific key pattern: traditional + '_s' + senseId
+  const senseMatch = wordKey.match(new RegExp('^' + WORD.traditional.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '_s(\\d+)$'));
+  if (senseMatch) {
+    const senseId = parseInt(senseMatch[1]);
+    const sense = (WORD.senses || []).find(s => s.id === senseId);
+    if (sense) {
+      return {
+        traditional: WORD.traditional,
+        simplified: WORD.simplified || '',
+        pinyin: sense.pinyin || WORD.pinyin || '',
+        definition: (sense.definitions || [])[0]?.def || '',
+        register: sense.register || '',
+        connotation: sense.connotation || '',
+        channel: sense.channel || '',
+        level: sense.tocfl || '',
+        formula: sense.formula || '',
+        senseId: sense.id,
+        senseIds: [sense.id],
+        wordObjectId: WORD.wordObjectId,
+        definitions: sense.definitions || [],
+      };
+    }
+  }
+  return null;
+};
+window.wsResolveWordKey = function(ex) {
+  if (typeof WORD === 'undefined') return null;
+  // Return sense-specific key to match IWP panel keys (traditional + '_s' + senseId)
+  const sense = (WORD.senses || []).find(s => s.id === ex.word_sense_id);
+  if (sense) return WORD.traditional + '_s' + sense.id;
+  return null;
+};
+</script>
 <script>
 
 // ── GEAR PANEL ──
@@ -970,12 +995,14 @@ HIDEABLE_SECTIONS.forEach(s => {
 function wdToggleSectionCollapse(key) {
   const body = document.getElementById('wdSectionBody-' + key);
   const arrow = document.getElementById('wdSectionArrow-' + key);
+  const toggle = body ? body.previousElementSibling : null;
   if (!body) return;
   const isOpen = body.classList.toggle('open');
   sectionOpenState[key] = isOpen;
   localStorage.setItem('wdOpen_' + key, isOpen);
   if (window.syncPref) syncPref('wdOpen_' + key, String(isOpen));
-  if (arrow) arrow.style.transform = isOpen ? 'rotate(180deg)' : '';
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
+  if (toggle) toggle.setAttribute('aria-expanded', isOpen);
 }
 
 function renderSection(key, contentHTML) {
@@ -984,9 +1011,9 @@ function renderSection(key, contentHTML) {
   if (!sec) return '';
   const isOpen = sectionOpenState[key] !== false;
   return `<div class="wd-section" id="wdSection-${key}">
-    <button class="wd-section-toggle" onclick="wdToggleSectionCollapse('${key}')">
+    <button class="wd-section-toggle" aria-expanded="${isOpen}" onclick="wdToggleSectionCollapse('${key}')">
       <span>${langText(sec.en, sec.zh)}</span>
-      <span class="wd-section-arrow" id="wdSectionArrow-${key}" style="transform:${isOpen ? 'rotate(180deg)' : ''}">&#9662;</span>
+      <span class="wd-section-arrow" id="wdSectionArrow-${key}">${isOpen ? '▼' : '▲'}</span>
     </button>
     <div class="wd-section-body${isOpen ? ' open' : ''}" id="wdSectionBody-${key}">
       ${contentHTML}
@@ -1077,66 +1104,99 @@ function wdSetTextDir(mode) {
   renderPage();
 }
 
-// ── SAVE/UNSAVE SENSE ──
+// ── SAVE/UNSAVE WORD ──
 function _csrfHeader() {
   return document.querySelector('meta[name="csrf-token"]').content;
 }
 
-function wdToggleSave(senseId) {
-  if (!window.__AUTH) return;
-  fetch('/api/saved-senses/' + senseId, {
-    method: 'POST',
+function wdToggleSave() {
+  if (!window.__AUTH || !WORD.wordObjectId) return;
+  var wordObjectId = WORD.wordObjectId;
+  var isSaved = (window.__AUTH.savedWordIds || []).includes(wordObjectId);
+
+  if (isSaved) {
+    // Already saved — just show the picker (don't toggle)
+    var existingPicker = document.getElementById('wdCollectionPicker');
+    if (existingPicker) {
+      wdDismissCollectionPicker();
+    } else {
+      wdShowCollectionPicker();
+    }
+  } else {
+    // Not saved — save it, fill star, show picker
+    fetch('/api/saved-words/' + wordObjectId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.saved) {
+        var btn = document.getElementById('wdSaveBtn');
+        if (btn) {
+          btn.classList.add('saved');
+          btn.innerHTML = '&#9733;';
+          btn.title = 'Manage';
+        }
+        if (!window.__AUTH.savedWordIds.includes(wordObjectId)) {
+          window.__AUTH.savedWordIds.push(wordObjectId);
+        }
+        wdShowCollectionPicker();
+      }
+    });
+  }
+}
+
+function wdUnsaveWord() {
+  var wordObjectId = WORD.wordObjectId;
+  fetch('/api/saved-words/' + wordObjectId, {
+    method: 'DELETE',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
   })
   .then(function(r) { return r.json(); })
-  .then(function(data) {
-    var btn = document.getElementById('wdSaveBtn-' + senseId);
-    if (!btn) return;
-    if (data.saved) {
-      btn.classList.add('saved');
-      btn.innerHTML = '&#9733;';
-      btn.title = 'Unsave';
-      if (!window.__AUTH.savedSenseIds.includes(senseId)) {
-        window.__AUTH.savedSenseIds.push(senseId);
-      }
-      wdShowCollectionPicker(senseId);
-    } else {
+  .then(function() {
+    var btn = document.getElementById('wdSaveBtn');
+    if (btn) {
       btn.classList.remove('saved');
       btn.innerHTML = '&#9734;';
       btn.title = 'Save';
-      window.__AUTH.savedSenseIds = window.__AUTH.savedSenseIds.filter(function(id) { return id !== senseId; });
-      // Remove from all collections in memory
-      (window.__AUTH.collections || []).forEach(function(c) {
-        c.senseIds = (c.senseIds || []).filter(function(id) { return id !== senseId; });
-      });
-      wdDismissCollectionPicker();
     }
+    window.__AUTH.savedWordIds = (window.__AUTH.savedWordIds || []).filter(function(id) { return id !== wordObjectId; });
+    // Remove from all collections in memory
+    (window.__AUTH.collections || []).forEach(function(c) {
+      c.wordObjectIds = (c.wordObjectIds || []).filter(function(id) { return id !== wordObjectId; });
+    });
+    wdDismissCollectionPicker();
   });
 }
 
 // ── COLLECTION PICKER POPOVER ──
 var _cpDismissHandler = null;
 
-function wdShowCollectionPicker(senseId) {
+function wdShowCollectionPicker() {
   wdDismissCollectionPicker();
+  var wordObjectId = WORD.wordObjectId;
   var collections = window.__AUTH.collections || [];
-  var html = '<div class="wd-cp-title">Add to collection</div>';
+  var inAnyCollection = collections.some(function(c) { return (c.wordObjectIds || []).includes(wordObjectId); });
+  var html = '<div class="wd-cp-title">Manage collections</div>';
 
-  if (collections.length === 0) {
-    html += '<div class="wd-cp-empty">No collections yet</div>';
-  } else {
-    collections.forEach(function(c) {
-      var checked = (c.senseIds || []).includes(senseId) ? ' checked' : '';
-      html += '<label class="wd-cp-item">'
-        + '<input type="checkbox"' + checked + ' onchange="wdToggleCollectionSense(' + c.id + ',' + senseId + ',this)">'
-        + '<span>' + escHtml(c.name) + '</span></label>';
-    });
-  }
+  // Uncategorized option
+  var uncatChecked = !inAnyCollection ? ' checked' : '';
+  html += '<label class="wd-cp-item wd-cp-uncat">'
+    + '<input type="checkbox" id="wdCpUncat"' + uncatChecked + ' onchange="wdHandleUncategorized(this,' + wordObjectId + ')">'
+    + '<span>Uncategorized</span></label>';
+
+  // Collection list
+  collections.forEach(function(c) {
+    var checked = (c.wordObjectIds || []).includes(wordObjectId) ? ' checked' : '';
+    html += '<label class="wd-cp-item">'
+      + '<input type="checkbox"' + checked + ' onchange="wdToggleCollectionWord(' + c.id + ',' + wordObjectId + ',this)">'
+      + '<span>' + escHtml(c.name) + '</span></label>';
+  });
 
   html += '<div class="wd-cp-new">'
-    + '<input type="text" id="wdCpNewInput-' + senseId + '" placeholder="New collection…" '
-    + 'onkeydown="if(event.key===\'Enter\')wdCreateCollection(' + senseId + ')">'
-    + '<button onclick="wdCreateCollection(' + senseId + ')" title="Create">+</button>'
+    + '<input type="text" id="wdCpNewInput" placeholder="New collection…" '
+    + 'onkeydown="if(event.key===\'Enter\')wdCreateCollection()">'
+    + '<button onclick="wdCreateCollection()" title="Create">+</button>'
     + '</div>';
 
   var popover = document.createElement('div');
@@ -1144,7 +1204,7 @@ function wdShowCollectionPicker(senseId) {
   popover.id = 'wdCollectionPicker';
   popover.innerHTML = html;
 
-  var header = document.getElementById('wdSaveBtn-' + senseId);
+  var header = document.getElementById('wdSaveBtn');
   if (header && header.parentElement) {
     header.parentElement.appendChild(popover);
   }
@@ -1169,25 +1229,55 @@ function wdDismissCollectionPicker() {
   }
 }
 
-function wdToggleCollectionSense(collectionId, senseId, checkbox) {
+function wdToggleCollectionWord(collectionId, wordObjectId, checkbox) {
   var method = checkbox.checked ? 'POST' : 'DELETE';
-  fetch('/api/collections/' + collectionId + '/senses/' + senseId, {
+  fetch('/api/collections/' + collectionId + '/words/' + wordObjectId, {
     method: method,
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
-  }).then(function() {
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
     // Update __AUTH.collections in memory
     var c = (window.__AUTH.collections || []).find(function(c) { return c.id === collectionId; });
     if (!c) return;
     if (checkbox.checked) {
-      if (!(c.senseIds || []).includes(senseId)) c.senseIds.push(senseId);
+      if (!(c.wordObjectIds || []).includes(wordObjectId)) c.wordObjectIds.push(wordObjectId);
+      // Uncheck "Uncategorized" since word is now in a collection
+      var uncat = document.getElementById('wdCpUncat');
+      if (uncat) uncat.checked = false;
     } else {
-      c.senseIds = (c.senseIds || []).filter(function(id) { return id !== senseId; });
+      c.wordObjectIds = (c.wordObjectIds || []).filter(function(id) { return id !== wordObjectId; });
+      // Check if word is still in any collection
+      var inAny = (window.__AUTH.collections || []).some(function(col) {
+        return (col.wordObjectIds || []).includes(wordObjectId);
+      });
+      if (!inAny) {
+        // No collections left — check Uncategorized
+        var uncat = document.getElementById('wdCpUncat');
+        if (uncat) uncat.checked = true;
+      }
     }
   });
 }
 
-function wdCreateCollection(senseId) {
-  var input = document.getElementById('wdCpNewInput-' + senseId);
+function wdHandleUncategorized(checkbox, wordObjectId) {
+  if (!checkbox.checked) {
+    // Unchecking Uncategorized when no collections are checked = unsave entirely
+    var inAny = (window.__AUTH.collections || []).some(function(c) {
+      return (c.wordObjectIds || []).includes(wordObjectId);
+    });
+    if (!inAny) {
+      // Truly unsave the word
+      wdUnsaveWord();
+    }
+  } else {
+    // Re-checking Uncategorized — word stays saved but not in any collection
+    // (it's already saved, so nothing to do)
+  }
+}
+
+function wdCreateCollection() {
+  var wordObjectId = WORD.wordObjectId;
+  var input = document.getElementById('wdCpNewInput');
   if (!input || !input.value.trim()) return;
   var name = input.value.trim();
   input.disabled = true;
@@ -1199,8 +1289,8 @@ function wdCreateCollection(senseId) {
   })
   .then(function(r) { return r.json(); })
   .then(function(collection) {
-    // Add sense to the new collection
-    return fetch('/api/collections/' + collection.id + '/senses/' + senseId, {
+    // Add word to the new collection
+    return fetch('/api/collections/' + collection.id + '/words/' + wordObjectId, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
     }).then(function() { return collection; });
@@ -1211,10 +1301,10 @@ function wdCreateCollection(senseId) {
     window.__AUTH.collections.push({
       id: collection.id,
       name: collection.name,
-      senseIds: [senseId],
+      wordObjectIds: [wordObjectId],
     });
     // Re-show picker with updated data
-    wdShowCollectionPicker(senseId);
+    wdShowCollectionPicker();
   });
 }
 
@@ -1231,11 +1321,11 @@ function wdSaveNote(senseId) {
   const noteVal = ta?.value || '';
   localStorage.setItem('wd_note_' + SMART_ID + '_' + senseId, noteVal);
   // Debounced DB sync for logged-in users
-  if (window.__AUTH) {
+  if (window.__AUTH && WORD.wordObjectId) {
     clearTimeout(_noteSyncTimer[senseId]);
     _noteSyncTimer[senseId] = setTimeout(function() {
       var csrfToken = document.querySelector('meta[name="csrf-token"]');
-      fetch('/api/saved-senses/' + senseId + '/note', {
+      fetch('/api/saved-words/' + WORD.wordObjectId + '/note', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken.content },
         body: JSON.stringify({ note: noteVal }),
@@ -1255,34 +1345,7 @@ function wdSaveNoteBtn(senseId) {
 }
 
 // ── WORKSHOP STATE ──
-const workshopWriting = {};
-
-function wdSaveWriting(senseId) {
-  const ta = document.getElementById('wdWriting-' + senseId);
-  if (!ta) return;
-  const key = 'wd_writing_' + SMART_ID + '_' + senseId;
-  localStorage.setItem(key, ta.value);
-  const btn = document.getElementById('wdSaveBtn-' + senseId);
-  if (btn) {
-    const orig = btn.textContent;
-    btn.textContent = 'Saved!';
-    setTimeout(() => btn.textContent = orig, 1500);
-  }
-}
-
-function wdLoadWriting(senseId) {
-  const key = 'wd_writing_' + SMART_ID + '_' + senseId;
-  return localStorage.getItem(key) || '';
-}
-
-function wdSwitchWorkshopTab(senseId, tabName, btn) {
-  const panels = document.querySelectorAll(`[data-workshop-sense="${senseId}"] .wd-workshop-panel`);
-  panels.forEach(p => p.classList.remove('active'));
-  const target = document.getElementById(`wdWsPanel-${tabName}-${senseId}`);
-  if (target) target.classList.add('active');
-  btn.closest('.wd-workshop-tabs').querySelectorAll('.wd-workshop-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-}
+// Workshop functions now in shared partial _workshop-js
 
 // ── SHARE / SAVE ──
 function wdShare() {
@@ -1348,11 +1411,18 @@ function renderHeader() {
   // Breadcrumb
   const trail = getTrail();
   const bc = document.getElementById('wdBreadcrumb');
+  // Breadcrumb trail (shared header already has ← Lexicon)
   if (trail.length > 1) {
-    bc.innerHTML = trail.map((t, i) => {
+    const crumbs = trail.map((t, i) => {
       if (i === trail.length - 1) return `<strong>${t.label}</strong>`;
+      // Sentence origin — link back to SRP with sentence pre-filled
+      if (t.smartId === '__sentence__') {
+        const sentenceQ = (t.sentence || sessionStorage.getItem('lexiconSentence') || '').replace(/'/g, "\\'");
+        return `<a href="/lexicon?q=${encodeURIComponent(sentenceQ)}" onclick="event.preventDefault(); window.location.href='/lexicon?q=${encodeURIComponent(sentenceQ)}'">${t.label}</a>`;
+      }
       return `<a href="/lexicon/${t.smartId}" onclick="event.preventDefault(); pushTrail('${t.smartId}','${t.label}'); window.location.href='/lexicon/${t.smartId}'">${t.label}</a>`;
     }).join(' <span style="opacity:0.4">\u203a</span> ');
+    bc.innerHTML = crumbs;
   } else {
     bc.innerHTML = '';
   }
@@ -1399,6 +1469,13 @@ function renderHeader() {
 
   const pinyin = primaryPinyin();
 
+  // Word-level save star in hero
+  const wordSaveBtn = window.__AUTH && WORD.wordObjectId ? (() => {
+    const isSv = (window.__AUTH.savedWordIds || []).includes(WORD.wordObjectId);
+    return `<button class="wd-save-btn${isSv ? ' saved' : ''}" id="wdSaveBtn" onclick="wdToggleSave()" title="${isSv ? 'Unsave' : 'Save'}">${isSv ? '&#9733;' : '&#9734;'}</button>`;
+  })() : '';
+  const wordShareBtn = `<button class="wd-share-btn" id="wdShareBtn" onclick="wdShare()" title="${langText('Share', '分享')}">&nearr;</button>`;
+
   document.getElementById('wdHeaderChar').innerHTML = `
     <div class="card-hanzi">
       <div class="hanzi-primary-wrap">
@@ -1410,6 +1487,10 @@ function renderHeader() {
       ${domainHTML ? `<div class="card-domain-row">${domainHTML}</div>` : ''}
       ${posHTML}
       ${pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${pinyin}</span></div>` : ''}
+      <div class="wd-hero-actions">
+        ${wordSaveBtn}
+        ${wordShareBtn}
+      </div>
     </div>`;
 }
 
@@ -1453,21 +1534,32 @@ function renderIdentity() {
 function renderSense(sense, idx) {
   const parts = [];
 
-  // Sense header: badge + save button, then domain chip (full-width, matching header), then pinyin
-  const isSaved = window.__AUTH && (window.__AUTH.savedSenseIds || []).includes(sense.id);
-  const saveBtn = window.__AUTH
-    ? `<button class="wd-save-btn${isSaved ? ' saved' : ''}" id="wdSaveBtn-${sense.id}" onclick="wdToggleSave(${sense.id})" title="${isSaved ? 'Unsave' : 'Save'}">${isSaved ? '&#9733;' : '&#9734;'}</button>`
-    : '';
-  let senseHdrHTML = `<span class="wd-sense-badge">${idx + 1}</span>${saveBtn}`;
+  // Sense header: badge + domain chip (full-width, matching header) + pinyin
+  // Save star is now word-level only (rendered in hero area)
+  const totalSenses = (WORD.senses || []).length;
+  const isSingle = totalSenses === 1;
 
-  // Domain chip: two-tier (primary + chevron + secondaries)
-  if (sense.domain) {
-    senseHdrHTML += `<div class="card-domain-row">${buildDomainChipHTML(sense.domain, sense.secondaryDomains)}</div>`;
+  // Single-sense: add a subtle HR divider between hero identity and sense content
+  if (isSingle) {
+    parts.push(`<hr style="border:none;border-top:1px solid var(--border);margin:0.5rem 0 0.75rem">`);
   }
 
-  if (sense.pinyin) senseHdrHTML += `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${sense.pinyin}</span></div>`;
-
-  parts.push(`<div class="wd-sense-header">${senseHdrHTML}</div>`);
+  let senseHdrHTML = '';
+  if (!isSingle) {
+    // Multi-sense: show stripe, then character + domain + pinyin block
+    parts.push(`<div class="wd-sense-stripe">${idx + 1} of ${totalSenses}</div>`);
+    // Character mini-hero for each sense — reuses exact same classes as the main hero
+    const senseChar = charDisplay();
+    const domainHTML = sense.domain ? `<div class="card-domain-row">${buildDomainChipHTML(sense.domain, sense.secondaryDomains)}</div>` : '';
+    const pinyinHTML = sense.pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${sense.pinyin}</span></div>` : '';
+    parts.push(`<div class="wd-header-char" style="background:transparent;border:none;padding:0.4rem 0 0.3rem;margin:0">
+      <span class="hanzi-char">${senseChar}</span>
+      <div class="card-hdr-mid">
+        ${domainHTML}
+        ${pinyinHTML}
+      </div>
+    </div>`);
+  }
 
   // Definitions
   if (isSectionVisible('definitions') && sense.definitions && sense.definitions.length) {
@@ -1498,22 +1590,8 @@ function renderSense(sense, idx) {
     }
   }
 
-  // Examples — uses shared renderExSentence()
-  if (isSectionVisible('examples') && sense.examples && sense.examples.length) {
-    const sensePosForEx = (sense.definitions || [])[0]?.pos || '';
-    const sensePosAbbrForEx = sensePosForEx ? (POS_ABBR[sensePosForEx] || sensePosForEx) : '';
-    const exHTML = sense.examples.filter(ex => !ex.isSuppressed).map((ex, i) => {
-      return renderExSentence(ex, {
-        pos: sensePosAbbrForEx,
-        vertical: textDir === 'vertical',
-        segFn: segmentedHTML,
-      });
-    }).join('');
-    parts.push(`<div class="wd-examples">
-      <div class="wd-examples-title">${langText('Examples', '例句')}</div>
-      <div class="ex-sentences">${exHTML}</div>
-    </div>`);
-  }
+  // Examples now live inside the Writing Conservatory panel (renderWorkshop),
+  // so the standalone section is no longer rendered here.
 
   // Learner Traps
   if (isSectionVisible('learnerTraps') && sense.learnerTraps) {
@@ -1541,7 +1619,7 @@ function renderSense(sense, idx) {
     parts.push(renderWorkshop(sense, idx));
   }
 
-  return `<div class="wd-sense">${parts.join('')}</div>`;
+  return `<div class="wd-sense${isSingle ? ' wd-sense-single' : ''}">${parts.join('')}</div>`;
 }
 
 // ── RENDER: RELATION CARD ──
@@ -1558,15 +1636,12 @@ function renderRelCard(r) {
 
 // ── RENDER: WORKSHOP ──
 function renderWorkshop(sense, idx) {
-  const senseId = sense.id || idx;
-  const title = langText('Writing Workshop', '寫作工坊');
-  const savedText = wdLoadWriting(senseId);
-
-  // Primary POS for this sense's examples
+  const wordKey = WORD.traditional;
   const sensePOS = (sense.definitions || [])[0]?.pos || '';
   const sensePosAbbr = sensePOS ? (POS_ABBR[sensePOS] || sensePOS) : '';
+  const allPOS = [...new Set((sense.definitions || []).map(d => d.pos).filter(Boolean))];
 
-  // Default examples tab — uses shared renderExSentence()
+  // Build default examples HTML
   const defaultExHTML = (sense.examples || []).filter(ex => !ex.isSuppressed).map((ex, i) => {
     return renderExSentence(ex, {
       pos: sensePosAbbr,
@@ -1575,35 +1650,30 @@ function renderWorkshop(sense, idx) {
     });
   }).join('') || `<div class="wd-stub">${langText('No examples yet.', '尚無例句。')}</div>`;
 
-  // Tabs visibility
-  const showCommunity = isSectionVisible('communityTab');
+  // Build workshop word data object that matches what shared partial expects
+  const wordData = {
+    traditional: WORD.traditional,
+    simplified: WORD.simplified || '',
+    pinyin: sense.pinyin || WORD.pinyin || '',
+    definition: (sense.definitions || [])[0]?.def || '',
+    register: sense.register || WORD.register || '',
+    connotation: sense.connotation || WORD.connotation || '',
+    channel: sense.channel || WORD.channel || '',
+    level: sense.tocfl || WORD.tocfl || '',
+    formula: sense.formula || WORD.formula || '',
+    senseId: sense.id,
+    senseIds: [sense.id],
+    wordObjectId: WORD.wordObjectId,
+    definitions: sense.definitions || [],
+  };
 
-  return `<div class="wd-workshop" data-workshop-sense="${senseId}">
-    <div class="wd-workshop-header">
-      <div class="wd-workshop-title">${title}</div>
-    </div>
-    <div class="wd-workshop-tabs">
-      <button class="wd-workshop-tab active" onclick="wdSwitchWorkshopTab('${senseId}','examples',this)">${langText('Default Examples', '預設例句')}</button>
-      <button class="wd-workshop-tab" onclick="wdSwitchWorkshopTab('${senseId}','writing',this)">${langText('My Writing', '我的寫作')}</button>
-      ${showCommunity ? `<button class="wd-workshop-tab" onclick="wdSwitchWorkshopTab('${senseId}','community',this)">${langText('Community', '社群')}</button>` : ''}
-      <button class="wd-workshop-tab" onclick="wdSwitchWorkshopTab('${senseId}','ai',this)">${langText('師父 Feedback', '師父回饋')}</button>
-    </div>
-    <div class="wd-workshop-content">
-      <div class="wd-workshop-panel active" id="wdWsPanel-examples-${senseId}">
-        <div class="ex-sentences">${defaultExHTML}</div>
-      </div>
-      <div class="wd-workshop-panel" id="wdWsPanel-writing-${senseId}">
-        <textarea class="wd-writing-area ${textDir === 'vertical' ? 'vertical-mode' : ''}" id="wdWriting-${senseId}" placeholder="${langMode === 'zh' ? '在這裡寫你的句子…' : 'Write your sentence here...'}">${savedText}</textarea>
-        <button class="wd-save-writing-btn" id="wdSaveBtn-${senseId}" onclick="wdSaveWriting('${senseId}')">${langText('Save', '儲存')}</button>
-      </div>
-      ${showCommunity ? `<div class="wd-workshop-panel" id="wdWsPanel-community-${senseId}">
-        <div class="wd-stub">${langText('Community contributions coming soon', '社群內容即將推出')}</div>
-      </div>` : ''}
-      <div class="wd-workshop-panel" id="wdWsPanel-ai-${senseId}">
-        <div class="wd-stub">${langText('師父 writing feedback coming soon', '師父寫作回饋即將推出')}</div>
-      </div>
-    </div>
-  </div>`;
+  // Use sense-specific key for IWP to avoid ID collisions with multi-sense words
+  const panelKey = WORD.traditional + '_s' + sense.id;
+  return wsRenderPanel(panelKey, wordData, {
+    isIWP: true,
+    allPOS: allPOS,
+    defaultExamplesHTML: defaultExHTML,
+  });
 }
 
 // ── RENDER: FAMILY TREE (inner content) ──
@@ -1781,10 +1851,14 @@ function renderPage() {
     )}</div>`
   ));
 
-  // Actions
-  sections.push(renderActions());
+  // Actions — now in hero area
 
   document.getElementById('wdMain').innerHTML = sections.filter(Boolean).join('');
+
+  // Apply single/multi-sense body class
+  const senseCount = (WORD.senses || []).length;
+  document.body.classList.toggle('wd-single-sense', senseCount === 1);
+  document.body.classList.toggle('wd-multi-sense', senseCount > 1);
 
   // Apply pinyin mode
   document.body.classList.toggle('wd-no-pinyin', pinyinMode === 'off');
@@ -1821,6 +1895,11 @@ document.addEventListener('DOMContentLoaded', function() {
   renderSectionToggles();
   renderPage();
 
+  // Hydrate workshop saved deck from DB
+  wsHydrateSavedDeck();
+  Object.keys(wsSavedDeck).forEach(key => wsRefreshDeck(key));
+  wsRestorePending();
+
   // Load related words asynchronously (once)
   loadRelatedWords();
 
@@ -1837,5 +1916,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @include('partials.lexicon._preference-sync')
+@include('partials.lexicon._site-footer')
 </body>
 </html>
