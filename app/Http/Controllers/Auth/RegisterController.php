@@ -32,7 +32,7 @@ class RegisterController extends Controller
             'name'     => $data['name'],
             'email'    => $data['email'],
             'password' => $data['password'],
-            'role'     => 'user',
+            'role'     => 'learner',
         ]);
 
         Auth::login($user);

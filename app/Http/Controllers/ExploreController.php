@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\DesignationGroup;
+use App\Models\SearchLog;
+use App\Models\LexiconGap;
+use App\Models\SearchNotFound;
 use App\Models\WordObject;
 use App\Models\WordSense;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 
 // Serves the live lexicon explorer view.
@@ -19,7 +23,8 @@ class ExploreController extends Controller
 
     // DB channel slugs → demo JS channel values
     private const CHANNEL_MAP = [
-        'fluid'            => 'fluid',           // spoken & written — passes through as 'fluid'
+        'channel-balanced' => 'balanced',
+        'fluid'            => 'balanced',         // legacy fallback
         'spoken-only'      => 'spoken-only',
         'spoken-dominant'  => 'spoken-dominant',
         'written-dominant' => 'written-dominant',
@@ -37,8 +42,7 @@ class ExploreController extends Controller
     ];
 
     // DB dimension slugs → demo JS dimension values
-    // (dim-fluid avoids slug collision with channel 'fluid' in the DB;
-    //  in the JS dimension filter it's just 'fluid')
+    // (dim-fluid is the DB slug for the 'fluid' semantic dimension concept)
     private const DIMENSION_MAP = [
         'dim-fluid' => 'fluid',
         'abstract'  => 'abstract',
@@ -195,7 +199,7 @@ class ExploreController extends Controller
             ->map(fn ($d) => self::DIMENSION_MAP[$d->slug] ?? $d->slug)
             ->values()->all();
 
-        $channelSlug = $primary->channel?->slug ?? 'fluid';
+        $channelSlug = $primary->channel?->slug ?? 'channel-balanced';
         $channel     = self::CHANNEL_MAP[$channelSlug] ?? $channelSlug;
 
         $tocflSlug  = $primary->tocflLevel?->slug;
@@ -230,7 +234,7 @@ class ExploreController extends Controller
                 ])->values()->all(),
                 'register'    => self::REGISTER_MAP[$registerDes?->slug ?? 'standard'] ?? 'neutral',
                 'connotation' => $s->connotation?->slug ?? 'neutral',
-                'channel'     => self::CHANNEL_MAP[$s->channel?->slug ?? 'fluid'] ?? ($s->channel?->slug ?? 'fluid'),
+                'channel'     => self::CHANNEL_MAP[$s->channel?->slug ?? 'channel-balanced'] ?? ($s->channel?->slug ?? 'channel-balanced'),
                 'dimension'   => $dimensionDes->map(fn ($d) => self::DIMENSION_MAP[$d->slug] ?? $d->slug)->values()->all(),
                 'intensity'   => $s->intensity ?? 2,
                 'tocfl'       => $s->tocflLevel?->slug ? (self::TOCFL_SLUG_MAP[$s->tocflLevel->slug] ?? null) : null,
@@ -633,6 +637,61 @@ class ExploreController extends Controller
             'beginning'  => $beginning,
             'containing' => $containing,
         ]);
+    }
+
+    // ── Search logging (called from frontend JS) ──────────────────────────────
+
+    public function logSearch(Request $request): JsonResponse
+    {
+        $request->validate([
+            'query'         => 'required|string|max:255',
+            'results_count' => 'required|integer|min:0',
+            'search_type'   => 'nullable|string|in:word,sentence',
+            'known_count'   => 'nullable|integer|min:0',
+            'unknown_count' => 'nullable|integer|min:0',
+            'not_found'     => 'nullable|array',
+            'not_found.*'   => 'string|max:16',
+            'filters'       => 'nullable|array',
+        ]);
+
+        $log = SearchLog::create([
+            'user_id'       => Auth::id(),
+            'session_id'    => Session::getId(),
+            'user_role'     => Auth::user()?->role,
+            'search_type'   => $request->input('search_type', 'word'),
+            'query'         => $request->input('query'),
+            'results_count' => $request->input('results_count'),
+            'known_count'   => $request->input('known_count', 0),
+            'unknown_count' => $request->input('unknown_count', 0),
+            'filters'       => $request->input('filters'),
+        ]);
+
+        // Bulk-insert not-found characters
+        $notFound = $request->input('not_found', []);
+        if (! empty($notFound)) {
+            $rows = array_map(fn (string $char) => [
+                'search_log_id' => $log->id,
+                'character'     => $char,
+                'created_at'    => now(),
+            ], array_unique($notFound));
+
+            SearchNotFound::insert($rows);
+
+            // Auto-populate lexicon_gaps for new characters
+            $uniqueChars = array_unique($notFound);
+            $existing = LexiconGap::whereIn('character', $uniqueChars)->pluck('character')->all();
+            $newChars = array_diff($uniqueChars, $existing);
+            if (! empty($newChars)) {
+                $gapRows = array_map(fn (string $c) => [
+                    'character'  => $c,
+                    'status'     => 'pending',
+                    'created_at' => now(),
+                ], array_values($newChars));
+                LexiconGap::insert($gapRows);
+            }
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     // ── Auth payload for client-side __AUTH injection ──────────────────────────

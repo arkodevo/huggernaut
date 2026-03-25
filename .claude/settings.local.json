@@ -102,7 +102,11 @@
       "Bash(curl -sk https://www.huggernaut8888.com/lexicon)",
       "Bash(awk \"NR>=4210 && NR<=4215\")",
       "Bash(awk \"NR>=4205 && NR<=4220\")",
-      "Bash(php /Users/chuluoyi/Sites/huggernaut/artisan tinker --execute=\":*)"
+      "Bash(php /Users/chuluoyi/Sites/huggernaut/artisan tinker --execute=\":*)",
+      "Bash(grep -r \"role.*=.*['''']\\\\\\(user\\\\|admin\\\\|editor\\\\|learner\\\\\\)\" /Users/chuluoyi/Sites/huggernaut/app /Users/chuluoyi/Sites/huggernaut/database --include=*.php)",
+      "Bash(pandoc /Users/chuluoyi/Documents/華語/planning/huiming_template_feedback_20260324.docx -o /tmp/huiming_feedback.md)",
+      "WebFetch(domain:share.google)",
+      "WebFetch(domain:www.google.com)"
     ]
   }
 }

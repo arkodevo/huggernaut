@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiUsageLog;
+use App\Models\ShifuEngagement;
 use App\Models\UserSavedExample;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,8 +19,10 @@ class WorkshopController extends Controller
     public function critique(Request $request): JsonResponse
     {
         $request->validate([
-            'system_prompt' => ['required', 'string', 'max:8000'],
-            'sentence'      => ['required', 'string', 'max:2000'],
+            'system_prompt'  => ['required', 'string', 'max:8000'],
+            'sentence'       => ['required', 'string', 'max:2000'],
+            'engagement_id'  => ['nullable', 'string', 'max:36'],
+            'word_label'     => ['nullable', 'string', 'max:32'],
         ]);
 
         $result = $this->callAnthropic(
@@ -43,7 +46,34 @@ class WorkshopController extends Controller
             ->map(fn ($b) => $b['text'] ?? '')
             ->join('');
 
-        return response()->json(['text' => $text]);
+        // ── Engagement tracking ──
+        $engagementUuid = $request->input('engagement_id');
+        $engagement = null;
+
+        if ($engagementUuid) {
+            $engagement = ShifuEngagement::where('uuid', $engagementUuid)->first();
+        }
+
+        if (! $engagement) {
+            $engagement = ShifuEngagement::create([
+                'user_id'        => Auth::id(),
+                'word_sense_id'  => $request->input('word_sense_id'),
+                'word_object_id' => $request->input('word_object_id'),
+                'context'        => 'writing_conservatory',
+                'word_label'     => $request->input('word_label', ''),
+                'started_at'     => now(),
+            ]);
+        }
+
+        $engagement->addInteraction(
+            $request->input('sentence'),
+            $text,
+        );
+
+        return response()->json([
+            'text'          => $text,
+            'engagement_id' => $engagement->uuid,
+        ]);
     }
 
     /**
@@ -54,6 +84,7 @@ class WorkshopController extends Controller
         $request->validate([
             'system_prompt' => ['required', 'string', 'max:8000'],
             'theme'         => ['required', 'string', 'max:500'],
+            'word_label'    => ['nullable', 'string', 'max:32'],
         ]);
 
         $result = $this->callAnthropic(
@@ -76,7 +107,27 @@ class WorkshopController extends Controller
             ->map(fn ($b) => $b['text'] ?? '')
             ->join('');
 
-        return response()->json(['text' => $text]);
+        // ── Engagement tracking ──
+        $engagement = ShifuEngagement::create([
+            'user_id'        => Auth::id(),
+            'word_sense_id'  => $request->input('word_sense_id'),
+            'word_object_id' => $request->input('word_object_id'),
+            'context'        => 'generation',
+            'word_label'     => $request->input('word_label', ''),
+            'started_at'     => now(),
+            'completed_at'   => now(),
+            'outcome'        => 'saved',
+        ]);
+
+        $engagement->addInteraction(
+            'Theme/subject: ' . $request->input('theme'),
+            $text,
+        );
+
+        return response()->json([
+            'text'          => $text,
+            'engagement_id' => $engagement->uuid,
+        ]);
     }
 
     /**
@@ -96,6 +147,7 @@ class WorkshopController extends Controller
             'assessed_level'   => ['nullable', 'string', 'in:beginner,learner,developing,advanced,fluent'],
             'assessed_mastery' => ['nullable', 'string', 'in:seed,sprout,bud,flower,fruit'],
             'mastery_guidance' => ['nullable', 'string', 'max:5000'],
+            'engagement_id'    => ['nullable', 'string', 'max:36'],
         ]);
 
         $example = UserSavedExample::create([
@@ -113,6 +165,15 @@ class WorkshopController extends Controller
             'mastery_guidance' => $request->input('mastery_guidance'),
             'is_public'        => false,
         ]);
+
+        // ── Close engagement on save ──
+        $engagementUuid = $request->input('engagement_id');
+        if ($engagementUuid) {
+            $engagement = ShifuEngagement::where('uuid', $engagementUuid)->first();
+            if ($engagement) {
+                $engagement->complete('saved');
+            }
+        }
 
         return response()->json($example, 201);
     }
@@ -143,6 +204,74 @@ class WorkshopController extends Controller
         $user->save();
 
         return response()->json(['fluency_level' => $user->fluency_level]);
+    }
+
+    /**
+     * Analyze a sentence/phrase: translate, assess, annotate words.
+     */
+    public function analyze(Request $request): JsonResponse
+    {
+        $request->validate([
+            'text' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $text = $request->input('text');
+
+        $prompt = "You are 師父 (Shifu), the expert Chinese language tutor for the Living Lexicon 流動. "
+            . "You are warm, encouraging, and intellectually precise.\n\n"
+            . "A learner wants you to analyze the following Chinese text.\n\n"
+            . "Your task:\n"
+            . "1. Provide a natural, fluent English translation\n"
+            . "2. Give brief feedback on the text (grammar, register, naturalness — 2-3 sentences)\n"
+            . "3. For key words, provide brief notes (meaning in this context, any nuances)\n\n"
+            . "Respond ONLY in JSON (no markdown):\n"
+            . "{\n"
+            . "  \"translation\": \"natural English translation\",\n"
+            . "  \"feedback\": \"brief 師父 commentary on the text\",\n"
+            . "  \"word_notes\": [\n"
+            . "    { \"word\": \"詞\", \"pinyin\": \"cí\", \"note\": \"brief note about this word in context\" }\n"
+            . "  ]\n"
+            . "}";
+
+        $result = $this->callAnthropic($prompt, $text);
+
+        if (isset($result['error'])) {
+            return response()->json(['error' => 'AI request failed'], 502);
+        }
+
+        $raw = collect($result['content'] ?? [])
+            ->map(fn ($b) => $b['text'] ?? '')
+            ->join('');
+
+        $clean = preg_replace('/```json|```/', '', $raw);
+        $parsed = json_decode(trim($clean), true);
+
+        if (! $parsed) {
+            return response()->json(['error' => 'Unable to parse analysis.'], 502);
+        }
+
+        // Log usage
+        AiUsageLog::create([
+            'user_id'      => Auth::id(),
+            'request_type' => 'analysis',
+            'credits_used' => 1,
+        ]);
+
+        // Engagement tracking
+        $engagement = ShifuEngagement::create([
+            'user_id'    => Auth::id(),
+            'context'    => 'analysis',
+            'word_label' => mb_substr($text, 0, 32),
+            'started_at' => now(),
+            'completed_at' => now(),
+            'outcome'    => 'saved',
+        ]);
+
+        $engagement->addInteraction($text, $raw);
+
+        $parsed['engagement_id'] = $engagement->uuid;
+
+        return response()->json($parsed);
     }
 
     /**

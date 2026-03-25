@@ -52,11 +52,12 @@
 <div class="user-menu" id="userMenu">
   @auth
     <span class="user-menu-name" onclick="document.getElementById('userDropdown').classList.toggle('open')">
-      {{ Auth::user()->name }}
+      {{ Auth::user()->chinese_name ?? Auth::user()->name }}
     </span>
     <div class="user-menu-dropdown" id="userDropdown">
       <a href="{{ route('my-words') }}">My Words</a>
       <a href="{{ route('my-writings') }}">My Writings</a>
+      <a href="{{ route('profile') }}">Profile</a>
       <form method="POST" action="{{ route('logout') }}">
         @csrf
         <button type="submit">Log out</button>

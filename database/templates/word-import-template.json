@@ -1,0 +1,145 @@
+{
+  "_template_version": "1.0",
+  "_instructions": "One file per word. Each sense must have exactly ONE POS. If a word has multiple POS roles (e.g., Vi and N), create SEPARATE senses. Fields prefixed with _ are documentation — strip them before import.",
+
+  "word": {
+    "smart_id": "u81a8_u8139",
+    "_smart_id_format": "Unicode codepoints separated by underscores. Single char: u + hex (u6d41 for 流). Multi-char: underscore-separated (u81a8_u8139 for 膨脹, u5ddd_u6d41_u4e0d_u606f for 川流不息).",
+    "traditional": "膨脹",
+    "simplified": "膨胀",
+    "structure": "left-right",
+    "_structure_options": ["left-right", "top-bottom", "enclosing", "single"]
+  },
+
+  "senses": [
+    {
+      "sense_id": "u81a8_u8139_Vi_01",
+      "_sense_id_format": "{smart_id}_{POS}_{sequence} — for tracking; DB assigns its own IDs.",
+
+      "pinyin": "pengzhang4",
+      "_pinyin_note": "Use tone numbers (liu2) or tone marks. One pronunciation per sense.",
+
+      "pos": "Vi",
+      "_pos_options": [
+        "N — Noun",
+        "Vi — Intransitive Verb",
+        "Vp — Process Verb",
+        "Vpsep — Separable Process Verb",
+        "Vpt — Process Verb (Telic)",
+        "Vs — Stative Verb",
+        "Vsattr — Stative Verb (Attributive)",
+        "Vspred — Stative Verb (Predicative)",
+        "Vssep — Separable Stative Verb",
+        "Vst — State-Transitive Verb",
+        "Vaux — Auxiliary Verb",
+        "Vsep — Separable Verb",
+        "M — Measure Word",
+        "Adv — Adverb",
+        "Prep — Preposition",
+        "Conj — Conjunction",
+        "Ptc — Particle",
+        "Det — Determiner",
+        "Prn — Pronoun",
+        "Num — Number",
+        "IE — Idiomatic Expression",
+        "Ph — Phrase"
+      ],
+      "_pos_rule": "NEVER use 'V' alone — always use a specific subtype. Each sense gets exactly ONE POS. If this word is also a Noun, create a separate sense.",
+
+      "definitions": {
+        "en": "to expand; to swell; to inflate",
+        "zh-TW": "體積增大；數量增加"
+      },
+      "_definitions_note": "Provide both English and Traditional Chinese. The definition must be specific to THIS sense and THIS POS only.",
+
+      "domains": ["nature", "business", "society"],
+      "_domains_note": "Flat array. The FIRST domain is treated as primary. All others are secondary. Domains are lenses — they describe WHERE the word is used, not WHAT it means.",
+      "_domain_groups": {
+        "Human Inner Life": ["emotion", "cognition", "perception", "personality", "values"],
+        "Body & Health": ["body", "health", "medicine"],
+        "Identity & Relationships": ["identity", "family", "social-relations"],
+        "Language & Communication": ["language", "communication"],
+        "Daily Living": ["food", "clothing", "housing", "objects"],
+        "Society & Institutions": ["education", "work", "business", "law", "politics", "society"],
+        "Physical World": ["nature", "animals", "plants", "weather", "materials"],
+        "Space, Time & Motion": ["place", "space", "time", "movement", "transportation"],
+        "Culture & Knowledge": ["art", "leisure", "sports", "technology", "religion", "philosophy"],
+        "Conceptual": ["properties", "number-quantity"]
+      },
+
+      "register": ["standard"],
+      "_register_note": "Multi-select. Most words are ['standard'].",
+      "_register_options": ["literary", "formal", "standard", "informal", "colloquial", "slang"],
+
+      "connotation": "neutral",
+      "_connotation_options": ["positive", "positive-dominant", "context-dependent", "negative-dominant", "negative"],
+
+      "channel": "channel-balanced",
+      "_channel_note": "Channel answers: 'Where is this word used?' Describes the spoken vs. written distribution spectrum.",
+      "_channel_options": ["spoken-only", "spoken-dominant", "channel-balanced", "written-dominant", "written-only"],
+      "_channel_rule": "Do NOT use 'fluid' here. 'fluid' belongs in dimension (as dim-fluid). Channel is strictly about usage distribution: spoken vs. written.",
+
+      "semantic_mode": "literal-only",
+      "_semantic_mode_note": "Semantic mode answers: 'How literally is this word typically used?' A spectrum from purely literal to purely metaphorical.",
+      "_semantic_mode_options": ["literal-only", "literal-dominant", "balanced", "metaphorical-dominant", "metaphorical-only"],
+      "_semantic_mode_vs_dimension": "semantic_mode = default usage tendency (literal vs metaphorical). dimension = structural/semantic teaching label. These are complementary, not overlapping.",
+
+      "dimension": ["resultative"],
+      "_dimension_note": "Dimension answers: 'What kind of meaning is this?' Multi-select. Describes the pedagogical/semantic character of the word.",
+      "_dimension_options": ["temporal", "aspectual", "resultative", "pragmatic", "figurative"],
+
+      "intensity": 3,
+      "_intensity_note": "1-5 scale. How strong/emphatic is this word? 1 = mild, 5 = extreme. NOT how common it is.",
+
+      "sensitivity": "general",
+      "_sensitivity_note": "Content sensitivity for age-appropriate filtering.",
+      "_sensitivity_options": ["general", "mature", "profanity", "sexual", "taboo"],
+
+      "valency": 0,
+      "_valency_note": "Number of required arguments. 0 = intransitive, 1 = transitive, 2 = ditransitive. Should align with POS.",
+
+      "tocfl": "tocfl-advanced",
+      "_tocfl_options": ["tocfl-prep", "tocfl-entry", "tocfl-basic", "tocfl-advanced", "tocfl-high", "tocfl-fluency"],
+
+      "hsk": null,
+      "_hsk_options": ["hsk-1", "hsk-2", "hsk-3", "hsk-4", "hsk-5", "hsk-6", null],
+
+      "formula": "[Entity/Quantity] + 膨脹",
+      "_formula_note": "Structural pattern showing how the word fits in a sentence. Use [brackets] for variable slots.",
+
+      "usage_note": "Broader and more systemic than 漲. Common with prices, egos, ambitions, and physical objects.",
+      "_usage_note_guidance": "Brief, practical guidance. What contexts does this word appear in? What makes it distinct from similar words?",
+
+      "learner_traps": "Often confused with 擴大. 膨脹 implies internal pressure or uncontrolled growth; 擴大 implies deliberate expansion.",
+      "_learner_traps_guidance": "What do learners commonly confuse this word with? Be specific about the difference.",
+
+      "collocations": ["通貨膨脹", "需求膨脹", "自我膨脹"],
+      "_collocations_note": "Common natural word pairings that learners would encounter.",
+
+      "examples": [
+        {
+          "chinese": "氣球慢慢地膨脹起來。",
+          "english": "The balloon slowly inflated."
+        },
+        {
+          "chinese": "通貨膨脹讓人民的生活越來越困難。",
+          "english": "Inflation has made people's lives increasingly difficult."
+        }
+      ],
+      "_examples_guidance": "Provide at least 2 examples per sense. Each example should clearly demonstrate usage within one of the listed domains. If domains are ['nature', 'business'], provide at least one example per domain. Examples should feel natural — not textbook-artificial."
+    }
+  ],
+
+  "_global_rules": [
+    "1 sense = 1 POS = 1 definition block. If a word has Vi AND N meanings, create SEPARATE senses.",
+    "NEVER use 'V' as a POS — always use a specific subtype (Vi, Vp, Vs, etc.).",
+    "sense = meaning; domains = lenses. The definition defines what it means; domains describe where it's used.",
+    "The first domain in the array is treated as primary.",
+    "Examples should clearly convey the domain context — a 'nature' example should feel like nature.",
+    "All _ prefixed fields are documentation and will be stripped on import.",
+    "Register, dimension, and domains are multi-select (arrays). Other attributes are single-select.",
+    "Channel describes spoken/written usage spectrum. Dimension describes semantic character. Do not confuse.",
+    "Intensity measures how strong/emphatic the word feels, NOT how common it is.",
+    "Formula shows sentence structure patterns — use [brackets] for variable parts."
+  ]
+}

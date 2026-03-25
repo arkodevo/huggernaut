@@ -5,6 +5,9 @@ use App\Http\Controllers\Admin\BadgeController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\PreferencesController;
+use App\Http\Controllers\Admin\SearchLogController;
+use App\Http\Controllers\Admin\SearchNotFoundController;
+use App\Http\Controllers\Admin\ShifuEngagementController;
 use App\Http\Controllers\Admin\WordObjectController;
 use App\Http\Controllers\Admin\WordPronunciationController;
 use App\Http\Controllers\Admin\WordSenseController;
@@ -19,9 +22,12 @@ use App\Http\Controllers\Api\SavedSenseController;
 use App\Http\Controllers\Api\SavedWordController;
 use App\Http\Controllers\Api\WorkshopController;
 use App\Http\Controllers\CollectionTestController;
+use App\Http\Controllers\Api\ChineseNameController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\MyWordsController;
 use App\Http\Controllers\MyWritingsController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // ── Public ────────────────────────────────────────────────────────────────────
@@ -42,11 +48,20 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm'])->name('password.reset');
 Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
+// ── Public feature pages ─────────────────────────────────────────────────────
+
+Route::get('/chinese-names', [PageController::class, 'chineseNames'])->name('chinese-names');
+Route::get('/translation', [PageController::class, 'translation'])->name('translation');
+Route::get('/idioms', [PageController::class, 'idioms'])->name('idioms');
+
 // ── Learner pages (auth required) ────────────────────────────────────────────
 
 Route::get('/my-words', [MyWordsController::class, 'index'])->name('my-words')->middleware('auth');
 Route::get('/my-writings', [MyWritingsController::class, 'index'])->name('my-writings')->middleware('auth');
 Route::get('/my-words/test/{collection}', [CollectionTestController::class, 'show'])->name('my-words.test')->middleware('auth');
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile')->middleware('auth');
+Route::patch('/profile/pll-name', [ProfileController::class, 'updatePllName'])->middleware('auth');
+Route::patch('/profile/chinese-name', [ProfileController::class, 'updateChineseName'])->middleware('auth');
 
 // ── Learner API (auth required) ──────────────────────────────────────────────
 
@@ -87,13 +102,19 @@ Route::middleware('auth')->prefix('api')->group(function () {
 Route::prefix('api')->middleware('throttle:10,1')->group(function () {
     Route::post('/workshop/critique', [WorkshopController::class, 'critique']);
     Route::post('/workshop/generate', [WorkshopController::class, 'generate']);
+    Route::post('/workshop/analyze', [WorkshopController::class, 'analyze']);
+    Route::post('/chinese-names/generate', [ChineseNameController::class, 'generate']);
 });
+
+// Chinese Names — choose requires auth
+Route::post('/api/chinese-names/choose', [ChineseNameController::class, 'choose'])->middleware('auth');
 
 // ── Lexicon explorer (public, no auth) ───────────────────────────────────────
 
 Route::get('/lexicon', [ExploreController::class, 'index'])->name('lexicon.index');
 Route::get('/lexicon/{smartId}', [ExploreController::class, 'show'])->name('lexicon.show');
 Route::get('/api/lexicon/related-words/{character}', [ExploreController::class, 'relatedWords'])->name('lexicon.relatedWords');
+Route::post('/api/lexicon/search-log', [ExploreController::class, 'logSearch'])->name('lexicon.searchLog');
 
 // ── Admin auth ────────────────────────────────────────────────────────────────
 
@@ -159,4 +180,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         ->name('examples.update');
     Route::delete('examples/{example}', [WordSenseExampleController::class, 'destroy'])
         ->name('examples.destroy');
+
+    // Activity logs -------------------------------------------------------------
+    Route::get('search-logs', [SearchLogController::class, 'index'])->name('search-logs.index');
+    Route::get('search-logs/export', [SearchLogController::class, 'export'])->name('search-logs.export');
+
+    Route::get('not-found', [SearchNotFoundController::class, 'index'])->name('not-found.index');
+    Route::get('not-found/export', [SearchNotFoundController::class, 'export'])->name('not-found.export');
+    Route::post('not-found/refresh', [SearchNotFoundController::class, 'refresh'])->name('not-found.refresh');
+    Route::post('not-found/{character}/reject', [SearchNotFoundController::class, 'reject'])->name('not-found.reject');
+    Route::get('not-found/{character}', [SearchNotFoundController::class, 'show'])->name('not-found.show');
+
+    Route::get('shifu-engagements', [ShifuEngagementController::class, 'index'])->name('shifu-engagements.index');
+    Route::get('shifu-engagements/export', [ShifuEngagementController::class, 'export'])->name('shifu-engagements.export');
+    Route::post('shifu-engagements/import', [ShifuEngagementController::class, 'import'])->name('shifu-engagements.import');
+    Route::get('shifu-engagements/{uuid}', [ShifuEngagementController::class, 'show'])->name('shifu-engagements.show');
 });

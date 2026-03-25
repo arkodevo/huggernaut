@@ -84,6 +84,7 @@ function wsCsrf() {
 }
 
 // ── API HELPER ───────────────────────────────────────────────────────────────
+// Returns { text, engagement_id } from critique/generate endpoints.
 async function wsCallAPI(endpoint, body) {
   const response = await fetch(endpoint, {
     method: 'POST',
@@ -98,8 +99,11 @@ async function wsCallAPI(endpoint, body) {
   if (!response.ok) throw new Error('api_error');
   const data = await response.json();
   if (data.error) throw new Error('api_error');
-  return data.text;
+  return data;
 }
+
+// Per-word engagement tracking: { wordKey: uuid }
+const wsEngagements = {};
 
 // ── GUEST AUTH PROMPT ────────────────────────────────────────────────────────
 function wsShowAuthPrompt(wordKey, context, resultElId) {
@@ -449,11 +453,16 @@ async function wsRunCritique(wordKey) {
     const senseId = wordData.senseIds ? wordData.senseIds[0] : (wordData.senseId || null);
     const wordObjectId = wordData.wordObjectId || null;
     const fluency = wsGetFluencyLevel(wordKey);
-    const raw = await wsCallAPI('/api/workshop/critique', {
+    const apiResp = await wsCallAPI('/api/workshop/critique', {
       system_prompt: wsGetCritiquePrompt(wordData, intendedPOS, fluency),
       sentence: sentence,
       word_sense_id: senseId,
+      word_object_id: wordObjectId,
+      word_label: wordData.traditional || wordKey,
+      engagement_id: wsEngagements[wordKey] || null,
     });
+    if (apiResp.engagement_id) wsEngagements[wordKey] = apiResp.engagement_id;
+    const raw = apiResp.text || '';
     const clean = raw.replace(/```json|```/g, '').trim();
     const data = JSON.parse(clean);
 
@@ -514,11 +523,14 @@ async function wsRunTheme(wordKey) {
     const senseId = wordData.senseIds ? wordData.senseIds[0] : (wordData.senseId || null);
     const wordObjectId = wordData.wordObjectId || null;
     const fluency = wsGetFluencyLevel(wordKey);
-    const raw = await wsCallAPI('/api/workshop/generate', {
+    const apiResp = await wsCallAPI('/api/workshop/generate', {
       system_prompt: wsGetThemePrompt(wordData, fluency),
       theme: theme,
       word_sense_id: senseId,
+      word_object_id: wordObjectId,
+      word_label: wordData.traditional || wordKey,
     });
+    const raw = apiResp.text || '';
     const clean = raw.replace(/```json|```/g, '').trim();
     const data = JSON.parse(clean);
     const senseIdAttr = senseId ? `data-sense-id="${senseId}"` : '';
@@ -605,6 +617,7 @@ async function wsSaveAIResult(btn) {
         assessed_level: assessedLevel || null,
         assessed_mastery: assessedMastery || null,
         mastery_guidance: masteryGuidance || null,
+        engagement_id: wsEngagements[wordKey] || null,
       }),
     });
 

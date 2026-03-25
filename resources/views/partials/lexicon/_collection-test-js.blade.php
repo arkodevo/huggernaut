@@ -13,7 +13,7 @@ const CT_POS_ABBR = {
 const CT_ATTR_ENUMS = {
   register:    ['neutral', 'literary', 'formal', 'informal', 'colloquial', 'slang'],
   connotation: ['positive', 'negative', 'neutral', 'contextual'],
-  channel:     ['fluid', 'spoken-only', 'spoken-dominant', 'written-dominant', 'written-only'],
+  channel:     ['balanced', 'spoken-only', 'spoken-dominant', 'written-dominant', 'written-only'],
   dimension:   ['abstract', 'concrete', 'internal', 'external', 'fluid'],
   intensity:   [1, 2, 3, 4, 5],
 };
@@ -78,6 +78,7 @@ let ctState = {
   isRetry: false,
   locked: false,        // prevent double-click during transition
   usageAttempts: 0,     // attempts for current usage question (max 3)
+  usageEngagementId: null, // engagement UUID for current usage question
 };
 
 // ── SETUP SCREEN ─────────────────────────────────────────────────────────────
@@ -207,6 +208,7 @@ function ctRenderQuestion() {
 
   ctState.hintsUsed = [];
   ctState.usageAttempts = 0;
+  ctState.usageEngagementId = null;
   ctState.locked = false;
 
   const total = ctState.senses.length;
@@ -625,6 +627,7 @@ async function ctSubmitUsage() {
       },
       body: JSON.stringify({
         word_sense_id: sense.senseId,
+        word_object_id: sense.wordObjectId || null,
         word: sense.traditional,
         pinyin: sense.pinyin || '',
         pos: (sense.definitions || []).map(d => (d.posFull || d.pos || '')).join(', '),
@@ -634,10 +637,12 @@ async function ctSubmitUsage() {
         channel: sense.channel || '',
         domain: sense.domain || '',
         sentence: sentence,
+        engagement_id: ctState.usageEngagementId || null,
       }),
     });
 
     const data = await res.json();
+    if (data.engagement_id) ctState.usageEngagementId = data.engagement_id;
     const isCorrect = data.is_correct || data.correct || false;
     const explanation = data.explanation || data.feedback || '';
     const canRetry = !isCorrect && ctState.usageAttempts < 3;

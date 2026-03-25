@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 // TODO Phase 3: composer require laravel/cashier, then uncomment:
 // use Laravel\Cashier\Billable;
 
-// role: user · editor · admin  (editor/admin gates admin panel access)
+// role: learner · user (staff) · editor · admin  (editor/admin gates admin panel access)
 // subscription_tier: free · entry · mid · pro  (cached/derived alongside Cashier)
 // level_framework: tocfl · hsk  (controls which Level filter chips appear)
 // script_preference: traditional · simplified · both
@@ -26,6 +26,10 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'pll_name',
+        'chinese_name',
+        'chinese_name_pinyin',
+        'chinese_name_meaning',
         'email',
         'password',
         'role',

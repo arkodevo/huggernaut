@@ -28,6 +28,23 @@
   position: absolute; right: 1rem; top: 50%;
   transform: translateY(-50%);
 }
+.site-nav {
+  display: flex; justify-content: center; gap: 0.15rem;
+  padding: 0.3rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.site-nav a {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--dim); text-decoration: none;
+  padding: 0.25rem 0.6rem; border-radius: 2px;
+  transition: color 0.15s, background 0.15s;
+}
+.site-nav a:hover { color: var(--ink); background: rgba(0,0,0,0.03); }
+.site-nav a.active { color: var(--accent); font-weight: 500; }
+.site-nav a.coming-soon { opacity: 0.4; cursor: default; }
+.site-nav a.coming-soon:hover { color: var(--dim); background: none; }
 </style>
 
 <header class="site-header">
@@ -37,3 +54,9 @@
   <a href="{{ route('lexicon.index') }}" class="site-header-logo">流動 · Living Lexicon</a>
   @include('partials.lexicon._user-menu')
 </header>
+<nav class="site-nav">
+  <a href="{{ route('lexicon.index') }}" class="{{ request()->routeIs('lexicon.*') ? 'active' : '' }}">Dictionary</a>
+  <a href="{{ route('chinese-names') }}" class="{{ request()->routeIs('chinese-names') ? 'active' : '' }}">Chinese Names</a>
+  <a href="{{ route('translation') }}" class="{{ request()->routeIs('translation') ? 'active' : '' }} coming-soon" title="Coming soon">Translation</a>
+  <a href="{{ route('idioms') }}" class="{{ request()->routeIs('idioms') ? 'active' : '' }} coming-soon" title="Coming soon">Idioms</a>
+</nav>

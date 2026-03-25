@@ -6,6 +6,7 @@ use App\Models\AiUsageLog;
 use App\Models\Collection;
 use App\Models\CollectionTest;
 use App\Models\CollectionTestAnswer;
+use App\Models\ShifuEngagement;
 use App\Models\WordSense;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -151,16 +152,18 @@ class CollectionTestController extends Controller
     public function usageCheck(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'sentence'    => 'required|string|max:500',
-            'word'        => 'required|string',
-            'pinyin'      => 'nullable|string',
-            'pos'         => 'nullable|string',
-            'definition'  => 'nullable|string',
-            'register'    => 'nullable|string',
-            'connotation' => 'nullable|string',
-            'channel'     => 'nullable|string',
-            'domain'      => 'nullable|string',
-            'word_sense_id' => 'nullable|exists:word_senses,id',
+            'sentence'       => 'required|string|max:500',
+            'word'           => 'required|string',
+            'pinyin'         => 'nullable|string',
+            'pos'            => 'nullable|string',
+            'definition'     => 'nullable|string',
+            'register'       => 'nullable|string',
+            'connotation'    => 'nullable|string',
+            'channel'        => 'nullable|string',
+            'domain'         => 'nullable|string',
+            'word_sense_id'  => 'nullable|exists:word_senses,id',
+            'word_object_id' => 'nullable|exists:word_objects,id',
+            'engagement_id'  => 'nullable|string|max:36',
         ]);
 
         $pos = $data['pos'] ?? '';
@@ -220,9 +223,36 @@ class CollectionTestController extends Controller
             ]);
 
             $clean = preg_replace('/```json|```/', '', $text);
-            $result = json_decode(trim($clean), true);
+            $result = json_decode(trim($clean), true) ?: ['correct' => false, 'explanation' => 'Unable to parse response.'];
 
-            return response()->json($result ?: ['correct' => false, 'explanation' => 'Unable to parse response.']);
+            // ── Engagement tracking ──
+            $engagementUuid = $data['engagement_id'] ?? null;
+            $engagement = $engagementUuid
+                ? ShifuEngagement::where('uuid', $engagementUuid)->first()
+                : null;
+
+            if (! $engagement) {
+                $engagement = ShifuEngagement::create([
+                    'user_id'        => Auth::id(),
+                    'word_sense_id'  => $data['word_sense_id'] ?? null,
+                    'word_object_id' => $data['word_object_id'] ?? null,
+                    'context'        => 'test',
+                    'word_label'     => $data['word'],
+                    'started_at'     => now(),
+                ]);
+            }
+
+            $isCorrect = $result['correct'] ?? false;
+            $engagement->addInteraction(
+                $data['sentence'],
+                $result['explanation'] ?? '',
+                $isCorrect,
+            );
+
+            // Auto-complete on correct or final attempt (handled by frontend)
+            $result['engagement_id'] = $engagement->uuid;
+
+            return response()->json($result);
         } catch (\Exception $e) {
             return response()->json(['correct' => false, 'explanation' => 'Error evaluating sentence.'], 500);
         }
@@ -253,8 +283,8 @@ class CollectionTestController extends Controller
             ->values()->all();
 
         // Channel
-        $channelMap = ['fluid' => 'fluid', 'spoken-only' => 'spoken-only', 'spoken-dominant' => 'spoken-dominant', 'written-dominant' => 'written-dominant', 'written-only' => 'written-only'];
-        $channel = $channelMap[$sense->channel?->slug ?? 'fluid'] ?? 'fluid';
+        $channelMap = ['channel-balanced' => 'balanced', 'fluid' => 'balanced', 'spoken-only' => 'spoken-only', 'spoken-dominant' => 'spoken-dominant', 'written-dominant' => 'written-dominant', 'written-only' => 'written-only'];
+        $channel = $channelMap[$sense->channel?->slug ?? 'channel-balanced'] ?? 'balanced';
 
         // Connotation
         $connotation = $sense->connotation?->slug ?? 'neutral';

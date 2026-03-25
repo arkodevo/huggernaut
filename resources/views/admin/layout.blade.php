@@ -42,6 +42,9 @@
                     $navItem('admin.words.index',  'Words',       '字'),
                     $navItem('admin.badges.index',           'Badges',             '🏅'),
                     $navItem('admin.attribute-settings.index', 'Attr Settings',   '⚗'),
+                    $navItem('admin.search-logs.index',         'Search Logs',     '🔍'),
+                    $navItem('admin.not-found.index',           'Not Found',       '⬚'),
+                    $navItem('admin.shifu-engagements.index',   'Engagements', '師'),
                     $navItem('admin.preferences',  'Preferences', '⚙'),
                 ];
             @endphp

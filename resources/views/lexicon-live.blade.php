@@ -1059,7 +1059,10 @@ main {
     placeholder="Search 流動…"
     style="font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 0.8rem;border:1px solid rgba(0,0,0,0.15);border-radius:2px;width:min(320px,calc(100vw - 3rem));background:var(--surface);color:var(--text);outline:none;"
     oninput="searchQuery=this.value;render();"
+    onblur="logSearchFinal();"
+    onkeydown="if(event.key==='Enter'){logSearchFinal();}"
   />
+  <button id="analyzeBtn" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;padding:0.3rem 0.8rem;margin-top:0.4rem;border:1px solid var(--accent);border-radius:2px;background:transparent;color:var(--accent);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--accent)'" onclick="analyzeWithShifu()">Analyze with 師父</button>
 </div>
 
 <!-- SCENARIO PRESETS -->
@@ -2179,6 +2182,33 @@ function levelLabel(v) {
 // Returns a word object if ANY of its surfaces match the query string.
 // POS is not a filter — a match on any definition row returns the whole word.
 let searchQuery = '';
+// ── Search logging: fires on blur or Enter (captures final query only) ───────
+let _lastLoggedQuery = '';
+function logSearchFinal() {
+  const q = searchQuery.trim();
+  if (!q || q === _lastLoggedQuery) return;
+  _lastLoggedQuery = q;
+
+  const isSentence = typeof isSentenceInput === 'function' && isSentenceInput(q);
+  const matched = WORDS.filter(matchWord);
+  const payload = { query: q, results_count: matched.length, search_type: 'word' };
+
+  if (isSentence && typeof segmentSentence === 'function') {
+    const segs = segmentSentence(q);
+    const wordSegs = segs.filter(s => !isPunctuation(s.text));
+    payload.search_type = 'sentence';
+    payload.known_count = wordSegs.filter(s => s.known).length;
+    payload.unknown_count = wordSegs.filter(s => !s.known).length;
+    payload.not_found = wordSegs.filter(s => !s.known).map(s => s.text);
+  }
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+  fetch('/api/lexicon/search-log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
 // Pre-fill search from URL ?q= (e.g. returning from IWP sentence breadcrumb)
 (function() {
   const urlQ = new URLSearchParams(window.location.search).get('q');
@@ -2191,6 +2221,91 @@ let searchQuery = '';
     });
   }
 })();
+
+// ── Analyze with 師父 ─────────────────────────────────────────────────────────
+async function analyzeWithShifu() {
+  const q = searchQuery.trim();
+  if (!q) return;
+
+  const container = document.getElementById('cardContainer');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  // Log the search on analyze click
+  logSearchFinal();
+
+  analyzeBtn.disabled = true;
+  analyzeBtn.textContent = '分析中…';
+  container.innerHTML = '<div style="text-align:center;padding:2rem;font-family:\'Cormorant Garamond\',serif;font-size:1rem;color:var(--dim);font-style:italic;">師父 is analyzing…</div>';
+
+  try {
+    const res = await fetch('/api/workshop/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '', 'Accept': 'application/json' },
+      body: JSON.stringify({ text: q }),
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--rose);">Analysis failed. Please try again.</div>';
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = 'Analyze with 師父';
+      return;
+    }
+
+    let html = '<div style="max-width:640px;margin:0 auto;padding:0.5rem;">';
+
+    // Translation
+    html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1rem;margin-bottom:1rem;">';
+    html += '<div style="font-family:\'DM Mono\',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;">Translation</div>';
+    html += '<div style="font-family:\'Cormorant Garamond\',serif;font-size:1.1rem;color:var(--ink);line-height:1.6;">' + escHtml(data.translation || '') + '</div>';
+    html += '</div>';
+
+    // Feedback
+    if (data.feedback) {
+      html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1rem;margin-bottom:1rem;">';
+      html += '<div style="font-family:\'DM Mono\',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;">師父 Feedback</div>';
+      html += '<div style="font-family:\'Cormorant Garamond\',serif;font-size:0.95rem;color:var(--text);line-height:1.6;">' + escHtml(data.feedback) + '</div>';
+      html += '</div>';
+    }
+
+    // Word notes
+    if (data.word_notes && data.word_notes.length) {
+      html += '<div style="font-family:\'DM Mono\',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem;">Word Notes</div>';
+      data.word_notes.forEach(function(wn) {
+        html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:0.8rem;margin-bottom:0.5rem;display:flex;gap:0.8rem;align-items:flex-start;">';
+        html += '<div style="font-family:\'Noto Serif TC\',serif;font-size:1.4rem;font-weight:600;color:var(--ink);flex-shrink:0;">' + escHtml(wn.word || '') + '</div>';
+        html += '<div>';
+        if (wn.pinyin) html += '<div style="font-family:\'Cormorant Garamond\',serif;font-size:0.85rem;color:var(--accent);font-style:italic;">' + escHtml(wn.pinyin) + '</div>';
+        html += '<div style="font-family:\'Cormorant Garamond\',serif;font-size:0.9rem;color:var(--text);line-height:1.5;">' + escHtml(wn.note || '') + '</div>';
+        html += '</div></div>';
+      });
+    }
+
+    // Sentence cards (reuse existing segmentation)
+    if (typeof segmentSentence === 'function') {
+      html += '<div style="font-family:\'DM Mono\',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin:1rem 0 0.5rem;">Word Breakdown</div>';
+      html += renderSentenceResults(q);
+    }
+
+    // Back button
+    html += '<div style="text-align:center;margin-top:1.5rem;">';
+    html += '<button onclick="render()" style="font-family:\'DM Mono\',monospace;font-size:0.65rem;padding:0.3rem 0.8rem;border:1px solid var(--border);border-radius:2px;background:var(--surface);color:var(--dim);cursor:pointer;">← Back to search</button>';
+    html += '</div>';
+
+    html += '</div>';
+    container.innerHTML = html;
+
+  } catch (e) {
+    container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--rose);">Connection error. Please try again.</div>';
+  }
+
+  analyzeBtn.disabled = false;
+  analyzeBtn.textContent = 'Analyze with 師父';
+}
+
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 function wordMatchesSearch(w) {
   if (!searchQuery.trim()) return true;
@@ -2709,10 +2824,17 @@ function isSentenceInput(query) {
   return segs.length >= 2 && segs.some(s => s.known);
 }
 
+// Punctuation / whitespace regex — CJK + Western punctuation, spaces
+const PUNCT_RE = /^[\s\u3000-\u303F\uFF00-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\u2000-\u206F\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E\u00A0-\u00BF]+$/;
+
+function isPunctuation(text) { return PUNCT_RE.test(text); }
+
 function renderSentenceResults(query) {
   const segs = segmentSentence(query.trim());
-  const knownCount = segs.filter(s => s.known).length;
-  const totalCount = segs.length;
+  // Filter out punctuation for counting
+  const wordSegs = segs.filter(s => !isPunctuation(s.text));
+  const knownCount = wordSegs.filter(s => s.known).length;
+  const totalCount = wordSegs.length;
   const vertical = textDir === 'vertical';
 
   const headerLang = langMode === 'zh' ? `共 ${totalCount} 個詞 · ${knownCount} 個在詞典中` :
@@ -2721,6 +2843,8 @@ function renderSentenceResults(query) {
   let html = `<div class="sentence-results-header">${headerLang}</div>`;
   html += `<div class="sentence-results">`;
   segs.forEach(seg => {
+    // Skip punctuation entirely — don't render as unknown cards
+    if (!seg.known && isPunctuation(seg.text)) return;
     if (seg.known) {
       // Find the full word object
       const w = WORDS.find(wd => wd.traditional === seg.text || wd.simplified === seg.text);
@@ -2816,12 +2940,22 @@ function render() {
                     (state.hsk||[]).length ||
                     posFilter || domainFilter || relFilter;
 
+  const analyzeBtn = document.getElementById('analyzeBtn');
+
   if (!hasQuery && !hasFilter) {
     container.innerHTML = '';
     countEl.textContent = '—';
     if (countQuery) countQuery.textContent = '';
     tagsEl.innerHTML = '';
+    if (analyzeBtn) analyzeBtn.style.display = 'none';
     return;
+  }
+
+  // Show/hide Analyze button: visible when query looks like a sentence or multi-word
+  if (analyzeBtn) {
+    const showAnalyze = hasQuery && !hasFilter && searchQuery.trim().length > 1 &&
+      (isSentenceInput(searchQuery) || searchQuery.trim().length >= 2);
+    analyzeBtn.style.display = showAnalyze ? 'inline-block' : 'none';
   }
 
   // ── SENTENCE DETECTION ──
