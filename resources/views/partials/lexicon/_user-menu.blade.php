@@ -51,13 +51,16 @@
 
 <div class="user-menu" id="userMenu">
   @auth
+    @php $shifuEmoji = config('shifu-personas.' . (Auth::user()->shifu_persona ?? 'dragon') . '.emoji', '🐉'); @endphp
     <span class="user-menu-name" onclick="document.getElementById('userDropdown').classList.toggle('open')">
+      <a href="{{ route('profile') }}#shifu-style" style="text-decoration:none;font-size:0.85rem;line-height:1" title="師父 Style">{{ $shifuEmoji }}</a>
       {{ Auth::user()->chinese_name ?? Auth::user()->name }}
     </span>
     <div class="user-menu-dropdown" id="userDropdown">
       <a href="{{ route('my-words') }}">My Words</a>
       <a href="{{ route('my-writings') }}">My Writings</a>
       <a href="{{ route('profile') }}">Profile</a>
+      <a href="{{ route('profile') }}#shifu-style">師父 Style</a>
       <form method="POST" action="{{ route('logout') }}">
         @csrf
         <button type="submit">Log out</button>

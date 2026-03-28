@@ -233,6 +233,13 @@ class WorkshopController extends Controller
             . "  ]\n"
             . "}";
 
+        // Inject persona overlay
+        $personaSlug = Auth::user()?->shifu_persona ?? 'dragon';
+        $persona = config("shifu-personas.{$personaSlug}");
+        if ($persona) {
+            $prompt .= "\n\nFEEDBACK STYLE PERSONA:\n" . $persona['prompt'];
+        }
+
         $result = $this->callAnthropic($prompt, $text);
 
         if (isset($result['error'])) {

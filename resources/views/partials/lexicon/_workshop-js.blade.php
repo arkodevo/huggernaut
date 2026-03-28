@@ -205,6 +205,14 @@ function wsRestorePending() {
   } catch(e) { localStorage.removeItem('ww_pending'); }
 }
 
+// ── PERSONA OVERLAY ──────────────────────────────────────────────────────────
+const WS_PERSONAS = @json(config('shifu-personas'));
+function wsGetPersonaOverlay() {
+  const slug = window.__AUTH?.shifuPersona || 'dragon';
+  const p = WS_PERSONAS[slug];
+  return p ? '\n\nFEEDBACK STYLE PERSONA:\n' + p.prompt + '\n' : '';
+}
+
 // ── SYSTEM PROMPTS ───────────────────────────────────────────────────────────
 function wsGetCritiquePrompt(word, intendedPOS, fluencyLevel) {
   const posLine = intendedPOS
@@ -248,7 +256,7 @@ Respond ONLY in this exact JSON format (no markdown, no extra text):
   "assessed_level": "beginner | learner | developing | advanced | fluent",
   "assessed_mastery": "seed | sprout | bud | flower | fruit",
   "mastery_guidance": "1-2 sentences: what specifically the learner could do to move to the next mastery phase within their assessed level. Be concrete — suggest a grammar pattern, a modifier type, a structural technique."
-}`;
+}` + wsGetPersonaOverlay();
 }
 
 function wsGetThemePrompt(word, fluencyLevel) {
@@ -286,7 +294,7 @@ Respond ONLY in this exact JSON format (no markdown, no extra text):
   "note": "One sentence explaining why this sentence fits the theme and demonstrates the word's nuance well",
   "assessed_level": "beginner | learner | developing | advanced | fluent",
   "assessed_mastery": "seed | sprout | bud | flower | fruit"
-}`;
+}` + wsGetPersonaOverlay();
 }
 
 // ── RENDER SAVED DECK ────────────────────────────────────────────────────────

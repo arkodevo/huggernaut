@@ -14,6 +14,9 @@ class SearchNotFound extends Model
     protected $fillable = [
         'search_log_id',
         'character',
+        'source',
+        'user_id',
+        'collection_id',
     ];
 
     protected $casts = [
@@ -23,5 +26,15 @@ class SearchNotFound extends Model
     public function searchLog(): BelongsTo
     {
         return $this->belongsTo(SearchLog::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function collection(): BelongsTo
+    {
+        return $this->belongsTo(Collection::class);
     }
 }

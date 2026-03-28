@@ -39,6 +39,7 @@ class User extends Authenticatable
         'pos_mode',
         'level_framework',
         'fluency_level',
+        'shifu_persona',
         'filter_attribute_overrides',
         'ui_preferences',
         'subscription_tier',

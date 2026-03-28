@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
+use App\Models\SearchNotFound;
 use App\Models\UserSavedWord;
+use App\Models\WordObject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -89,6 +91,78 @@ class CollectionController extends Controller
         ]);
 
         return response()->json(['ok' => true]);
+    }
+
+    public function importWords(Request $request, Collection $collection): JsonResponse
+    {
+        if ($collection->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'words' => ['required', 'array', 'max:500'],
+            'words.*' => ['required', 'string', 'max:32'],
+            'mode' => ['required', 'string', 'in:append,overwrite'],
+        ]);
+
+        $words = $data['words'];
+        $mode = $data['mode'];
+
+        // If overwrite, clear existing words from collection
+        if ($mode === 'overwrite') {
+            $collection->wordObjects()->detach();
+        }
+
+        // Look up all word objects by traditional character
+        $wordObjects = WordObject::whereIn('traditional', $words)->get()->keyBy('traditional');
+
+        $added = 0;
+        $alreadyIn = 0;
+        $notFound = [];
+        $maxSort = $collection->wordObjects()->max('collection_word.sort_order') ?? 0;
+
+        // Get existing word IDs in this collection
+        $existingIds = $collection->wordObjects()->pluck('word_objects.id')->all();
+
+        foreach ($words as $word) {
+            $wo = $wordObjects->get($word);
+            if (! $wo) {
+                $notFound[] = $word;
+                // Log to Not Found system
+                SearchNotFound::create([
+                    'character'     => $word,
+                    'source'        => 'import',
+                    'user_id'       => Auth::id(),
+                    'collection_id' => $collection->id,
+                ]);
+                continue;
+            }
+
+            if (in_array($wo->id, $existingIds) && $mode === 'append') {
+                $alreadyIn++;
+                continue;
+            }
+
+            // Ensure word is saved
+            UserSavedWord::firstOrCreate(
+                ['user_id' => Auth::id(), 'word_object_id' => $wo->id],
+                ['saved_at' => now()]
+            );
+
+            // Add to collection
+            $maxSort++;
+            $collection->wordObjects()->syncWithoutDetaching([
+                $wo->id => ['sort_order' => $maxSort, 'added_at' => now()],
+            ]);
+            $added++;
+        }
+
+        return response()->json([
+            'added'      => $added,
+            'already_in' => $alreadyIn,
+            'not_found'  => $notFound,
+            'total'      => $collection->wordObjects()->count(),
+        ]);
     }
 
     public function removeWord(Collection $collection, int $wordObjectId): JsonResponse

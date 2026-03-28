@@ -233,6 +233,7 @@ function mwRender() {
       html += '<a class="mw-action-btn" href="/my-words/test/' + c.id + '" style="color:var(--accent);text-decoration:none">Test</a>';
     }
     html += '<button class="mw-action-btn" onclick="event.stopPropagation();mwRenameCollection(' + c.id + ')">Rename</button>';
+    html += '<button class="mw-action-btn" onclick="event.stopPropagation();mwImportCollection(' + c.id + ')">Import</button>';
     html += '<button class="mw-action-btn danger" onclick="mwDeleteCollection(' + c.id + ')">Delete</button>';
     html += '</div>';
 
@@ -440,6 +441,109 @@ function mwDeleteCollection(collectionId) {
       mwRender();
     });
   });
+}
+
+// ── IMPORT WORDS INTO COLLECTION ─────────────────────────────────────────────
+function mwImportCollection(collectionId) {
+  var section = document.querySelector('[data-collection-id="' + collectionId + '"]');
+  var body = section ? section.querySelector('.mw-section-body') : null;
+  if (!body) return;
+
+  // Remove existing import panel if any
+  var existing = body.querySelector('.mw-import-panel');
+  if (existing) { existing.remove(); return; }
+
+  var panel = document.createElement('div');
+  panel.className = 'mw-import-panel';
+  panel.innerHTML = ''
+    + '<div style="border:1px solid var(--border);border-radius:4px;padding:0.8rem;margin:0.5rem 0;background:var(--surface)">'
+    + '<div style="font-family:\'DM Mono\',monospace;font-size:0.7rem;color:var(--accent);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">Import Words</div>'
+    + '<div style="font-family:\'Cormorant Garamond\',serif;font-size:0.85rem;color:var(--dim);margin-bottom:0.6rem">'
+    + 'Upload a <strong>.txt</strong> file (one word per line) or a <strong>.csv</strong> file (comma-separated words).'
+    + '</div>'
+    + '<div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">'
+    + '<input type="file" accept=".txt,.csv" id="mwImportFile-' + collectionId + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem">'
+    + '<select id="mwImportMode-' + collectionId + '" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:2px">'
+    + '<option value="append">Append</option>'
+    + '<option value="overwrite">Overwrite</option>'
+    + '</select>'
+    + '<button onclick="mwDoImport(' + collectionId + ')" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;padding:0.3rem 0.8rem;background:var(--accent);color:white;border:none;border-radius:2px;cursor:pointer">Import</button>'
+    + '<button onclick="this.closest(\'.mw-import-panel\').remove()" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;padding:0.3rem 0.5rem;background:none;border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--dim)">Cancel</button>'
+    + '</div>'
+    + '<div id="mwImportResult-' + collectionId + '" style="margin-top:0.5rem"></div>'
+    + '</div>';
+
+  body.insertBefore(panel, body.querySelector('.mw-list') || body.querySelector('.mw-empty'));
+}
+
+function mwDoImport(collectionId) {
+  var fileInput = document.getElementById('mwImportFile-' + collectionId);
+  var modeSelect = document.getElementById('mwImportMode-' + collectionId);
+  var resultDiv = document.getElementById('mwImportResult-' + collectionId);
+  if (!fileInput || !fileInput.files.length) {
+    resultDiv.innerHTML = '<span style="color:var(--rose);font-size:0.75rem">Please select a file.</span>';
+    return;
+  }
+
+  var file = fileInput.files[0];
+  var mode = modeSelect.value;
+  var reader = new FileReader();
+
+  reader.onload = function(e) {
+    var text = e.target.result.trim();
+    var words = [];
+
+    if (file.name.endsWith('.csv')) {
+      // CSV: split by commas, newlines, or both
+      words = text.split(/[,\n\r]+/).map(function(w) { return w.trim(); }).filter(Boolean);
+    } else {
+      // TXT: one word per line
+      words = text.split(/\n+/).map(function(w) { return w.trim(); }).filter(Boolean);
+    }
+
+    // Remove duplicates
+    words = words.filter(function(w, i) { return words.indexOf(w) === i; });
+
+    if (words.length === 0) {
+      resultDiv.innerHTML = '<span style="color:var(--rose);font-size:0.75rem">No words found in file.</span>';
+      return;
+    }
+
+    resultDiv.innerHTML = '<span style="color:var(--dim);font-size:0.75rem;font-style:italic">Importing ' + words.length + ' words...</span>';
+
+    fetch('/api/collections/' + collectionId + '/import', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ words: words, mode: mode }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        resultDiv.innerHTML = '<span style="color:var(--rose);font-size:0.75rem">' + data.error + '</span>';
+        return;
+      }
+      var msg = '<span style="font-size:0.75rem;font-family:\'DM Mono\',monospace">';
+      msg += '<span style="color:var(--jade)">Added: ' + data.added + '</span>';
+      if (data.already_in > 0) msg += ' · <span style="color:var(--dim)">Already in: ' + data.already_in + '</span>';
+      if (data.not_found.length > 0) msg += ' · <span style="color:var(--rose)">Not found: ' + data.not_found.join(', ') + '</span>';
+      msg += '</span>';
+      resultDiv.innerHTML = msg;
+
+      // Reload page to reflect changes
+      if (data.added > 0) {
+        setTimeout(function() { window.location.reload(); }, 1500);
+      }
+    })
+    .catch(function() {
+      resultDiv.innerHTML = '<span style="color:var(--rose);font-size:0.75rem">Import failed.</span>';
+    });
+  };
+
+  reader.readAsText(file);
 }
 
 function escHtml(str) {

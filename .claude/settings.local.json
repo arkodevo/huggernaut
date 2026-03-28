@@ -106,7 +106,19 @@
       "Bash(grep -r \"role.*=.*['''']\\\\\\(user\\\\|admin\\\\|editor\\\\|learner\\\\\\)\" /Users/chuluoyi/Sites/huggernaut/app /Users/chuluoyi/Sites/huggernaut/database --include=*.php)",
       "Bash(pandoc /Users/chuluoyi/Documents/華語/planning/huiming_template_feedback_20260324.docx -o /tmp/huiming_feedback.md)",
       "WebFetch(domain:share.google)",
-      "WebFetch(domain:www.google.com)"
+      "WebFetch(domain:www.google.com)",
+      "Bash(grep -n 'protected \\\\$signature' /Users/chuluoyi/Sites/huggernaut/app/Console/Commands/ImportWordData.php)",
+      "Bash(php -l /Users/chuluoyi/Sites/huggernaut/app/Console/Commands/ImportWordData.php)",
+      "Bash(php /Users/chuluoyi/Sites/huggernaut/app/Console/Commands/ImportWordData.php)",
+      "Bash(php -d display_errors=1 -r \"require ''/Users/chuluoyi/Sites/huggernaut/app/Console/Commands/ImportWordData.php'';\")",
+      "Bash(php -i)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/lexicon)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} — %{time_total}s\\\\n\" http://127.0.0.1:8000/lexicon)",
+      "Bash(curl -s http://127.0.0.1:8000/lexicon)",
+      "mcp__mcp-registry__search_mcp_registry",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} — Time: %{time_total}s — Size: %{size_download} bytes\" http://localhost:8000/lexicon)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} — Time: %{time_total}s — Size: %{size_download} bytes\\\\n\" http://localhost:8000/lexicon)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} — Time: %{time_total}s — Size: %{size_download} bytes\\\\n\" http://localhost:8000/lexicon/u6d41_u52d5)"
     ]
   }
 }

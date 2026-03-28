@@ -62,6 +62,7 @@ Route::get('/my-words/test/{collection}', [CollectionTestController::class, 'sho
 Route::get('/profile', [ProfileController::class, 'show'])->name('profile')->middleware('auth');
 Route::patch('/profile/pll-name', [ProfileController::class, 'updatePllName'])->middleware('auth');
 Route::patch('/profile/chinese-name', [ProfileController::class, 'updateChineseName'])->middleware('auth');
+Route::patch('/profile/shifu-persona', [ProfileController::class, 'updateShifuPersona'])->middleware('auth')->name('profile.shifu-persona');
 
 // ── Learner API (auth required) ──────────────────────────────────────────────
 
@@ -81,6 +82,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::patch('/collections/{collection}', [CollectionController::class, 'update']);
     Route::delete('/collections/{collection}', [CollectionController::class, 'destroy']);
     Route::post('/collections/{collection}/words/{wordObjectId}', [CollectionController::class, 'addWord']);
+    Route::post('/collections/{collection}/import', [CollectionController::class, 'importWords']);
     Route::delete('/collections/{collection}/words/{wordObjectId}', [CollectionController::class, 'removeWord']);
 
     // Workshop (造句) — save & delete require auth
@@ -189,6 +191,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('not-found/export', [SearchNotFoundController::class, 'export'])->name('not-found.export');
     Route::post('not-found/refresh', [SearchNotFoundController::class, 'refresh'])->name('not-found.refresh');
     Route::post('not-found/{character}/reject', [SearchNotFoundController::class, 'reject'])->name('not-found.reject');
+    Route::post('not-found/{character}/unreject', [SearchNotFoundController::class, 'unreject'])->name('not-found.unreject');
     Route::get('not-found/{character}', [SearchNotFoundController::class, 'show'])->name('not-found.show');
 
     Route::get('shifu-engagements', [ShifuEngagementController::class, 'index'])->name('shifu-engagements.index');

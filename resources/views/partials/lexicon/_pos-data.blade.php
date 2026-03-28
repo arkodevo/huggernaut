@@ -83,13 +83,21 @@ function posLabel(raw) {
   return POS_ABBR[raw] || raw;
 }
 
-// POS group membership — selecting 'Verb' matches all verb subtypes
+// POS group membership — selecting 'V' (or 'Verb') matches all verb subtypes
+// Supports both full-name and slug-based POS values
 const POS_GROUPS = {
   'Verb': Object.keys(POS_ABBR).filter(k => k !== 'Verb' && POS_ABBR[k].startsWith('V')),
+};
+const POS_SLUG_GROUPS = {
+  'V': Object.values(POS_ABBR).filter(v => v !== 'V' && v.startsWith('V')),
 };
 
 function posMatchesFilter(pos, filter) {
   if (pos === filter) return true;
+  // Check slug-based groups (slim index uses slugs like Vpt, N, Adv)
+  const slugGroup = POS_SLUG_GROUPS[filter];
+  if (slugGroup && slugGroup.includes(pos)) return true;
+  // Fallback: full-name groups (legacy support)
   const group = POS_GROUPS[filter];
   return group ? group.includes(pos) : false;
 }

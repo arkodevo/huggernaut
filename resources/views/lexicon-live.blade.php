@@ -812,6 +812,99 @@ main {
   color: var(--dim);
 }
 
+/* ── Slim search result cards ────────────────────────────────────────────── */
+.word-card--slim {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.6rem 0.75rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 0.75rem;
+  align-items: start;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  animation: cardIn 0.25s ease both;
+}
+.word-card--slim:hover { border-color: rgba(98,64,200,0.25); transform: translateY(-1px); }
+.slim-card-char-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.slim-card-char-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+.slim-card-char-col .hanzi-secondary {
+  font-family: BiauKai, STKaiti, KaiTi, '楷體-繁', 'Noto Serif TC', serif;
+  font-size: calc(var(--fs-char, 2.6rem) * 0.45);
+  color: var(--dim);
+  line-height: 1.15;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+.slim-card-char {
+  font-family: BiauKai, STKaiti, KaiTi, '楷體-繁', 'Noto Serif TC', serif;
+  font-size: var(--fs-char, 2.6rem);
+  line-height: 1.15;
+  color: var(--ink);
+}
+.slim-card-char.vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.08em;
+}
+.slim-script-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--dim);
+  font-size: 0.75rem;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s, border-color 0.2s;
+}
+.slim-script-toggle:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.slim-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-top: 0.2rem;
+}
+.slim-card-pinyin {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.slim-card-pinyin .pinyin {
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+.slim-level-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: var(--dim);
+}
+.slim-level-prep     { background: #8ca0b8; }
+.slim-level-entry    { background: #7b9a6d; }
+.slim-level-basic    { background: #b88c3f; }
+.slim-level-advanced { background: #b06030; }
+.slim-level-high     { background: #9c4060; }
+.slim-level-fluency  { background: #6840a0; }
+
 /* Character display, domain, POS summary, pinyin styles loaded from shared partial */
 .card-divider {
   grid-column: 1 / -1;
@@ -1053,15 +1146,20 @@ main {
 
 @include('partials.lexicon._site-header')
 <div class="search-bar-wrap" style="text-align:center;padding:0.5rem 1rem;">
-  <input
-    id="searchInput"
-    type="text"
-    placeholder="Search 流動…"
-    style="font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 0.8rem;border:1px solid rgba(0,0,0,0.15);border-radius:2px;width:min(320px,calc(100vw - 3rem));background:var(--surface);color:var(--text);outline:none;"
-    oninput="searchQuery=this.value;render();"
-    onblur="logSearchFinal();"
-    onkeydown="if(event.key==='Enter'){logSearchFinal();}"
-  />
+  <div style="position:relative;display:inline-block;width:min(320px,calc(100vw - 3rem));">
+    <input
+      id="searchInput"
+      type="text"
+      placeholder="Search 流動…"
+      style="font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 2rem 0.4rem 0.8rem;border:1px solid rgba(0,0,0,0.15);border-radius:2px;width:100%;background:var(--surface);color:var(--text);outline:none;box-sizing:border-box;"
+      oninput="searchQuery=this.value;debouncedRender();"
+      onblur="logSearchFinal();"
+      onkeydown="if(event.key==='Enter'){logSearchFinal();}"
+    />
+    <button id="searchClear" onclick="var i=document.getElementById('searchInput');i.value='';searchQuery='';render();i.focus();"
+      style="display:none;position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--dim);font-size:0.85rem;cursor:pointer;padding:0 0.2rem;line-height:1;"
+      title="Clear search">&times;</button>
+  </div>
   <button id="analyzeBtn" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;padding:0.3rem 0.8rem;margin-top:0.4rem;border:1px solid var(--accent);border-radius:2px;background:transparent;color:var(--accent);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--accent)'" onclick="analyzeWithShifu()">Analyze with 師父</button>
 </div>
 
@@ -1415,7 +1513,8 @@ main {
       <select class="refine-select" id="posRefineSelect">
         <option value="">POS — all</option>
       </select>
-      <select class="refine-select" id="relRefineSelect">
+      {{-- Relatives filter hidden: relProximity not in slim search index --}}
+      <select class="refine-select" id="relRefineSelect" style="display:none">
         <option value="">Relatives — all</option>
         <option value="immediate">Immediate</option>
         <option value="close">Close</option>
@@ -1801,7 +1900,7 @@ function rebuildCustomScenariosGrid() {
 let scriptMode      = localStorage.getItem('scriptMode') || 'traditional';
 let pinyinMode      = localStorage.getItem('pinyinMode') || 'on';
 let workshopDefault = localStorage.getItem('workshopDefault') || 'collapsed';
-let textDir         = localStorage.getItem('textDir') || 'horizontal';
+let textDir         = localStorage.getItem('textDir') || 'vertical';
 
 function setWorkshopDefault(mode) {
   workshopDefault = mode;
@@ -2119,18 +2218,23 @@ WORDS.forEach(w => {
 })();
 
 // Populate POS refine select from distinct POS values present in WORDS
+// (slim index sends POS slugs like Vpt, N, Adv instead of full names)
 (function() {
   const sel = document.getElementById('posRefineSelect');
   if (!sel) return;
-  const posOrder = Object.keys(POS_ABBR);
+  // Build slug→full-name reverse map for display
+  const SLUG_TO_FULL = {};
+  Object.entries(POS_ABBR).forEach(([full, abbr]) => { SLUG_TO_FULL[abbr] = full; });
+  const slugOrder = Object.values(POS_ABBR);
   const seen = new Set();
   WORDS.forEach(w => (w.definitions || []).forEach(d => { if (d.pos) seen.add(d.pos); }));
   [...seen]
-    .sort((a, b) => posOrder.indexOf(a) - posOrder.indexOf(b))
-    .forEach(pos => {
+    .sort((a, b) => slugOrder.indexOf(a) - slugOrder.indexOf(b))
+    .forEach(slug => {
       const opt = document.createElement('option');
-      opt.value = pos;
-      opt.textContent = (POS_ABBR[pos] || pos) + ' — ' + posDisplay(pos);
+      opt.value = slug;
+      const fullName = SLUG_TO_FULL[slug] || slug;
+      opt.textContent = slug + ' — ' + (POS_RENAME[fullName] || fullName);
       sel.appendChild(opt);
     });
   sel.addEventListener('change', () => {
@@ -2273,9 +2377,13 @@ async function analyzeWithShifu() {
     // Word notes
     if (data.word_notes && data.word_notes.length) {
       html += '<div style="font-family:\'DM Mono\',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem;">Word Notes</div>';
+      const isVertical = textDir === 'vertical';
       data.word_notes.forEach(function(wn) {
+        const charStyle = isVertical
+          ? "font-family:BiauKai,STKaiti,KaiTi,'楷體-繁','Noto Serif TC',serif;font-size:1.8rem;font-weight:400;color:var(--ink);flex-shrink:0;writing-mode:vertical-rl;line-height:1.2;padding:0.3rem 0;"
+          : "font-family:BiauKai,STKaiti,KaiTi,'楷體-繁','Noto Serif TC',serif;font-size:1.8rem;font-weight:400;color:var(--ink);flex-shrink:0;";
         html += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:0.8rem;margin-bottom:0.5rem;display:flex;gap:0.8rem;align-items:flex-start;">';
-        html += '<div style="font-family:\'Noto Serif TC\',serif;font-size:1.4rem;font-weight:600;color:var(--ink);flex-shrink:0;">' + escHtml(wn.word || '') + '</div>';
+        html += '<div style="' + charStyle + '">' + escHtml(wn.word || '') + '</div>';
         html += '<div>';
         if (wn.pinyin) html += '<div style="font-family:\'Cormorant Garamond\',serif;font-size:0.85rem;color:var(--accent);font-style:italic;">' + escHtml(wn.pinyin) + '</div>';
         html += '<div style="font-family:\'Cormorant Garamond\',serif;font-size:0.9rem;color:var(--text);line-height:1.5;">' + escHtml(wn.note || '') + '</div>';
@@ -2311,9 +2419,8 @@ function wordMatchesSearch(w) {
   if (!searchQuery.trim()) return true;
   const q = searchQuery.trim().toLowerCase();
   const surfaces = [
-    w.traditional, w.simplified, w.pinyin,
-    ...(w.definitions || []).flatMap(d => [d.def, d.pos, d.usageNote]),
-    ...Object.values(w.family || {}).flat().flatMap(f => [f.word, f.trad, f.pinyin, f.def]),
+    w.traditional, w.simplified, w.pinyin, w.pinyinToneless,
+    ...(w.definitions || []).flatMap(d => [d.def, d.pos]),
   ];
   return surfaces.some(s => s && s.toLowerCase().includes(q));
 }
@@ -2344,8 +2451,6 @@ function matchWord(w) {
   if (state.tocfl.length && !state.tocfl.includes(w.tocfl)) return false;
   // POS refine: match any definition with the selected POS (group-aware)
   if (posFilter && !(w.definitions || []).some(d => posMatchesFilter(d.pos, posFilter))) return false;
-  // Relative proximity refine: match if word has the selected proximity bucket
-  if (relFilter && !(w.relProximity || []).includes(relFilter)) return false;
   // Domain refine: matches any domain across all senses
   if (domainFilter && !(w.allDomains || []).includes(domainFilter)) return false;
   return true;
@@ -2444,127 +2549,16 @@ window.wsResolveWordKey = function(ex) {
 </script>
 <script>
 
+// Slug→full-name reverse map for slim card POS cycling
+const SLIM_POS_SLUG_TO_FULL = {};
+const SLIM_POS_SLUG_TO_ZH = {};
+Object.entries(POS_ABBR).forEach(([full, abbr]) => {
+  SLIM_POS_SLUG_TO_FULL[abbr] = full;
+  if (POS_ZH[full]) SLIM_POS_SLUG_TO_ZH[abbr] = POS_ZH[full];
+});
+
 function renderCard(w, idx) {
-  const wordKey = w.traditional;
-  const extras = [...(w.extraExamples || []), ...(EXTRA_SENTENCES[wordKey] || [])];
-  const allDefaults = [w.example, ...extras];
-
-  // Primary POS for example chips
-  const primaryPosSlug = (w.definitions || [])[0]?.posAbbr || (w.definitions || [])[0]?.pos || '';
-  const primaryPosChip = primaryPosSlug ? (POS_ABBR[primaryPosSlug] || POS_ABBR[primaryPosSlug.toLowerCase()] || primaryPosSlug) : '';
-
-  const defaultSentsHTML = allDefaults.map((s, i) => renderExSentence(s, {
-    pos: primaryPosChip,
-    vertical: textDir === 'vertical',
-    segFn: segmentedHTML,
-    segCtx: w,
-  })).join('') || `<div class="wd-stub">${langMode === 'zh' ? '尚無例句。' : langMode === 'both' ? 'No examples yet. 尚無例句。' : 'No examples yet.'}</div>`;
-
-  // Collect all unique POS across definitions for the mobile header summary
-  const allPOS = [...new Set((w.definitions || []).map(d => d.pos).filter(Boolean))];
-  // Domain chips HTML — two-tier chevron: Primary ⌄ Sec1, Sec2, Sec3
-  const domainChipHTML = (() => {
-    const pairs = w.domainPairs || [];
-    if (!pairs.length) return '';
-    // Group secondaries by primary
-    const grouped = {};
-    pairs.forEach(d => {
-      if (!d.p) return;
-      if (!grouped[d.p]) grouped[d.p] = [];
-      if (d.s && !grouped[d.p].includes(d.s)) grouped[d.p].push(d.s);
-    });
-    const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-    return Object.entries(grouped).map(([p, secs]) => {
-      const pEn = DOMAIN_LABEL_MAP[p]; const pZh = DOMAIN_LABEL_MAP_ZH[p];
-      if (!pEn) return '';
-      if (!secs.length) {
-        const display = preferred === 'zh' ? pZh : (uiMode === 'all' || uiMode === 'en-zh') ? `${pEn} ${pZh}` : pEn;
-        return `<div class="card-domain-row"><span class="card-domain" data-en="${pEn}" data-zh="${pZh}" data-state="${preferred}" onclick="toggleLangChip(event,this)">${display}</span></div>`;
-      }
-      const secEn = secs.map(s => DOMAIN_LABEL_MAP[s]).filter(Boolean).join(', ');
-      const secZh = secs.map(s => DOMAIN_LABEL_MAP_ZH[s]).filter(Boolean).join(', ');
-      const pDisplay = preferred === 'zh' ? pZh : (uiMode === 'all' || uiMode === 'en-zh') ? `${pEn} ${pZh}` : pEn;
-      // Pair each secondary EN label with its ZH translation inline
-      const sDisplay = preferred === 'zh' ? secZh : (uiMode === 'all' || uiMode === 'en-zh')
-        ? secs.map(s => { const en = DOMAIN_LABEL_MAP[s]; const zh = DOMAIN_LABEL_MAP_ZH[s]; return en && zh ? `${en} ${zh}` : (en || ''); }).filter(Boolean).join(', ')
-        : secEn;
-      return `<div class="card-domain-row"><div class="card-domain-stack" data-p-en="${pEn}" data-p-zh="${pZh}" data-s-en="${secEn}" data-s-zh="${secZh}" data-state="${preferred}" onclick="toggleLangChip(event,this)">
-        <span class="card-domain-primary">${pDisplay}</span>
-        <span class="card-domain-chevron">⌄</span>
-        <span class="card-domain-secondary">${sDisplay}</span>
-      </div></div>`;
-    }).filter(Boolean).join('');
-  })();
-  // Simplified char (different from traditional)
-  const simpCharVal = w.traditional !== w.simplified
-    ? (scriptMode === 'simplified' ? w.traditional : w.simplified)
-    : '';
-
-  // Saved indicator
-  const hasSaved = window.__AUTH && w.wordObjectId && (window.__AUTH.savedWordIds || []).includes(w.wordObjectId);
-  const heroActionsHTML = window.__AUTH ? '<div class="card-hero-actions">'
-    + '<button class="card-hero-btn' + (hasSaved ? ' saved' : '') + '" onclick="handleSaveToCollection(event, \'' + wordKey + '\')" title="' + (hasSaved ? 'Unsave' : 'Save') + '">' + (hasSaved ? '&#9733;' : '&#9734;') + '</button>'
-    + '<button class="card-hero-btn" onclick="handleShare(event, \'' + wordKey + '\')" title="Share">↗</button>'
-    + '</div>' : '';
-
-  return `
-  <div class="word-card" style="animation-delay:${idx * 0.04}s; cursor:pointer;" id="card-${wordKey}" onclick="openCard(event, '${wordKey}')">
-    <!-- Zone 1: primary char + optional ⇌ switch icon -->
-    <div class="card-hanzi" onclick="event.stopPropagation(); window.location.href='/lexicon/${encodeURIComponent(w.smart_id)}';" title="Open word page">
-      <div class="hanzi-primary-wrap">
-        <span class="hanzi-char">${scriptMode === 'simplified' ? w.simplified : w.traditional}</span>
-        ${simpCharVal ? `<button class="script-switch-btn" data-secondary="${simpCharVal}" onclick="toggleSecondaryChar(event,this)" title="Reveal ${scriptMode === 'simplified' ? 'traditional' : 'simplified'}">⇌</button>` : ''}
-      </div>
-    </div>
-
-    <!-- Zone 2 (mobile only): domain chip + all-POS summary row + pinyin -->
-    <div class="card-hdr-mid">
-      ${domainChipHTML}
-      ${allPOS.length ? `<div class="card-pos-summary">${allPOS.map(p => {
-        const enText = `${posDisplay(p)} · ${POS_ABBR[p]||p}`;
-        const zhText = `${POS_ZH[p]||posDisplay(p)}`;
-        const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-        const display = preferred === 'zh' ? zhText : (uiMode === 'all' || uiMode === 'en-zh') ? `${enText} ${zhText}` : enText;
-        return `<span class="card-pos-hdr" data-en="${enText}" data-zh="${zhText}" data-state="${preferred}" onclick="toggleLangChip(event,this)" title="Tap to toggle 中文">${display}</span>`;
-      }).join('')}</div>` : ''}
-      ${w.pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${w.pinyin}</span></div>` : ''}
-      ${heroActionsHTML}
-    </div>
-
-    <!-- Divider (mobile only) -->
-    <hr class="card-divider">
-
-    <!-- Definitions + per-sense attribute chips — full-width on mobile, col 2 on desktop -->
-    <div class="card-body">
-      ${(w.senseGroups || []).map((sg, sIdx) => {
-          const defsHTML = (sg.definitions || []).map(d => {
-            const fml = d.formula || '';
-            const fmlDisplay = scriptMode === 'simplified' && w.traditional !== w.simplified ? fml.replace(w.traditional, w.simplified) : fml;
-            return `
-            <div class="card-def-row">
-              ${d.pos ? `<span class="card-pos" data-abbr="${POS_ABBR[d.pos] || d.pos}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" title="Tap to cycle: abbr → EN → 中文" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}</span>` : ''}
-              <span class="card-definition">${d.def}</span>
-            </div>
-            ${fmlDisplay ? `<div class="card-formula">${fmlDisplay}</div>` : ''}
-            ${d.usageNote ? `<div class="card-usage-note">${d.usageNote}</div>` : ''}`;
-          }).join('');
-
-          const metaHTML = `<div class="card-meta card-meta-sense">
-            ${cardAttr('register',    sg.register,    'Register',    metaAttrLabel('register', sg.register))}
-            ${cardAttr('connotation', sg.connotation, 'Connotation', metaAttrLabel('connotation', sg.connotation), connoClass[sg.connotation])}
-            ${cardAttr('channel',     sg.channel,     'Channel',     metaAttrLabel('channel', sg.channel))}
-            ${(sg.dimension||[]).length ? cardAttrMulti('dimension', sg.dimension, 'Dimension') : ''}
-            ${sg.intensity ? cardAttr('intensity', sg.intensity, 'Intensity', metaAttrLabel('intensity', sg.intensity)) : ''}
-            ${sg.tocfl ? cardAttr('tocfl', sg.tocfl, 'TOCFL', metaAttrLabel('tocfl', sg.tocfl)) : ''}
-          </div>`;
-
-          return `<div class="card-sense-block">${defsHTML}${metaHTML}</div>`;
-      }).join('')}
-    </div>
-
-    <!-- 造句 PANEL (shared) -->
-    ${wsRenderPanel(wordKey, w, { allPOS, defaultExamplesHTML: defaultSentsHTML })}
-  </div>`;
+  return renderSlimCard(w, { delay: idx });
 }
 
 // ── Workshop toggle/interactions now in shared partial _workshop-js ──
@@ -2878,41 +2872,73 @@ function sentenceNavTo(smartId, label, sentenceQuery) {
   window.location.href = '/lexicon/' + encodeURIComponent(smartId);
 }
 
-function renderSentenceCard(w, seg, vertical) {
+// ── Unified slim card for both sentence segmentation and search results ──
+// Renders the same component with optional sentence breadcrumb navigation.
+function renderSlimCard(w, opts = {}) {
   const charDisplay = scriptMode === 'simplified' ? (w.simplified || w.traditional) : w.traditional;
+  const altChar = w.traditional !== w.simplified
+    ? (scriptMode === 'simplified' ? w.traditional : w.simplified)
+    : '';
+  const vertical = textDir === 'vertical';
   const smartId = w.smart_id;
-  const sentenceQ = searchQuery.trim().replace(/'/g, "\\'");
 
-  // All POS + definition lines
-  const allDefs = (w.senseGroups || []).flatMap(sg => sg.definitions || []);
-  const defsHTML = allDefs.map(d => {
-    const posChip = d.pos ? `<span class="card-pos" style="pointer-events:none">${POS_ABBR[d.pos] || d.pos}</span>` : '';
-    return `<div class="sentence-card-def">${posChip} <span class="sentence-card-def-text">${d.def}</span></div>`;
+  // Click handler: sentence mode uses breadcrumb nav, search mode navigates directly
+  const clickHandler = opts.sentenceQuery
+    ? `sentenceNavTo('${smartId}', '${charDisplay.replace(/'/g, "\\'")}', '${opts.sentenceQuery.replace(/'/g, "\\'")}')`
+    : `window.location.href='/lexicon/${encodeURIComponent(smartId)}'`;
+
+  // POS + definition lines with 3-way cycling chips
+  const defs = w.definitions || [];
+  const defsHTML = defs.map(d => {
+    if (!d.pos) return `<div class="sentence-card-def"><span class="sentence-card-def-text">${d.def}</span></div>`;
+    const abbr = d.pos;
+    const full = SLIM_POS_SLUG_TO_FULL[abbr] || abbr;
+    const fullDisplay = POS_RENAME[full] || full;
+    const zh = SLIM_POS_SLUG_TO_ZH[abbr] || fullDisplay;
+    return `<div class="sentence-card-def"><span class="card-pos" data-abbr="${abbr}" data-full="${fullDisplay}" data-zh="${zh}" data-state="abbr" title="Tap to cycle: abbr → EN → 中文" onclick="event.stopPropagation(); cyclePosChip(event, this)">${abbr}</span> <span class="sentence-card-def-text">${d.def}</span></div>`;
   }).join('');
 
-  const pinyinHTML = w.pinyin ? `<div class="sentence-card-pinyin"><span class="pinyin">${w.pinyin}</span></div>` : '';
+  // Level badge
+  const levelBadge = w.tocfl ? `<span class="slim-level-badge slim-level-${w.tocfl}">${w.tocfl}</span>` : '';
+
+  // Script toggle (⇌)
+  const toggleBtn = altChar
+    ? `<button class="slim-script-toggle" data-secondary="${altChar}" onclick="event.stopPropagation(); toggleSecondaryChar(event,this)" title="Reveal ${scriptMode === 'simplified' ? 'traditional' : 'simplified'}">⇌</button>`
+    : '';
 
   return `
-  <div class="sentence-card" onclick="sentenceNavTo('${smartId}', '${charDisplay.replace(/'/g, "\\'")}', '${sentenceQ}')">
-    <div class="sentence-card-char${vertical ? ' vertical' : ''}">${charDisplay}</div>
-    <div class="sentence-card-body">
+  <div class="word-card word-card--slim" style="${opts.delay ? 'animation-delay:' + (opts.delay * 0.02) + 's;' : ''} cursor:pointer;"
+       onclick="${clickHandler}">
+    <div class="slim-card-char-col">
+      <div class="slim-card-char-wrap">
+        <div class="slim-card-char${vertical ? ' vertical' : ''}">${charDisplay}</div>
+      </div>
+      ${toggleBtn}
+    </div>
+    <div class="slim-card-body">
       ${defsHTML}
-      ${pinyinHTML}
+      <div class="slim-card-pinyin"><span class="pinyin">${w.pinyin || ''}</span> ${levelBadge}</div>
     </div>
   </div>`;
 }
 
+function renderSentenceCard(w, seg, vertical) {
+  const sentenceQ = searchQuery.trim();
+  return renderSlimCard(w, { sentenceQuery: sentenceQ });
+}
+
 function renderSentenceKnownMini(seg, vertical) {
+  // Word found in WORD_INDEX but not in full WORDS array — build a minimal word object
   const d = seg.data;
-  const posChip = d.pos ? `<span class="card-pos" style="pointer-events:none">${POS_ABBR[d.pos] || d.pos}</span>` : '';
-  return `
-  <div class="sentence-card" onclick="window.location.href='/lexicon/${encodeURIComponent(d.smartId)}'">
-    <div class="sentence-card-char${vertical ? ' vertical' : ''}">${seg.text}</div>
-    <div class="sentence-card-body">
-      <div class="sentence-card-def">${posChip} <span class="sentence-card-def-text">${d.def || ''}</span></div>
-      ${d.pinyin ? `<div class="sentence-card-pinyin"><span class="pinyin">${d.pinyin}</span></div>` : ''}
-    </div>
-  </div>`;
+  const miniWord = {
+    smart_id: d.smartId,
+    traditional: d.trad || seg.text,
+    simplified: d.simp || seg.text,
+    pinyin: d.pinyin || '',
+    definitions: d.pos ? [{ pos: d.pos, def: d.def || '' }] : [{ pos: '', def: d.def || '' }],
+    tocfl: null,
+  };
+  return renderSlimCard(miniWord);
 }
 
 function renderUnknownCard(text, vertical) {
@@ -2925,8 +2951,17 @@ function renderUnknownCard(text, vertical) {
   </div>`;
 }
 
+// Debounce render for search performance with large word sets
+let _renderTimer = null;
+function debouncedRender() {
+  clearTimeout(_renderTimer);
+  _renderTimer = setTimeout(render, 150);
+}
+
 function render() {
   rerenderLabels();
+  const _clr = document.getElementById('searchClear');
+  if (_clr) _clr.style.display = searchQuery ? 'block' : 'none';
   const container = document.getElementById('cardContainer');
   const countEl    = document.getElementById('countNum');
   const countQuery = document.getElementById('countQuery');

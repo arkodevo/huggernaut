@@ -46,4 +46,23 @@ class ProfileController extends Controller
             'meaning'       => $user->chinese_name_meaning,
         ]);
     }
+
+    public function updateShifuPersona(Request $request): JsonResponse
+    {
+        $validSlugs = array_keys(config('shifu-personas'));
+
+        $request->validate([
+            'persona' => ['required', 'string', 'in:' . implode(',', $validSlugs)],
+        ]);
+
+        $user = Auth::user();
+        $user->update(['shifu_persona' => $request->input('persona')]);
+
+        $persona = config('shifu-personas.' . $user->shifu_persona);
+
+        return response()->json([
+            'ok'      => true,
+            'persona' => $persona,
+        ]);
+    }
 }

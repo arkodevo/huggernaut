@@ -119,50 +119,51 @@ class ExploreController extends Controller
 
     public function index(Request $request): View
     {
-        $wordObjects = WordObject::with([
-            'senses' => fn ($q) => $q->orderBy('id')->with([
-                'pronunciation',
-                'channel',
-                'connotation',
-                'tocflLevel',
-                'domains' => fn ($q) => $q->with(['labels' => fn ($q) => $q->whereIn('language_id', [1, 2])]),
-                'definitions' => fn ($q) => $q->where('language_id', 1)
-                                              ->orderBy('sort_order')
-                                              ->with('posLabel'),
-                'designations', // pivot — register + dimension
-                'examples'      => fn ($q) => $q->where('is_suppressed', false)
-                                               ->where('is_public', true),
-                'senseRelations.relationType',
-            ]),
-        ])->get();
+        // Slim search index — lightweight payload for client-side search/filter.
+        // Full word detail loads via /lexicon/{smartId} on click.
+        // Use: php artisan cache:forget lexicon_words_slim   to bust after import.
+        $words = cache()->remember('lexicon_words_slim', now()->addHours(24), function () {
+            $wordObjects = WordObject::with([
+                'senses' => fn ($q) => $q->orderBy('id')->with([
+                    'pronunciation',
+                    'channel',
+                    'connotation',
+                    'tocflLevel',
+                    'domains',
+                    'definitions' => fn ($q) => $q->where('language_id', 1)
+                                                  ->orderBy('sort_order')
+                                                  ->with('posLabel'),
+                    'designations', // pivot — register + dimension
+                ]),
+            ])->published()->get();
 
-        // One JS WORDS entry per word_object — all senses aggregated into definitions[].
-        $words = $wordObjects
-            ->map(fn ($w) => $this->shapeWordObject($w))
-            ->filter()
-            ->values();
+            return $wordObjects
+                ->map(fn ($w) => $this->shapeWordObjectSlim($w))
+                ->filter()
+                ->values()
+                ->all();
+        });
 
-        // ── Domain groups for the cascading filter UI ─────────────────────────
-        // Build: [{slug, label(EN), label_zh, domains:[{slug, label(EN), label_zh}]}]
-        // Labels for both EN (language_id 1) and ZH-TW (language_id 2) are loaded
-        // so the client can toggle between languages on the domain chip.
-        $domainGroups = DesignationGroup::with([
-            'designations' => fn ($q) => $q->orderBy('sort_order')
-                                           ->with(['labels' => fn ($q) => $q->whereIn('language_id', [1, 2])]),
-            'labels'       => fn ($q) => $q->whereIn('language_id', [1, 2]),
-        ])->orderBy('sort_order')->get()
-          ->map(fn ($group) => [
-              'slug'     => $group->slug,
-              'label'    => $group->labels->firstWhere('language_id', 1)?->label
-                                ?? ucwords(str_replace('-', ' ', $group->slug)),
-              'label_zh' => $group->labels->firstWhere('language_id', 2)?->label,
-              'domains'  => $group->designations->map(fn ($d) => [
-                  'slug'     => $d->slug,
-                  'label'    => $d->labels->firstWhere('language_id', 1)?->label
-                                    ?? ucwords(str_replace('-', ' ', $d->slug)),
-                  'label_zh' => $d->labels->firstWhere('language_id', 2)?->label,
-              ])->values()->all(),
-          ])->values()->all();
+        // Cache domain groups too — rarely changes.
+        $domainGroups = cache()->remember('lexicon_domain_groups', now()->addHours(24), function () {
+            return DesignationGroup::with([
+                'designations' => fn ($q) => $q->orderBy('sort_order')
+                                               ->with(['labels' => fn ($q) => $q->whereIn('language_id', [1, 2])]),
+                'labels'       => fn ($q) => $q->whereIn('language_id', [1, 2]),
+            ])->orderBy('sort_order')->get()
+              ->map(fn ($group) => [
+                  'slug'     => $group->slug,
+                  'label'    => $group->labels->firstWhere('language_id', 1)?->label
+                                    ?? ucwords(str_replace('-', ' ', $group->slug)),
+                  'label_zh' => $group->labels->firstWhere('language_id', 2)?->label,
+                  'domains'  => $group->designations->map(fn ($d) => [
+                      'slug'     => $d->slug,
+                      'label'    => $d->labels->firstWhere('language_id', 1)?->label
+                                        ?? ucwords(str_replace('-', ' ', $d->slug)),
+                      'label_zh' => $d->labels->firstWhere('language_id', 2)?->label,
+                  ])->values()->all(),
+              ])->values()->all();
+        });
 
         return view('lexicon-live', [
             'words'         => $words,
@@ -295,6 +296,74 @@ class ExploreController extends Controller
             'usageNote'       => $definitions[0]['usageNote'] ?? '',
             'formula'         => $definitions[0]['formula'] ?? '',
             'senseIds'        => $senses->pluck('id')->values()->all(),
+        ];
+    }
+
+    // ── Slim shape: lightweight version for search index ─────────────────────
+    // Contains only what's needed for: search matching, attribute filtering,
+    // and slim result card rendering. Full detail loads on click via show().
+
+    private function shapeWordObjectSlim(WordObject $word): ?array
+    {
+        $senses = $word->senses;
+
+        if ($senses->isEmpty()) {
+            return null;
+        }
+
+        $primary = $senses->first();
+
+        // ── Meta from primary sense ───────────────────────────────────────────
+
+        $registerDes = $primary->designations
+            ->first(fn ($d) => in_array($d->slug, self::REGISTER_SLUGS));
+        $dimensionDes = $primary->designations
+            ->filter(fn ($d) => in_array($d->slug, self::DIMENSION_SLUGS));
+
+        $register   = self::REGISTER_MAP[$registerDes?->slug ?? 'standard'] ?? 'neutral';
+        $dimensions = $dimensionDes
+            ->map(fn ($d) => self::DIMENSION_MAP[$d->slug] ?? $d->slug)
+            ->values()->all();
+
+        $channelSlug = $primary->channel?->slug ?? 'channel-balanced';
+        $channel     = self::CHANNEL_MAP[$channelSlug] ?? $channelSlug;
+
+        $tocflSlug  = $primary->tocflLevel?->slug;
+        $tocflShort = $tocflSlug ? (self::TOCFL_SLUG_MAP[$tocflSlug] ?? null) : null;
+        $tocflNum   = $tocflSlug ? (self::TOCFL_NUM_MAP[$tocflSlug]  ?? null) : null;
+
+        // ── Definitions: pos abbreviation + def only (no formula/usageNote) ──
+
+        $definitions = $senses->flatMap(fn ($s) => $s->definitions->map(fn ($d) => [
+            'pos' => $d->posLabel?->slug ?? '',
+            'def' => $d->definition_text,
+        ]))->values()->all();
+
+        // ── Pinyin: also build toneless version for search ──────────────────
+
+        $pinyin = $primary->pronunciation?->pronunciation_text ?? '';
+        $pinyinToneless = preg_replace('/[0-9]/', '', $pinyin);
+
+        // ── Domains: flat slug list for filter matching ─────────────────────
+
+        $allDomains = $senses->flatMap(fn ($s) => $s->domains->pluck('slug'))
+            ->unique()->values()->all();
+
+        return [
+            'smart_id'        => $word->smart_id,
+            'traditional'     => $word->traditional,
+            'simplified'      => $word->simplified ?? $word->traditional,
+            'pinyin'          => $pinyin,
+            'pinyinToneless'  => $pinyinToneless,
+            'definitions'     => $definitions,
+            'register'        => $register,
+            'connotation'     => $primary->connotation?->slug ?? 'neutral',
+            'channel'         => $channel,
+            'dimension'       => $dimensions,
+            'intensity'       => $primary->intensity ?? 2,
+            'tocfl'           => $tocflShort,
+            'level'           => $tocflNum,
+            'allDomains'      => $allDomains,
         ];
     }
 
@@ -710,6 +779,7 @@ class ExploreController extends Controller
             'uiPreferences'  => $user->ui_preferences ?? [],
             'savedWordIds'   => $user->savedWords()->pluck('word_object_id')->all(),
             'fluencyLevel'   => $user->fluency_level,
+            'shifuPersona'   => $user->shifu_persona ?? 'dragon',
             'savedExamples'  => $user->savedExamples()
                 ->select('id', 'word_sense_id', 'chinese_text', 'english_text', 'original_chinese_text', 'ai_verified', 'ai_feedback', 'source_type', 'assessed_level', 'assessed_mastery', 'mastery_guidance', 'created_at')
                 ->get(),

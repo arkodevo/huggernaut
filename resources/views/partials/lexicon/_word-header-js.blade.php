@@ -4,7 +4,11 @@ function toggleSecondaryChar(e, btn) {
   e.stopPropagation();
   const secondary = btn.dataset.secondary;
   if (!secondary) return;
-  const container = btn.closest('.card-hanzi');
+  // For slim cards, append to the char-wrap (beside the character); for enriched cards, use card-hanzi
+  const container = btn.closest('.slim-card-char-col')
+    ? btn.closest('.slim-card-char-col').querySelector('.slim-card-char-wrap')
+    : btn.closest('.card-hanzi');
+  if (!container) return;
   const existing = container.querySelector('.hanzi-secondary');
   if (existing) {
     existing.classList.add('leaving');

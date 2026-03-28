@@ -45,6 +45,11 @@
         <option value="added" {{ request('status') === 'added' ? 'selected' : '' }}>Added</option>
         <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
     </select>
+    <select name="source" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+        <option value="">All Sources</option>
+        <option value="search" {{ request('source') === 'search' ? 'selected' : '' }}>Search</option>
+        <option value="import" {{ request('source') === 'import' ? 'selected' : '' }}>Import</option>
+    </select>
     <input type="date" name="date_from" value="{{ request('date_from') }}" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" title="From">
     <input type="date" name="date_to" value="{{ request('date_to') }}" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm" title="To">
     <button type="submit" class="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-indigo-700">Filter</button>
@@ -70,6 +75,7 @@
                 <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Character</th>
                 <th class="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Occurrences</th>
                 <th class="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Searchers</th>
+                <th class="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Source</th>
                 <th class="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">First Seen</th>
                 <th class="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Last Seen</th>
@@ -91,6 +97,12 @@
                     <td class="px-4 py-3 text-center font-mono font-bold text-red-600">{{ $word->occurrences }}</td>
                     <td class="px-4 py-3 text-center text-gray-600">{{ $word->unique_searchers }}</td>
                     <td class="px-4 py-3 text-center">
+                        @php $sources = explode(',', $word->sources ?? 'search'); @endphp
+                        @foreach ($sources as $src)
+                            <span class="px-1.5 py-0.5 rounded text-xs font-medium {{ $src === 'import' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800' }}">{{ $src }}</span>
+                        @endforeach
+                    </td>
+                    <td class="px-4 py-3 text-center">
                         <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-800' }}">{{ $status }}</span>
                     </td>
                     <td class="px-4 py-3 text-gray-500">{{ \Carbon\Carbon::parse($word->first_seen)->diffForHumans() }}</td>
@@ -104,13 +116,18 @@
                                     @csrf
                                     <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Reject</button>
                                 </form>
+                            @elseif ($status === 'rejected')
+                                <form method="POST" action="{{ route('admin.not-found.unreject', $word->character) }}" class="inline">
+                                    @csrf
+                                    <button type="submit" class="text-amber-600 hover:text-amber-800 text-xs font-medium">Restore</button>
+                                </form>
                             @endif
                         </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-4 py-8 text-center text-gray-400">No missing words recorded yet.</td>
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-400">No missing words recorded yet.</td>
                 </tr>
             @endforelse
         </tbody>

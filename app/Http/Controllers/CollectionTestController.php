@@ -198,6 +198,13 @@ class CollectionTestController extends Controller
             . "- Keep feedback to 2-3 sentences maximum.\n\n"
             . "Respond ONLY in JSON (no markdown): { \"correct\": true/false, \"explanation\": \"your warm, precise feedback in English\" }";
 
+        // Inject persona overlay
+        $personaSlug = Auth::user()?->shifu_persona ?? 'dragon';
+        $persona = config("shifu-personas.{$personaSlug}");
+        if ($persona) {
+            $prompt .= "\n\nFEEDBACK STYLE PERSONA:\n" . $persona['prompt'];
+        }
+
         try {
             $response = Http::withHeaders([
                 'x-api-key'         => config('services.anthropic.key'),
