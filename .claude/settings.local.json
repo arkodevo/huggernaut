@@ -179,7 +179,9 @@
       "Bash(pandoc /Users/chuluoyi/Documents/華語/planning/流動_POS_Reference_Guide_v1.5.docx -t markdown)",
       "Bash(wc -l \"/Users/chuluoyi/Downloads/meta_ads_insights_20260401 \\(1\\).csv\")",
       "Bash(head -1 \"/Users/chuluoyi/Downloads/meta_ads_insights_20260401 \\(1\\).csv\")",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(pandoc \"/Users/chuluoyi/Documents/華語/planning/流動_POS_Reference_Guide_v2.0.docx\" -o /tmp/pos_guide_v2.md)",
+      "Read(//tmp/**)"
     ]
   }
 }
