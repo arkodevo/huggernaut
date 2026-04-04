@@ -9,8 +9,10 @@ use App\Models\PosLabel;
 use App\Models\WordObject;
 use App\Models\WordSense;
 use App\Models\WordSenseDefinition;
+use App\Models\WordSenseExample;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class WordSenseController extends Controller
@@ -108,6 +110,33 @@ class WordSenseController extends Controller
             ->with('success', 'Sense updated.');
     }
 
+    public function destroy(WordObject $word, WordSense $sense): RedirectResponse
+    {
+        abort_unless($sense->word_object_id === $word->id, 404);
+
+        DB::transaction(function () use ($sense) {
+            // Delete child rows before the sense itself
+            $sense->definitions()->delete();
+            $sense->examples()->delete();
+            DB::table('word_sense_designations')->where('word_sense_id', $sense->id)->delete();
+            DB::table('word_sense_domains')->where('word_sense_id', $sense->id)->delete();
+            DB::table('word_sense_pos')->where('word_sense_id', $sense->id)->delete();
+            DB::table('word_sense_collocations')->where('word_sense_id', $sense->id)->delete();
+            DB::table('word_sense_relations')
+                ->where('word_sense_id', $sense->id)
+                ->orWhere('related_sense_id', $sense->id)
+                ->delete();
+            $sense->delete();
+        });
+
+        // Bust lexicon caches so the deletion is reflected immediately
+        cache()->forget('lexicon_words');
+        cache()->forget('lexicon_words_slim');
+
+        return redirect()->route('admin.words.show', $word)
+            ->with('success', 'Sense deleted.');
+    }
+
     public function updateStatus(Request $request, WordSense $sense): RedirectResponse
     {
         $request->validate(['status' => ['required', 'in:draft,review,published']]);
@@ -136,6 +165,8 @@ class WordSenseController extends Controller
             'usage_note'        => ['nullable', 'string'],
             'learner_traps'     => ['nullable', 'string'],
             'status'            => ['required', 'in:draft,review,published'],
+            'alignment'         => ['nullable', 'in:full,partial,disputed'],
+            'source'            => ['nullable', 'in:tocfl,editorial'],
             'designations'      => ['nullable', 'array'],
             'designations.*'    => ['exists:designations,id'],
             'definitions'       => ['nullable', 'array'],
@@ -150,6 +181,7 @@ class WordSenseController extends Controller
             'pronunciation_id', 'channel_id', 'connotation_id', 'semantic_mode_id',
             'sensitivity_id', 'tocfl_level_id', 'hsk_level_id',
             'intensity', 'valency', 'formula', 'usage_note', 'learner_traps', 'status',
+            'alignment', 'source',
         ]));
 
         return [

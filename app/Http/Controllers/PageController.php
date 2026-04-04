@@ -20,4 +20,9 @@ class PageController extends Controller
     {
         return view('chinese-names');
     }
+
+    public function help(): View
+    {
+        return view('help');
+    }
 }

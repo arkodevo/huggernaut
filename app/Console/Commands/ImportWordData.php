@@ -119,6 +119,7 @@ class ImportWordData extends Command
             cache()->forget('lexicon_words');
             cache()->forget('lexicon_words_slim');
             cache()->forget('lexicon_domain_groups');
+            cache()->forget('word_index_slim');
 
             return 0;
         } catch (\Exception $e) {
@@ -263,8 +264,8 @@ class ImportWordData extends Command
         );
 
         // Resolve FKs
-        $channelId      = $this->designations[$s['channel']] ?? null;
-        $connotationId  = $this->designations[$s['connotation']] ?? null;
+        $channelId      = isset($s['channel'])     && $s['channel']     ? ($this->designations[$s['channel']]     ?? null) : null;
+        $connotationId  = isset($s['connotation']) && $s['connotation'] ? ($this->designations[$s['connotation']] ?? null) : null;
         $semanticModeId = isset($s['semantic_mode']) ? ($this->designations[$s['semantic_mode']] ?? null) : null;
         $sensitivityId  = isset($s['sensitivity']) ? ($this->designations[$s['sensitivity']] ?? null) : null;
         $tocflId        = isset($s['tocfl']) ? ($this->designations[$s['tocfl']] ?? null) : null;

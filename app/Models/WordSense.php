@@ -31,6 +31,8 @@ class WordSense extends Model
         'tocfl_level_id',
         'hsk_level_id',
         'status',
+        'source',
+        'alignment',
     ];
 
     // ── Parent ────────────────────────────────────────────────────────────────

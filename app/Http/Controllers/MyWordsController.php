@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\WordObject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class MyWordsController extends Controller
@@ -58,10 +59,22 @@ class MyWordsController extends Controller
                 'words'  => $c->wordObjects->map(fn ($wo) => $this->shapeWord($wo))->filter()->values(),
             ]);
 
+        // ── Learning progress (keyed by word_object_id) ────────────────────
+        $wordProgress = DB::table('user_word_progress')
+            ->where('user_id', $user->id)
+            ->get()
+            ->keyBy('word_object_id')
+            ->map(fn ($p) => [
+                'pinyin_passed'     => (bool) $p->pinyin_passed,
+                'definition_passed' => (bool) $p->definition_passed,
+                'usage_passed'      => (bool) $p->usage_passed,
+            ]);
+
         return view('my-words', [
-            'savedWords'  => $savedWords,
-            'collections' => $collections,
-            'authUser'    => (new ExploreController())->authUserPayload(),
+            'savedWords'    => $savedWords,
+            'collections'   => $collections,
+            'wordProgress'  => $wordProgress,
+            'authUser'      => (new ExploreController())->authUserPayload(),
         ]);
     }
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\SearchNotFound;
 use App\Models\UserSavedWord;
+use App\Models\Designation;
 use App\Models\WordObject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -162,6 +163,106 @@ class CollectionController extends Controller
             'already_in' => $alreadyIn,
             'not_found'  => $notFound,
             'total'      => $collection->wordObjects()->count(),
+        ]);
+    }
+
+    // ── BUILD: randomly add words from a TOCFL level ──────────────────────────
+
+    private const TOCFL_LEVEL_MAP = [
+        'novice1'  => 'tocfl-novice1',
+        'novice2'  => 'tocfl-novice2',
+        'entry'    => 'tocfl-entry',
+        'basic'    => 'tocfl-basic',
+        'advanced' => 'tocfl-advanced',
+        'high'     => 'tocfl-high',
+        'fluency'  => 'tocfl-fluency',
+    ];
+
+    public function build(Request $request, Collection $collection): JsonResponse
+    {
+        if ($collection->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'count'                  => ['required', 'integer', 'min:1', 'max:200'],
+            'tocfl_level'            => ['required', 'string', 'in:novice1,novice2,entry,basic,advanced,high,fluency'],
+            'exclusion_mode'         => ['required', 'string', 'in:all,selected'],
+            'excluded_collection_ids' => ['nullable', 'array'],
+            'excluded_collection_ids.*' => ['integer'],
+        ]);
+
+        // Resolve TOCFL level to designation ID
+        $slug = self::TOCFL_LEVEL_MAP[$data['tocfl_level']];
+        $levelDesignationId = Designation::where('slug', $slug)->value('id');
+
+        if (! $levelDesignationId) {
+            return response()->json(['error' => 'TOCFL level not found'], 422);
+        }
+
+        // Determine which collections to exclude from
+        if ($data['exclusion_mode'] === 'all') {
+            $excludedIds = Auth::user()->collections()->pluck('id')->all();
+        } else {
+            // Use selected collections, but verify ownership
+            $userCollectionIds = Auth::user()->collections()->pluck('id')->all();
+            $excludedIds = array_intersect($data['excluded_collection_ids'] ?? [], $userCollectionIds);
+        }
+
+        // Always exclude current collection (prevent duplicates within it)
+        if (! in_array($collection->id, $excludedIds)) {
+            $excludedIds[] = $collection->id;
+        }
+
+        // Count available words at this level (before random selection)
+        $availableQuery = DB::table('word_objects as wo')
+            ->join('word_senses as ws', 'ws.word_object_id', '=', 'wo.id')
+            ->where('ws.tocfl_level_id', $levelDesignationId)
+            ->where('ws.status', 'published');
+
+        if (! empty($excludedIds)) {
+            $availableQuery->whereNotIn('wo.id', function ($sub) use ($excludedIds) {
+                $sub->select('word_object_id')
+                    ->from('collection_word')
+                    ->whereIn('collection_id', $excludedIds);
+            });
+        }
+
+        // Get all eligible word IDs first, then randomize in PHP
+        $eligibleIds = (clone $availableQuery)
+            ->distinct()
+            ->select('wo.id')
+            ->pluck('id')
+            ->all();
+
+        $available = count($eligibleIds);
+
+        // Shuffle and take requested count
+        shuffle($eligibleIds);
+        $wordIds = array_slice($eligibleIds, 0, $data['count']);
+
+        // Attach to collection (same pattern as importWords)
+        $maxSort = $collection->wordObjects()->max('collection_word.sort_order') ?? 0;
+        $added = 0;
+
+        foreach ($wordIds as $woId) {
+            UserSavedWord::firstOrCreate(
+                ['user_id' => Auth::id(), 'word_object_id' => $woId],
+                ['saved_at' => now()]
+            );
+
+            $maxSort++;
+            $collection->wordObjects()->syncWithoutDetaching([
+                $woId => ['sort_order' => $maxSort, 'added_at' => now()],
+            ]);
+            $added++;
+        }
+
+        return response()->json([
+            'added'     => $added,
+            'requested' => $data['count'],
+            'available' => $available,
+            'total'     => $collection->wordObjects()->count(),
         ]);
     }
 

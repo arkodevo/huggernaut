@@ -23,7 +23,7 @@
 <footer class="site-footer">
   &copy; {{ date('Y') }} 流動 Living Lexicon
   <span class="site-footer-sep">&middot;</span>
-  <a href="mailto:support@livinglexicon.com">Help</a>
+  <a href="{{ route('help') }}">Help</a>
   <span class="site-footer-sep">&middot;</span>
   <a href="#">Privacy</a>
 </footer>

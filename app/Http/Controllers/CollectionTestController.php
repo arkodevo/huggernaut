@@ -7,10 +7,12 @@ use App\Models\Collection;
 use App\Models\CollectionTest;
 use App\Models\CollectionTestAnswer;
 use App\Models\ShifuEngagement;
+use App\Models\UserWordProgress;
 use App\Models\WordSense;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 
@@ -65,11 +67,24 @@ class CollectionTestController extends Controller
             ->filter()
             ->values();
 
+        // Load learning progress for words in this collection
+        $wordProgress = DB::table('user_word_progress')
+            ->where('user_id', Auth::id())
+            ->whereIn('word_object_id', $wordObjectIds)
+            ->get()
+            ->keyBy('word_object_id')
+            ->map(fn ($p) => [
+                'pinyin_passed'     => (bool) $p->pinyin_passed,
+                'definition_passed' => (bool) $p->definition_passed,
+                'usage_passed'      => (bool) $p->usage_passed,
+            ]);
+
         return view('collection-test', [
-            'collection'  => ['id' => $collection->id, 'name' => $collection->name],
-            'senses'      => $senses,
-            'distractors' => $distractors,
-            'authUser'    => (new ExploreController())->authUserPayload(),
+            'collection'    => ['id' => $collection->id, 'name' => $collection->name],
+            'senses'        => $senses,
+            'distractors'   => $distractors,
+            'wordProgress'  => $wordProgress,
+            'authUser'      => (new ExploreController())->authUserPayload(),
         ]);
     }
 
@@ -127,6 +142,16 @@ class CollectionTestController extends Controller
             'time_spent_ms'      => $data['time_spent_ms'] ?? null,
         ]);
 
+        // Track learning progress for usage tests immediately (AI-graded)
+        if ($test->test_mode === 'usage' && $data['is_correct'] && $data['score_tier'] === 'clean') {
+            $woId = WordSense::where('id', $data['word_sense_id'])->value('word_object_id');
+            if ($woId) {
+                UserWordProgress::safeUpsert(Auth::id(), $woId, [
+                    'usage_passed' => true, 'usage_passed_at' => now(),
+                ]);
+            }
+        }
+
         return response()->json(['answerId' => $answer->id]);
     }
 
@@ -142,6 +167,48 @@ class CollectionTestController extends Controller
             'assisted_count' => $answers->where('score_tier', 'assisted')->count(),
             'learning_count' => $answers->where('score_tier', 'learning')->count(),
             'completed_at'   => now(),
+        ]);
+
+        // ── Track learning progress ─────────────────────────────────────────
+        $progressColumn = match ($test->test_mode) {
+            'pinyin'     => 'pinyin_passed',
+            'definition' => 'definition_passed',
+            'usage'      => 'usage_passed',
+            default      => null,
+        };
+
+        if ($progressColumn) {
+            $timestampColumn = $progressColumn . '_at';
+
+            // Get word_object_ids where user got a "clean" correct answer
+            $passedWordObjectIds = $test->answers()
+                ->where('is_correct', true)
+                ->where('score_tier', 'clean')
+                ->join('word_senses', 'word_senses.id', '=', 'collection_test_answers.word_sense_id')
+                ->distinct()
+                ->pluck('word_senses.word_object_id');
+
+            foreach ($passedWordObjectIds as $woId) {
+                UserWordProgress::safeUpsert(Auth::id(), $woId, [
+                    $progressColumn => true, $timestampColumn => now(),
+                ]);
+            }
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    // ── API: mark word as learned (self-assessment) ───────────────────────────
+
+    public function markLearned(int $wordObjectId): JsonResponse
+    {
+        UserWordProgress::safeUpsert(Auth::id(), $wordObjectId, [
+            'pinyin_passed'        => true,
+            'definition_passed'    => true,
+            'usage_passed'         => true,
+            'pinyin_passed_at'     => now(),
+            'definition_passed_at' => now(),
+            'usage_passed_at'      => now(),
         ]);
 
         return response()->json(['ok' => true]);
@@ -321,9 +388,10 @@ class CollectionTestController extends Controller
         ])->values()->all();
 
         $shaped = [
-            'senseId'     => $sense->id,
-            'smartId'     => $wo->smart_id,
-            'traditional' => $wo->traditional,
+            'senseId'      => $sense->id,
+            'wordObjectId' => $wo->id,
+            'smartId'      => $wo->smart_id,
+            'traditional'  => $wo->traditional,
             'simplified'  => $wo->simplified ?? '',
             'pinyin'      => $sense->pronunciation?->pronunciation_text ?? '',
             'definitions' => $shapedDefs,

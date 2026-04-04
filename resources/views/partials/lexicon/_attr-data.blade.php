@@ -7,7 +7,7 @@ const ATTR_LABELS = {
   channel:     { 'spoken-only':['🦎','Spoken Only'], 'spoken-dominant':['🐍','Spoken Dominant'], fluid:['🦜','Fluid'], 'written-dominant':['🦚','Written Dominant'], 'written-only':['🐉','Written Only'] },
   dimension:   { abstract:['🐙','Abstract'], concrete:['🐢','Concrete'], internal:['🐟','Internal'], external:['🦂','External'], fluid:['🦀','Fluid'] },
   intensity:   { 1:['🌸','Faint'], 2:['🌼','Mild'], 3:['🪷','Moderate'], 4:['🌻','Strong'], 5:['🌺','Blazing'] },
-  tocfl:       { prep:['🌑','Prep'], entry:['🌒','Entry'], basic:['🌓','Basic'], intermediate:['🌔','Intermediate'], advanced:['🌕','Advanced'], high:['🌖','High'], fluency:['🌝','Fluency'] },
+  tocfl:       { novice1:['🌑','Novice 1'], novice2:['🌑','Novice 2'], entry:['🌒','Entry'], basic:['🌓','Basic'], advanced:['🌔','Advanced'], high:['🌕','High'], fluency:['🌝','Fluency'] },
 };
 
 function metaAttrLabel(cat, key) {
@@ -20,7 +20,7 @@ const ATTR_ZH = {
   channel:     { 'spoken-only':'純口語', 'spoken-dominant':'偏口語', fluid:'流動', 'written-dominant':'偏書面', 'written-only':'純書面' },
   dimension:   { abstract:'抽象', concrete:'具體', internal:'內在', external:'外在', fluid:'流動' },
   intensity:   { 1:'微', 2:'淡', 3:'中', 4:'濃', 5:'烈' },
-  tocfl:       { prep:'準備', entry:'入門', basic:'基礎', advanced:'高階', high:'精通', fluency:'流利' },
+  tocfl:       { novice1:'準備一', novice2:'準備二', entry:'入門', basic:'基礎', advanced:'進階', high:'高階', fluency:'流利' },
 };
 
 const ATTR_HEADER_ZH = {

@@ -17,6 +17,9 @@
 .card-pos:hover { background: rgba(98,64,200,0.13); border-color: rgba(98,64,200,0.35); }
 .card-pos[data-overridden] { border-style: dashed; }
 
+/* Alignment quality signal — appended inside POS chip */
+.pos-align-icon { font-size: 0.85rem; vertical-align: middle; margin-left: 3px; line-height: 1; }
+
 .card-definition {
   font-family: 'Cormorant Garamond', serif;
   font-size: var(--fs-defn, 1.5rem); font-weight: 300;

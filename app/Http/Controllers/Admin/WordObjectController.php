@@ -18,7 +18,7 @@ class WordObjectController extends Controller
 {
     // ── Filter keys used in both index() and export() ────────────────────────
 
-    private const FILTER_KEYS = ['q', 'status', 'tocfl_level', 'hsk_level', 'pos', 'register', 'dimension', 'domain', 'secondary_domain'];
+    private const FILTER_KEYS = ['q', 'status', 'alignment', 'source', 'tocfl_level', 'hsk_level', 'pos', 'register', 'dimension', 'domain', 'secondary_domain'];
 
     // ── Index ─────────────────────────────────────────────────────────────────
 
@@ -74,8 +74,34 @@ class WordObjectController extends Controller
         $query = $this->baseQuery();
         $this->applyFilters($query, $request);
 
+        // Order by primary pronunciation text (pinyin) alphabetically.
+        $query->leftJoinSub(
+            \DB::table('word_pronunciations')
+                ->where('is_primary', true)
+                ->select('word_object_id', 'pronunciation_text'),
+            'primary_pron',
+            'primary_pron.word_object_id', '=', 'word_objects.id'
+        )->orderBy('primary_pron.pronunciation_text');
+
         // For export we don't paginate — stream all matching rows.
         $words = $query->get();
+
+        // Extra eager-loads only needed for export (kept out of baseQuery to keep index fast).
+        $words->load([
+            'senses.channel',
+            'senses.connotation',
+            'senses.domains',
+            'senses.designations.attribute',  // register, dimension (multi-select)
+            'senses.examples' => fn ($q) => $q->where('is_suppressed', false)->orderBy('id'),
+        ]);
+
+        // Pre-load Traditional Chinese definitions (language_id=2) keyed by sense ID.
+        $senseIds = $words->flatMap(fn ($w) => $w->senses->pluck('id'));
+        $zhDefs = \App\Models\WordSenseDefinition::where('language_id', 2)
+            ->whereIn('word_sense_id', $senseIds)
+            ->orderBy('sort_order')
+            ->get()
+            ->groupBy('word_sense_id');
 
         $filename = 'liudong-export-' . now()->format('Ymd-His') . '.csv';
 
@@ -104,19 +130,54 @@ class WordObjectController extends Controller
             // by_sense — one row per word_sense
             fputcsv($output, [
                 'Traditional', 'Simplified', 'Pinyin',
-                'POS', 'Definition', 'TOCFL Level', 'HSK Level', 'Status',
+                'POS', 'Definition (EN)', 'Definition (ZH)',
+                'TOCFL Level', 'HSK Level',
+                'Register', 'Connotation', 'Channel', 'Intensity', 'Dimension',
+                'Domain (Primary)', 'Domain (Secondary)',
+                'Example 1 (ZH)', 'Example 1 (EN)',
+                'Example 2 (ZH)', 'Example 2 (EN)',
+                'Status',
             ]);
             foreach ($words as $word) {
                 foreach ($word->senses as $sense) {
-                    $def = $sense->definitions->first();
+                    $def   = $sense->definitions->first();
+                    $defZh = $zhDefs->get($sense->id)?->first();
+
+                    // Multi-select: register + dimension (via designations pivot, grouped by attribute slug)
+                    $byAttr = $sense->designations->groupBy(fn ($d) => $d->attribute?->slug ?? '');
+                    $register  = $byAttr->get('register',  collect())->pluck('slug')->implode(', ');
+                    $dimension = $byAttr->get('dimension',  collect())->pluck('slug')->implode(', ');
+
+                    // Domains
+                    $primaryDomain    = $sense->domains->firstWhere('pivot.is_primary', true)?->slug ?? '';
+                    $secondaryDomains = $sense->domains->filter(fn ($d) => !$d->pivot->is_primary)
+                                              ->pluck('slug')->implode(', ');
+
+                    // Examples (up to 2)
+                    $exs  = $sense->examples->values();
+                    $ex1  = $exs->get(0);
+                    $ex2  = $exs->get(1);
+
                     fputcsv($output, [
                         $word->traditional,
                         $word->simplified ?? '',
                         $sense->pronunciation?->pronunciation_text ?? '',
                         $def?->posLabel?->slug ?? '',
                         $def?->definition_text ?? '',
+                        $defZh?->definition_text ?? '',
                         $sense->tocflLevel?->labels->first()?->label ?? '',
                         $sense->hskLevel?->labels->first()?->label ?? '',
+                        $register,
+                        $sense->connotation?->slug ?? '',
+                        $sense->channel?->slug ?? '',
+                        $sense->intensity ?? '',
+                        $dimension,
+                        $primaryDomain,
+                        $secondaryDomains,
+                        $ex1?->chinese_text ?? '',
+                        $ex1?->english_text ?? '',
+                        $ex2?->chinese_text ?? '',
+                        $ex2?->english_text ?? '',
                         $word->status,
                     ]);
                 }
@@ -150,6 +211,19 @@ class WordObjectController extends Controller
     {
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('alignment')) {
+            $val = $request->alignment;
+            if ($val === 'none') {
+                $query->whereNull('alignment');
+            } else {
+                $query->where('alignment', $val);
+            }
+        }
+
+        if ($request->filled('source')) {
+            $query->whereHas('senses', fn ($s) => $s->where('source', $request->source));
         }
 
         if ($request->filled('tocfl_level')) {
@@ -194,15 +268,31 @@ class WordObjectController extends Controller
         }
 
         if ($request->filled('q')) {
-            $q = $request->q;
-            $query->where(function ($sub) use ($q) {
-                $sub->where('traditional', 'like', "%{$q}%")
-                    ->orWhere('simplified', 'like', "%{$q}%")
-                    ->orWhereHas('senses.definitions', fn ($d) => $d
-                        ->where('language_id', 1)
-                        ->whereRaw('definition_text ~* ?', ['\\y' . preg_quote($q, '/') . '\\y'])
-                    );
-            });
+            $raw = $request->q;
+            // Support comma-separated or space-separated multi-word search
+            // Use unicode-aware split to avoid breaking multi-byte characters
+            $terms = preg_split('/[,，、\s]+/u', $raw);
+            $terms = array_filter(array_map('trim', $terms));
+
+            if (count($terms) === 1) {
+                $q = $terms[0];
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('traditional', 'like', "%{$q}%")
+                        ->orWhere('simplified', 'like', "%{$q}%")
+                        ->orWhereHas('senses.definitions', fn ($d) => $d
+                            ->where('language_id', 1)
+                            ->whereRaw('definition_text ~* ?', ['\\y' . preg_quote($q, '/') . '\\y'])
+                        );
+                });
+            } else {
+                // Multi-term: exact match on traditional/simplified for each term
+                $query->where(function ($sub) use ($terms) {
+                    foreach ($terms as $t) {
+                        $sub->orWhere('traditional', $t)
+                            ->orWhere('simplified', $t);
+                    }
+                });
+            }
         }
     }
 

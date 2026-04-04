@@ -58,6 +58,30 @@
                 </select>
             </div>
         </div>
+
+        <div class="grid grid-cols-2 gap-4 mt-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Alignment</label>
+                <select name="alignment"
+                        class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <option value="">— Unset</option>
+                    @foreach (['full' => '🤓 Full', 'partial' => '🤨 Partial', 'disputed' => '😵‍💫 Disputed'] as $val => $label)
+                        <option value="{{ $val }}" {{ $v('alignment') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                <select name="source"
+                        class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <option value="">— Unset</option>
+                    @foreach (['tocfl' => 'TOCFL', 'editorial' => 'Editorial'] as $val => $label)
+                        <option value="{{ $val }}" {{ $v('source') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
     </div>
 
     {{-- ── Spectrum designations (single-select) ────────────────────── --}}

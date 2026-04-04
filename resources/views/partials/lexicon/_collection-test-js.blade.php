@@ -87,8 +87,10 @@ function ctSetup() {
   if (!app) return;
 
   let html = '<div class="ct-setup">';
+  // Count unique words (not senses)
+  const uniqueWordCount = new Set(CT_SENSES.map(s => s.wordObjectId)).size;
   html += `<div class="ct-collection-name">${ctEsc(CT_COLLECTION.name)}</div>`;
-  html += `<div class="ct-collection-count">${CT_SENSES.length} word${CT_SENSES.length !== 1 ? 's' : ''}</div>`;
+  html += `<div class="ct-collection-count">${uniqueWordCount} word${uniqueWordCount !== 1 ? 's' : ''}</div>`;
   html += '<div class="ct-setup-question">What would you like to be tested on?</div>';
 
   // Mode list
@@ -110,6 +112,17 @@ function ctSetup() {
 
   // Description area (shown when a mode is selected)
   html += '<div id="ctModeDesc" class="ct-mode-desc" style="display:none;"></div>';
+
+  // Word status filter
+  const statusCounts = ctCountByStatus();
+  html += '<div style="margin:0.6rem 0;font-family:\'DM Mono\',monospace;font-size:0.68rem;color:var(--dim)">';
+  html += '<div style="margin-bottom:0.3rem;letter-spacing:0.05em">Include:</div>';
+  html += '<div style="display:flex;gap:0.75rem;flex-wrap:wrap">';
+  html += `<label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="checkbox" class="ct-status-filter" value="0" checked> 🟥 <span>${statusCounts[0]}</span></label>`;
+  html += `<label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="checkbox" class="ct-status-filter" value="1" checked> 🔶 <span>${statusCounts[1]}</span></label>`;
+  html += `<label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="checkbox" class="ct-status-filter" value="2" checked> 🟡 <span>${statusCounts[2]}</span></label>`;
+  html += `<label style="display:flex;align-items:center;gap:0.3rem;cursor:pointer"><input type="checkbox" class="ct-status-filter" value="3"> 💚 <span>${statusCounts[3]}</span></label>`;
+  html += '</div></div>';
 
   // Start button
   html += '<button class="ct-start-btn" id="ctStartBtn" disabled onclick="ctStartTest()">Start Test</button>';
@@ -161,9 +174,54 @@ function ctSelectAttr(slug) {
   if (startBtn) startBtn.disabled = false;
 }
 
+function ctIsWordLearned(wordObjectId) {
+  const p = (CT_WORD_PROGRESS || {})[wordObjectId];
+  return p && p.pinyin_passed && p.definition_passed && p.usage_passed;
+}
+
+function ctWordPassedCount(wordObjectId) {
+  const p = (CT_WORD_PROGRESS || {})[wordObjectId];
+  if (!p) return 0;
+  return (p.pinyin_passed ? 1 : 0) + (p.definition_passed ? 1 : 0) + (p.usage_passed ? 1 : 0);
+}
+
+function ctCountByStatus() {
+  // Returns { 0: count, 1: count, 2: count, 3: count }
+  const counts = { 0: 0, 1: 0, 2: 0, 3: 0 };
+  const seen = new Set();
+  CT_SENSES.forEach(s => {
+    if (seen.has(s.wordObjectId)) return;
+    seen.add(s.wordObjectId);
+    counts[ctWordPassedCount(s.wordObjectId)]++;
+  });
+  return counts;
+}
+
+function ctCountLearned() {
+  return ctCountByStatus()[3];
+}
+
 // ── START TEST ───────────────────────────────────────────────────────────────
 async function ctStartTest() {
-  ctState.senses = ctShuffle([...CT_SENSES]);
+  // Deduplicate: one sense per word_object (use first sense for each word)
+  const seen = new Set();
+  let pool = CT_SENSES.filter(s => {
+    if (seen.has(s.wordObjectId)) return false;
+    seen.add(s.wordObjectId);
+    return true;
+  });
+
+  // Filter by selected status levels
+  const includedStatuses = new Set();
+  document.querySelectorAll('.ct-status-filter:checked').forEach(cb => {
+    includedStatuses.add(parseInt(cb.value));
+  });
+  pool = pool.filter(s => includedStatuses.has(ctWordPassedCount(s.wordObjectId)));
+  if (pool.length === 0) {
+    alert('No words match your selection. Adjust the filters and try again.');
+    return;
+  }
+  ctState.senses = ctShuffle(pool);
   ctState.currentIndex = 0;
   ctState.scores = { clean: 0, assisted: 0, learning: 0 };
   ctState.answers = [];
@@ -305,6 +363,12 @@ function ctRenderQuestion() {
   }
   html += '</div>';
 
+  // ── Quit + Learned buttons ──
+  html += '<div class="ct-secondary-nav" style="display:flex;gap:0.75rem;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--border)">';
+  html += `<button class="ct-quit-btn" onclick="ctQuitTest()" style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.05em;color:var(--dim);background:none;border:1px solid var(--border);border-radius:3px;padding:0.3rem 0.6rem;cursor:pointer">Quit Test</button>`;
+  html += `<button class="ct-learned-btn" onclick="ctMarkLearned()" style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.05em;color:var(--jade,#2a9d5c);background:none;border:1px solid var(--jade,#2a9d5c);border-radius:3px;padding:0.3rem 0.6rem;cursor:pointer">💚 Learned</button>`;
+  html += '</div>';
+
   html += '</div>';
 
   // ── HINT BLOCK (below question: definition, attributes, examples) ──
@@ -415,12 +479,33 @@ function ctGetPosOptions(sense) {
   return ctShuffle(options);
 }
 
+function ctCountSyllables(py) {
+  // Count syllables by counting tone numbers (digits) or vowel clusters for toneless
+  const digits = (py.match(/[1-5]/g) || []).length;
+  if (digits > 0) return digits;
+  // Fallback: count spaces + 1
+  return py.trim().split(/\s+/).length;
+}
+
 function ctGetPinyinOptions(sense) {
   const correct = sense.pinyin;
+  const correctSyllables = ctCountSyllables(correct);
+
+  // Filter distractors to match syllable count
   const wrongPool = CT_DISTRACTORS
-    .filter(d => d.pinyin && d.pinyin !== correct)
+    .filter(d => d.pinyin && d.pinyin !== correct && ctCountSyllables(d.pinyin) === correctSyllables)
     .map(d => d.pinyin);
-  const unique = [...new Set(wrongPool)];
+  let unique = [...new Set(wrongPool)];
+
+  // If not enough same-syllable distractors, relax to ±1 syllable
+  if (unique.length < 3) {
+    const relaxed = CT_DISTRACTORS
+      .filter(d => d.pinyin && d.pinyin !== correct
+        && Math.abs(ctCountSyllables(d.pinyin) - correctSyllables) <= 1)
+      .map(d => d.pinyin);
+    unique = [...new Set(relaxed)];
+  }
+
   const wrong = ctShuffle(unique).slice(0, 3);
   return ctShuffle([correct, ...wrong]);
 }
@@ -746,6 +831,58 @@ function ctBack() {
   if (ctState.currentIndex <= 0) return;
   ctState.currentIndex--;
   ctRenderReview();
+}
+
+function ctQuitTest() {
+  if (!confirm('Quit this test? Your progress so far will be saved.')) return;
+  // Complete the test with whatever we have so far
+  if (ctState.testId) {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    fetch('/api/collection-tests/' + ctState.testId + '/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+    }).then(() => {
+      window.location.href = '/my-words';
+    });
+  } else {
+    window.location.href = '/my-words';
+  }
+}
+
+function ctMarkLearned() {
+  const sense = ctState.senses[ctState.currentIndex];
+  if (!sense || !sense.wordObjectId) return;
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const btn = document.querySelector('.ct-learned-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '💚 Marking...'; }
+
+  // Mark all 3 tests as passed for this word
+  fetch('/api/word-progress/' + sense.wordObjectId + '/learned', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+  })
+  .then(r => r.json())
+  .then(data => {
+    // Update local progress
+    if (!CT_WORD_PROGRESS) window.CT_WORD_PROGRESS = {};
+    CT_WORD_PROGRESS[sense.wordObjectId] = {
+      pinyin_passed: true,
+      definition_passed: true,
+      usage_passed: true,
+    };
+    if (btn) {
+      btn.innerHTML = '💚 Learned!';
+      btn.style.background = '#2a9d5c';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#2a9d5c';
+    }
+    // Auto-advance after a moment
+    setTimeout(() => { ctNext(); }, 1200);
+  })
+  .catch(() => {
+    if (btn) { btn.disabled = false; btn.textContent = '💚 Learned'; }
+  });
 }
 
 function ctRenderReview() {

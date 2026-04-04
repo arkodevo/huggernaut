@@ -1,3 +1,4 @@
+@php use App\Helpers\PinyinHelper; @endphp
 @extends('admin.layout')
 @section('title', $word->traditional)
 
@@ -15,6 +16,15 @@
             @include('admin.partials.status-badge', ['status' => $word->status])
         </div>
         <p class="text-sm text-gray-500 mt-0.5 font-mono">{{ $word->smart_id }}</p>
+        @if ($word->alignment)
+            @php
+                $alignIcon  = ['full' => '💚', 'partial' => '🟡', 'disputed' => '🟥'][$word->alignment] ?? '';
+                $alignLabel = ['full' => 'Full alignment', 'partial' => 'Partial alignment', 'disputed' => 'Disputed'][$word->alignment] ?? $word->alignment;
+            @endphp
+            <span class="mt-1 inline-flex items-center gap-1 text-xs text-gray-500">
+                {{ $alignIcon }} {{ $alignLabel }}
+            </span>
+        @endif
     </div>
     <div class="flex gap-2">
         <a href="{{ route('admin.words.edit', $word) }}"
@@ -33,18 +43,34 @@
     <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
         <p class="text-xs text-gray-500 mb-1">Radical</p>
         <p class="text-sm font-medium text-gray-900">
-            {{ $word->radical->character }} — {{ $word->radical->meaning_en }}
+            {{ $word->radical?->character ?? '—' }}
+            @if($word->radical) — {{ $word->radical->meaning_en }} @endif
         </p>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
         <p class="text-xs text-gray-500 mb-1">Strokes</p>
         <p class="text-sm font-medium text-gray-900">
-            {{ $word->strokes_trad }}
+            {{ $word->strokes_trad ?? '—' }}
             @if ($word->strokes_simp && $word->strokes_simp !== $word->strokes_trad)
                 / {{ $word->strokes_simp }} (simp.)
             @endif
         </p>
     </div>
+    @if ($word->subtlex_rank)
+    <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+        <p class="text-xs text-gray-500 mb-1">Frequency <span class="text-gray-400">(SUBTLEX-CH)</span></p>
+        <p class="text-sm font-medium text-gray-900">
+            #{{ number_format($word->subtlex_rank) }}
+            <span class="text-xs text-gray-400 ml-1">{{ number_format($word->subtlex_ppm, 1) }}/M</span>
+        </p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+        <p class="text-xs text-gray-500 mb-1">Contextual Diversity</p>
+        <p class="text-sm font-medium text-gray-900">{{ $word->subtlex_cd }}%
+            <span class="text-xs text-gray-400 ml-1">of films/shows</span>
+        </p>
+    </div>
+    @endif
 </div>
 
 {{-- ── Pronunciations ──────────────────────────────────────────────────── --}}
@@ -60,7 +86,8 @@
             @foreach ($word->pronunciations as $pron)
                 <li class="flex items-center justify-between px-5 py-3">
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-mono font-medium text-gray-900">{{ $pron->pronunciation_text }}</span>
+                        <span class="text-sm font-medium text-gray-900">{{ PinyinHelper::toMarked($pron->pronunciation_text) }}</span>
+                        <span class="text-xs font-mono text-gray-400">{{ $pron->pronunciation_text }}</span>
                         <span class="text-xs text-gray-400">{{ $pron->pronunciationSystem->name }}</span>
                         @if ($pron->is_primary)
                             <span class="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">primary</span>
@@ -125,7 +152,10 @@
                 <li class="px-5 py-4">
                     <div class="flex items-start justify-between">
                         <div class="flex items-center gap-3">
-                            <span class="text-sm font-mono text-gray-500">{{ $sense->pronunciation->pronunciation_text ?? '—' }}</span>
+                            <span class="text-sm text-gray-700">{{ $sense->pronunciation ? PinyinHelper::toMarked($sense->pronunciation->pronunciation_text) : '—' }}</span>
+                            @if($sense->pronunciation)
+                                <span class="text-xs font-mono text-gray-400">{{ $sense->pronunciation->pronunciation_text }}</span>
+                            @endif
                             @include('admin.partials.status-badge', ['status' => $sense->status])
                             @if ($sense->tocflLevel)
                                 <span class="text-xs text-gray-400">TOCFL: {{ $sense->tocflLevel->labels->first()?->label ?? $sense->tocflLevel->slug }}</span>
@@ -134,8 +164,19 @@
                                 <span class="text-xs text-gray-400">HSK: {{ $sense->hskLevel->labels->first()?->label ?? $sense->hskLevel->slug }}</span>
                             @endif
                         </div>
-                        <a href="{{ route('admin.words.senses.edit', [$word, $sense]) }}"
-                           class="text-xs font-medium text-indigo-600 hover:text-indigo-800 shrink-0">Edit →</a>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <a href="{{ route('admin.words.senses.edit', [$word, $sense]) }}"
+                               class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Edit →</a>
+                            <form method="POST"
+                                  action="{{ route('admin.words.senses.destroy', [$word, $sense]) }}"
+                                  onsubmit="return confirm('Delete this sense ({{ $sense->pronunciation->pronunciation_text ?? '' }} · {{ $sense->definitions->first()?->posLabel?->slug ?? '?' }})?\n\nThis removes its definitions, examples, and all related data and cannot be undone.')">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                        class="text-xs text-red-400 hover:text-red-600 transition-colors">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
                     @if ($sense->definitions->isNotEmpty())

@@ -380,7 +380,7 @@ main {
   position: relative; z-index: 19;
 }
 .acc-panel.open {
-  max-height: 900px;
+  max-height: 1400px;
   border-bottom: 1px solid var(--border);
 }
 .acc-panel-inner {
@@ -819,6 +819,8 @@ main {
   border-radius: 2px;
   padding: 0.6rem 0.75rem;
   display: grid;
+  position: relative;
+  overflow: visible;
   grid-template-columns: auto 1fr;
   gap: 0 0.75rem;
   align-items: start;
@@ -898,7 +900,8 @@ main {
   color: #fff;
   background: var(--dim);
 }
-.slim-level-prep     { background: #8ca0b8; }
+.slim-level-novice1  { background: #8ca0b8; }
+.slim-level-novice2  { background: #8ca0b8; }
 .slim-level-entry    { background: #7b9a6d; }
 .slim-level-basic    { background: #b88c3f; }
 .slim-level-advanced { background: #b06030; }
@@ -989,7 +992,7 @@ main {
 /* Collection picker popover (SRP) */
 .card-hero-actions { position: relative; }
 .srp-cp {
-  position: absolute; top: 100%; left: 0; z-index: 200;
+  position: absolute; top: 100%; left: 0; z-index: 9999;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 3px; min-width: 200px; padding: 0.4rem 0;
   box-shadow: 0 8px 28px rgba(0,0,0,0.12);
@@ -1146,21 +1149,27 @@ main {
 
 @include('partials.lexicon._site-header')
 <div class="search-bar-wrap" style="text-align:center;padding:0.5rem 1rem;">
-  <div style="position:relative;display:inline-block;width:min(320px,calc(100vw - 3rem));">
-    <input
-      id="searchInput"
-      type="text"
-      placeholder="Search 流動…"
-      style="font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 2rem 0.4rem 0.8rem;border:1px solid rgba(0,0,0,0.15);border-radius:2px;width:100%;background:var(--surface);color:var(--text);outline:none;box-sizing:border-box;"
-      oninput="searchQuery=this.value;debouncedRender();"
-      onblur="logSearchFinal();"
-      onkeydown="if(event.key==='Enter'){logSearchFinal();}"
-    />
-    <button id="searchClear" onclick="var i=document.getElementById('searchInput');i.value='';searchQuery='';render();i.focus();"
-      style="display:none;position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--dim);font-size:0.85rem;cursor:pointer;padding:0 0.2rem;line-height:1;"
-      title="Clear search">&times;</button>
+  <div style="display:inline-flex;align-items:center;gap:0.4rem;width:min(420px,calc(100vw - 3rem));">
+    <div style="position:relative;flex:1;">
+      <input
+        id="searchInput"
+        type="text"
+        placeholder="Search 流動…"
+        style="font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 2rem 0.4rem 0.8rem;border:1px solid rgba(0,0,0,0.15);border-radius:2px;width:100%;background:var(--surface);color:var(--text);outline:none;box-sizing:border-box;"
+        onblur="logSearchFinal();"
+        onkeydown="if(event.key==='Enter'){triggerSearch();}"
+      />
+      <button id="searchClear" onclick="var i=document.getElementById('searchInput');i.value='';searchQuery='';render();i.focus();"
+        style="display:none;position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--dim);font-size:0.85rem;cursor:pointer;padding:0 0.2rem;line-height:1;"
+        title="Clear search">&times;</button>
+    </div>
+    <button id="searchBtn" onclick="triggerSearch();"
+      style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;padding:0.4rem 0.9rem;border:1px solid rgba(0,0,0,0.2);border-radius:2px;background:var(--accent);color:white;cursor:pointer;white-space:nowrap;transition:opacity 0.15s;flex-shrink:0;"
+      onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Search</button>
   </div>
-  <button id="analyzeBtn" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;padding:0.3rem 0.8rem;margin-top:0.4rem;border:1px solid var(--accent);border-radius:2px;background:transparent;color:var(--accent);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--accent)'" onclick="analyzeWithShifu()">Analyze with 師父</button>
+  <div style="margin-top:0.4rem;">
+    <button id="analyzeBtn" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;padding:0.3rem 0.8rem;border:1px solid var(--accent);border-radius:2px;background:transparent;color:var(--accent);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='var(--accent)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--accent)'" onclick="analyzeWithShifu()">Analyze with 師父</button>
+  </div>
 </div>
 
 <!-- SCENARIO PRESETS -->
@@ -1307,6 +1316,15 @@ main {
       </div>
 
       <div class="iface-group">
+        <div class="iface-group-label">Verb Presentation</div>
+        <div class="script-toggle" id="verbPresentationToggle">
+          <button class="script-btn active" id="btnVerbConsolidated" onclick="setVerbPresentation('consolidated')">Consolidated</button>
+          <button class="script-btn"        id="btnVerbIntricate"    onclick="setVerbPresentation('intricate')">Intricate 精細</button>
+        </div>
+        <div class="iface-hint">Consolidated collapses verb subtypes to transitive, intransitive, or separable. Intricate shows the full taxonomy: Vp, Vpt, Vs, Vst, Vsep…</div>
+      </div>
+
+      <div class="iface-group">
         <div class="iface-group-label">Language</div>
         <div class="script-toggle" id="langToggle">
           <button class="script-btn active" id="btnLangEn"   onclick="setLangMode('en')">English</button>
@@ -1335,6 +1353,15 @@ main {
       </div>
 
       <div class="iface-group">
+        <div class="iface-group-label">Pinyin Format</div>
+        <div class="script-toggle" id="pinyinDisplayToggle">
+          <button class="script-btn active" id="btnPinyinAccented" onclick="setPinyinDisplay('accented')">Diacritic biǎo</button>
+          <button class="script-btn"        id="btnPinyinNumeric"  onclick="setPinyinDisplay('numeric')">Numeric biao3</button>
+        </div>
+        <div class="iface-hint">Tone marks (biǎo) or numeric tones (biao3)</div>
+      </div>
+
+      <div class="iface-group">
         <div class="iface-group-label">Workshop</div>
         <div class="script-toggle" id="workshopToggle">
           <button class="script-btn"        id="btnWorkshopExpanded"  onclick="setWorkshopDefault('expanded')">Expanded</button>
@@ -1350,6 +1377,18 @@ main {
           <button class="script-btn"        id="btnTextVert"  onclick="setTextDir('vertical')">Vertical 直</button>
         </div>
         <div class="iface-hint">Chinese text flows left-to-right (horizontal) or top-to-bottom right-to-left (vertical)</div>
+      </div>
+
+      <div class="iface-group">
+        <div class="iface-group-label">POS Alignment</div>
+        <div style="display:flex;flex-direction:column;gap:0.3rem">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--dim);cursor:pointer">
+            <input type="checkbox" id="alignShowPartial" checked onchange="setAlignmentFilter()"> 🤨 Partial
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--dim);cursor:pointer">
+            <input type="checkbox" id="alignShowDisputed" checked onchange="setAlignmentFilter()"> 😵‍💫 Disputed
+          </label>
+        </div>
       </div>
 
       <div class="iface-group">
@@ -1481,7 +1520,8 @@ main {
     <div class="filter-row-preview" id="preview-tocfl"></div>
     <div class="filter-dropdown" id="drop-tocfl">
       <div class="dropdown-chips">
-        <div class="d-chip" data-group="tocfl" data-val="prep">🌑 準備 Prep</div>
+        <div class="d-chip" data-group="tocfl" data-val="novice1">🌑 準備一 Novice 1</div>
+        <div class="d-chip" data-group="tocfl" data-val="novice2">🌑 準備二 Novice 2</div>
         <div class="d-chip" data-group="tocfl" data-val="entry">🌒 入門 Entry</div>
         <div class="d-chip" data-group="tocfl" data-val="basic">🌓 基礎 Basic</div>
         <div class="d-chip" data-group="tocfl" data-val="intermediate">🌔 進階 Intermediate</div>
@@ -1513,8 +1553,7 @@ main {
       <select class="refine-select" id="posRefineSelect">
         <option value="">POS — all</option>
       </select>
-      {{-- Relatives filter hidden: relProximity not in slim search index --}}
-      <select class="refine-select" id="relRefineSelect" style="display:none">
+      <select class="refine-select" id="relRefineSelect">
         <option value="">Relatives — all</option>
         <option value="immediate">Immediate</option>
         <option value="close">Close</option>
@@ -1644,7 +1683,8 @@ const LABELS = {
   },
   tocfl: {
     groupLabel:   { en: 'TOCFL',        zh: '華測', icon: '🌙' },
-    prep:         { en: 'Preparatory',  zh: '準備', icon: '🌑' },
+    novice1:      { en: 'Novice 1',    zh: '準備一', icon: '🌑' },
+    novice2:      { en: 'Novice 2',    zh: '準備二', icon: '🌑' },
     entry:        { en: 'Entry',        zh: '入門', icon: '🌒' },
     basic:        { en: 'Basic',        zh: '基礎', icon: '🌓' },
     intermediate: { en: 'Intermediate', zh: '進階', icon: '🌔' },
@@ -1933,6 +1973,16 @@ function setPinyinMode(mode) {
   document.getElementById('cardContainer').classList.toggle('no-pinyin', mode === 'off');
 }
 
+function setPinyinDisplay(mode) {
+  pinyinDisplay = mode;
+  localStorage.setItem('pinyinDisplay', mode);
+  if (window.syncPref) syncPref('pinyinDisplay', mode);
+  document.getElementById('btnPinyinAccented').classList.toggle('active', mode === 'accented');
+  document.getElementById('btnPinyinNumeric').classList.toggle('active', mode === 'numeric');
+  updateTogglePill('pinyinDisplayToggle');
+  render();
+}
+
 function setScript(mode) {
   scriptMode = mode;
   localStorage.setItem('scriptMode', mode);
@@ -1944,6 +1994,37 @@ function setScript(mode) {
 }
 
 let posMode = localStorage.getItem('posMode') || 'abbr';
+let verbPresentation = localStorage.getItem('verbPresentation') || 'consolidated';
+let pinyinDisplay = localStorage.getItem('pinyinDisplay') || 'accented';
+
+// POS Alignment filter — stored in localStorage, shared across SRP and IWP
+let alignShowPartial = localStorage.getItem('alignShowPartial') !== 'false';
+let alignShowDisputed = localStorage.getItem('alignShowDisputed') !== 'false';
+
+function setAlignmentFilter() {
+  const partialEl = document.getElementById('alignShowPartial');
+  const disputedEl = document.getElementById('alignShowDisputed');
+  alignShowPartial = partialEl ? partialEl.checked : true;
+  alignShowDisputed = disputedEl ? disputedEl.checked : true;
+  localStorage.setItem('alignShowPartial', alignShowPartial);
+  localStorage.setItem('alignShowDisputed', alignShowDisputed);
+  if (window.syncPref) {
+    syncPref('alignShowPartial', alignShowPartial);
+    syncPref('alignShowDisputed', alignShowDisputed);
+  }
+  // Re-render search results if any
+  if (typeof runSearch === 'function' && document.getElementById('searchInput')?.value) {
+    runSearch();
+  }
+}
+
+// Check if a word should be shown based on alignment filter
+function alignmentVisible(alignment) {
+  if (!alignment || alignment === 'full') return true;
+  if (alignment === 'partial') return alignShowPartial;
+  if (alignment === 'disputed') return alignShowDisputed;
+  return true;
+}
 </script>
 @include('partials.lexicon._pos-data')
 <script>
@@ -1960,6 +2041,24 @@ function setPosMode(mode) {
     el.removeAttribute('data-overridden');
     el.textContent = posMode === 'abbr' ? el.dataset.abbr : el.dataset.full;
   });
+  render();
+}
+
+function setVerbPresentation(mode) {
+  verbPresentation = mode;
+  localStorage.setItem('verbPresentation', mode);
+  if (window.syncPref) syncPref('verbPresentation', mode);
+  document.getElementById('btnVerbConsolidated').classList.toggle('active', mode === 'consolidated');
+  document.getElementById('btnVerbIntricate').classList.toggle('active', mode === 'intricate');
+  updateTogglePill('verbPresentationToggle');
+  populatePosRefine();
+  render();
+}
+
+function triggerSearch() {
+  const input = document.getElementById('searchInput');
+  searchQuery = input ? input.value : '';
+  logSearchFinal();
   render();
 }
 
@@ -1998,6 +2097,11 @@ setLevel(currentLevel);
     document.getElementById('btnPosAbbr')?.classList.remove('active');
     document.getElementById('btnPosFull')?.classList.add('active');
   }
+  // Verb complexity
+  if (verbPresentation !== 'consolidated') {
+    document.getElementById('btnVerbConsolidated')?.classList.remove('active');
+    document.getElementById('btnVerbIntricate')?.classList.add('active');
+  }
   // Language
   if (langMode !== 'en') {
     document.getElementById('btnLangEn')?.classList.remove('active');
@@ -2019,6 +2123,16 @@ setLevel(currentLevel);
     document.getElementById('btnPinyinOff')?.classList.add('active');
     document.getElementById('cardContainer')?.classList.add('no-pinyin');
   }
+  // Pinyin format
+  if (pinyinDisplay !== 'accented') {
+    document.getElementById('btnPinyinAccented')?.classList.remove('active');
+    document.getElementById('btnPinyinNumeric')?.classList.add('active');
+  }
+  // POS Alignment filter
+  const alignPartialEl = document.getElementById('alignShowPartial');
+  const alignDisputedEl = document.getElementById('alignShowDisputed');
+  if (alignPartialEl) alignPartialEl.checked = alignShowPartial;
+  if (alignDisputedEl) alignDisputedEl.checked = alignShowDisputed;
   // Workshop
   if (workshopDefault !== 'collapsed') {
     document.getElementById('btnWorkshopCollapsed')?.classList.remove('active');
@@ -2031,7 +2145,7 @@ setLevel(currentLevel);
     document.getElementById('cardContainer')?.classList.add('vertical-mode');
   }
   // Update all toggle pills
-  ['scriptToggle','posToggle','langToggle','iconsToggle','pinyinToggle','workshopToggle','textDirToggle'].forEach(function(id) {
+  ['scriptToggle','posToggle','verbPresentationToggle','langToggle','iconsToggle','pinyinToggle','pinyinDisplayToggle','workshopToggle','textDirToggle'].forEach(function(id) {
     updateTogglePill(id);
   });
   // Note: rerenderLabels() is called later in INIT after state & DOMAIN_GROUPS are defined
@@ -2044,7 +2158,7 @@ const PREVIEW_ICONS = {
   dimension:   { abstract:'🐙', concrete:'🐢', internal:'🐟', external:'🦂', fluid:'🦀' },
   intensity:   { '1':'🌸', '2':'🌼', '3':'🪷', '4':'🌻', '5':'🌺' },
   hsk:         { '1':'🌰', '2':'🌱', '3':'🌿', '4':'🌳', '5':'🌲', '6':'🎋' },
-  tocfl:       { prep:'🌑', entry:'🌒', basic:'🌓', intermediate:'🌔', advanced:'🌕', fluency:'🌝' },
+  tocfl:       { novice1:'🌑', novice2:'🌑', entry:'🌒', basic:'🌓', advanced:'🌔', high:'🌕', fluency:'🌝' },
 };
 
 let openDropdown = null;
@@ -2055,7 +2169,7 @@ const PREVIEW_LABELS = {
   channel:     { 'spoken-only':'🦎 Spoken Only', 'spoken-dominant':'🐍 Spoken Dominant', fluid:'🦜 Fluid', 'written-dominant':'🦚 Written Dominant', 'written-only':'🐉 Written Only' },
   dimension:   { abstract:'🐙 Abstract', concrete:'🐢 Concrete', internal:'🐟 Internal', external:'🦂 External', fluid:'🦀 Fluid' },
   intensity:   { '1':'🌸 Faint', '2':'🌼 Mild', '3':'🪷 Moderate', '4':'🌻 Strong', '5':'🌺 Blazing' },
-  tocfl:       { prep:'🌑 Prep', entry:'🌒 Entry', basic:'🌓 Basic', intermediate:'🌔 Intermediate', advanced:'🌕 Advanced', high:'🌖 High', fluency:'🌝 Fluency' },
+  tocfl:       { novice1:'🌑 Novice 1', novice2:'🌑 Novice 2', entry:'🌒 Entry', basic:'🌓 Basic', advanced:'🌔 Advanced', high:'🌕 High', fluency:'🌝 Fluency' },
 };
 
 function updatePreview(group) {
@@ -2217,26 +2331,10 @@ WORDS.forEach(w => {
   });
 })();
 
-// Populate POS refine select from distinct POS values present in WORDS
-// (slim index sends POS slugs like Vpt, N, Adv instead of full names)
+// Wire up POS refine change listener
 (function() {
   const sel = document.getElementById('posRefineSelect');
   if (!sel) return;
-  // Build slug→full-name reverse map for display
-  const SLUG_TO_FULL = {};
-  Object.entries(POS_ABBR).forEach(([full, abbr]) => { SLUG_TO_FULL[abbr] = full; });
-  const slugOrder = Object.values(POS_ABBR);
-  const seen = new Set();
-  WORDS.forEach(w => (w.definitions || []).forEach(d => { if (d.pos) seen.add(d.pos); }));
-  [...seen]
-    .sort((a, b) => slugOrder.indexOf(a) - slugOrder.indexOf(b))
-    .forEach(slug => {
-      const opt = document.createElement('option');
-      opt.value = slug;
-      const fullName = SLUG_TO_FULL[slug] || slug;
-      opt.textContent = slug + ' — ' + (POS_RENAME[fullName] || fullName);
-      sel.appendChild(opt);
-    });
   sel.addEventListener('change', () => {
     posFilter = sel.value;
     sel.classList.toggle('active', !!posFilter);
@@ -2261,6 +2359,9 @@ WORDS.forEach(w => {
 let domainFilter = ''; // '' = all; domain slug = refine to that primary domain
 let posFilter    = ''; // '' = all; full POS name (e.g. 'Intransitive Verb')
 let relFilter    = ''; // '' = all; 'immediate' | 'close' | 'distant'
+
+// Populate POS refine select — MUST be after posFilter/relFilter/domainFilter declarations
+populatePosRefine();
 
 // ── STATE ──────────────────────────────────────────────────────────────────────
 let state = {
@@ -2426,6 +2527,8 @@ function wordMatchesSearch(w) {
 }
 
 function matchWord(w) {
+  // POS Alignment filter
+  if (!alignmentVisible(w.alignment)) return false;
   if (!wordMatchesSearch(w)) return false;
   // Register: if any selected, word must match one
   if (state.register.length && !state.register.includes(w.register)) return false;
@@ -2451,6 +2554,8 @@ function matchWord(w) {
   if (state.tocfl.length && !state.tocfl.includes(w.tocfl)) return false;
   // POS refine: match any definition with the selected POS (group-aware)
   if (posFilter && !(w.definitions || []).some(d => posMatchesFilter(d.pos, posFilter))) return false;
+  // Relative proximity refine: match if word has the selected proximity bucket
+  if (relFilter && !(w.relProximity || []).includes(relFilter)) return false;
   // Domain refine: matches any domain across all senses
   if (domainFilter && !(w.allDomains || []).includes(domainFilter)) return false;
   return true;
@@ -2664,10 +2769,12 @@ function srpShowCollectionPicker(wordKey, wordObjectId, anchorBtn) {
   popover.dataset.wordKey = wordKey;
   popover.innerHTML = html;
 
-  // Anchor to the card-hero-actions div
+  // Anchor to the card-hero-actions div, lift parent card above siblings
   const actionsDiv = anchorBtn ? anchorBtn.closest('.card-hero-actions') : null;
   if (actionsDiv) {
     actionsDiv.appendChild(popover);
+    const parentCard = anchorBtn.closest('.word-card--slim');
+    if (parentCard) parentCard.style.zIndex = '100';
   }
 
   // Click outside to dismiss
@@ -2683,7 +2790,11 @@ function srpShowCollectionPicker(wordKey, wordObjectId, anchorBtn) {
 
 function srpDismissCollectionPicker() {
   const el = document.getElementById('srpCollectionPicker');
-  if (el) el.remove();
+  if (el) {
+    const parentCard = el.closest('.word-card--slim');
+    if (parentCard) parentCard.style.zIndex = '';
+    el.remove();
+  }
   if (_srpCpDismissHandler) {
     document.removeEventListener('click', _srpCpDismissHandler);
     _srpCpDismissHandler = null;
@@ -2800,7 +2911,7 @@ function buildActiveTags() {
   const intIcons  = ['','🌸','🌼','🪷','🌻','🌺'];
   const intLabels = ['','微','淡','中','濃','烈'];
   state.intensity.forEach(v => items.push({ group:'intensity', val:v, html: `<span class="tag-icon">${intIcons[v]}</span>${intLabels[v]}` }));
-  const tocflLabels = { prep:'準備', entry:'入門', basic:'基礎', intermediate:'進階', advanced:'高階', high:'精通', fluency:'流利' };
+  const tocflLabels = { novice1:'準備一', novice2:'準備二', entry:'入門', basic:'基礎', advanced:'進階', high:'高階', fluency:'流利' };
   state.tocfl.forEach(v => items.push({ group:'tocfl', val:v, html: tocflLabels[v] || v }));
   return items.map(t => `<span class="active-filter-tag removable" data-group="${t.group}" data-val="${t.val}" title="Click to remove">${t.html}<span class="tag-remove">✕</span></span>`).join('');
 }
@@ -2891,11 +3002,11 @@ function renderSlimCard(w, opts = {}) {
   const defs = w.definitions || [];
   const defsHTML = defs.map(d => {
     if (!d.pos) return `<div class="sentence-card-def"><span class="sentence-card-def-text">${d.def}</span></div>`;
-    const abbr = d.pos;
-    const full = SLIM_POS_SLUG_TO_FULL[abbr] || abbr;
-    const fullDisplay = POS_RENAME[full] || full;
-    const zh = SLIM_POS_SLUG_TO_ZH[abbr] || fullDisplay;
-    return `<div class="sentence-card-def"><span class="card-pos" data-abbr="${abbr}" data-full="${fullDisplay}" data-zh="${zh}" data-state="abbr" title="Tap to cycle: abbr → EN → 中文" onclick="event.stopPropagation(); cyclePosChip(event, this)">${abbr}</span> <span class="sentence-card-def-text">${d.def}</span></div>`;
+    const abbr = posLabel(d.pos);
+    const fullDisplay = POS_RENAME[d.pos] || d.pos;
+    const zh = POS_ZH[d.pos] || fullDisplay;
+    const alignIcon = posAlignIcon(w.alignment);
+    return `<div class="sentence-card-def"><span class="card-pos" data-abbr="${abbr}" data-full="${fullDisplay}" data-zh="${zh}" data-state="abbr" title="Tap to cycle: abbr → EN → 中文" onclick="event.stopPropagation(); cyclePosChip(event, this)">${abbr}${alignIcon ? '<span class="pos-align-icon">' + alignIcon + '</span>' : ''}</span> <span class="sentence-card-def-text">${d.def}</span></div>`;
   }).join('');
 
   // Level badge
@@ -2906,8 +3017,17 @@ function renderSlimCard(w, opts = {}) {
     ? `<button class="slim-script-toggle" data-secondary="${altChar}" onclick="event.stopPropagation(); toggleSecondaryChar(event,this)" title="Reveal ${scriptMode === 'simplified' ? 'traditional' : 'simplified'}">⇌</button>`
     : '';
 
+  // Star + Share buttons (only for authenticated users)
+  const isSaved = window.__AUTH && (window.__AUTH.savedWordIds || []).includes(w.wordObjectId);
+  const heroActions = window.__AUTH
+    ? `<div class="card-hero-actions">
+        <button class="card-action-btn${isSaved ? ' saved' : ''}" onclick="event.stopPropagation(); handleSaveToCollection(event, '${smartId}')" title="${isSaved ? 'Saved' : 'Save'}">&#${isSaved ? '9733' : '9734'};</button>
+        <button class="card-action-btn" onclick="event.stopPropagation(); handleShare(event, '${smartId}')" title="Share">&nearr;</button>
+      </div>`
+    : '';
+
   return `
-  <div class="word-card word-card--slim" style="${opts.delay ? 'animation-delay:' + (opts.delay * 0.02) + 's;' : ''} cursor:pointer;"
+  <div class="word-card word-card--slim" id="card-${smartId}" style="${opts.delay ? 'animation-delay:' + (opts.delay * 0.02) + 's;' : ''} cursor:pointer;"
        onclick="${clickHandler}">
     <div class="slim-card-char-col">
       <div class="slim-card-char-wrap">
@@ -2917,7 +3037,8 @@ function renderSlimCard(w, opts = {}) {
     </div>
     <div class="slim-card-body">
       ${defsHTML}
-      <div class="slim-card-pinyin"><span class="pinyin">${w.pinyin || ''}</span> ${levelBadge}</div>
+      <div class="slim-card-pinyin"><span class="pinyin">${formatPinyin(w.pinyin)}</span> ${levelBadge}</div>
+      ${heroActions}
     </div>
   </div>`;
 }
@@ -3087,10 +3208,10 @@ function syncUI() {
 // ── SCENARIOS ─────────────────────────────────────────────────────────────────
 // ── SCENARIO SYSTEM (merged presets + custom saved) ──────────────────────────
 const BUILT_IN_SCENARIOS = {
-  beginner:   { register: ['colloquial'], connotation: ['positive'], channel: ['spoken'],  dimension: [], intensity: [], tocfl: ['prep'] },
+  beginner:   { register: ['colloquial'], connotation: ['positive'], channel: ['spoken'],  dimension: [], intensity: [], tocfl: ['novice1','novice2'] },
   classicist: { register: ['literary'],   connotation: ['negative'], channel: ['written'], dimension: [], intensity: ['3','4','5'], hsk: [],             tocfl: ['advanced','fluency'] },
   essay:      { register: ['formal'],     connotation: [],           channel: ['written'], dimension: [], intensity: [], tocfl: ['basic'] },
-  exchange:   { register: ['colloquial'], connotation: ['neutral'],  channel: ['spoken'],  dimension: [], intensity: [],          hsk: [],               tocfl: ['prep','entry','basic'] },
+  exchange:   { register: ['colloquial'], connotation: ['neutral'],  channel: ['spoken'],  dimension: [], intensity: [],          hsk: [],               tocfl: ['novice1','novice2','entry','basic'] },
   literature: { register: ['literary'],   connotation: [],           channel: ['written'], dimension: [], intensity: ['3','4','5'], hsk: [],             tocfl: ['advanced','fluency'] },
   business:   { register: ['formal'],     connotation: ['positive'], channel: ['spoken'],  dimension: [], intensity: ['2','3','4','5'], tocfl: [] },
   creative:   { register: ['literary'],   connotation: [],           channel: ['both'],    dimension: [], intensity: [],          tocfl: [] },
@@ -3245,7 +3366,7 @@ document.getElementById('btnTextHoriz').classList.toggle('active', textDir === '
 document.getElementById('btnTextVert').classList.toggle('active', textDir === 'vertical');
 if (textDir === 'vertical') document.getElementById('cardContainer').classList.add('vertical-mode');
 // Initialise all sliding pills (no transition on first paint — just snap into position)
-['scriptToggle','posToggle','langToggle','iconsToggle','pinyinToggle','workshopToggle','textDirToggle'].forEach(updateTogglePill);
+['scriptToggle','posToggle','verbPresentationToggle','langToggle','iconsToggle','pinyinToggle','pinyinDisplayToggle','workshopToggle','textDirToggle'].forEach(updateTogglePill);
 if (INITIAL_SEARCH) {
   const si = document.getElementById('searchInput');
   if (si) si.value = INITIAL_SEARCH;

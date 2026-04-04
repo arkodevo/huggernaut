@@ -112,6 +112,13 @@ class User extends Authenticatable
         return $this->hasMany(UserSavedExample::class);
     }
 
+    // ── Learning progress ────────────────────────────────────────────────────
+
+    public function wordProgress(): HasMany
+    {
+        return $this->hasMany(UserWordProgress::class);
+    }
+
     // ── Collections ───────────────────────────────────────────────────────────
 
     public function collections(): HasMany

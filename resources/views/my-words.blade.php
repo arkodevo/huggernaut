@@ -98,6 +98,106 @@ body.vertical-mode .mw-hanzi {
 }
 .mw-remove:hover { color: #c44; }
 
+/* ── MY WORDS COLLECTION PICKER ── */
+.mw-entry-wrap { position: relative; }
+.mw-cp {
+  position: absolute; top: 100%; right: 0; z-index: 9999;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; min-width: 200px; padding: 0.4rem 0;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  animation: mwCpIn 0.15s ease;
+}
+@keyframes mwCpIn { from { opacity: 0; transform: translateY(-4px); } }
+.mw-cp-title {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--dim); padding: 0.3rem 0.6rem 0.2rem;
+}
+.mw-cp-item {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.25rem 0.6rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: var(--ink);
+}
+.mw-cp-item:hover { background: rgba(98,64,200,0.06); }
+.mw-cp-new {
+  display: flex; gap: 0.3rem; padding: 0.3rem 0.5rem;
+  border-top: 1px solid var(--border); margin-top: 0.2rem;
+}
+.mw-cp-new input {
+  flex: 1; font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.2rem 0.4rem; background: var(--bg); color: var(--ink);
+}
+.mw-cp-new button {
+  font-family: 'DM Mono', monospace; font-size: 0.85rem;
+  background: none; border: 1px solid var(--border); border-radius: 2px;
+  color: var(--accent); cursor: pointer; padding: 0 0.4rem;
+}
+
+/* ── LEARNING STATUS ── */
+.mw-status { font-size: 0.7rem; cursor: help; flex-shrink: 0; }
+.mw-pinyin-row { display: flex; align-items: center; gap: 0.3rem; }
+.mw-pinyin-row .mw-pinyin { flex: 1; }
+.mw-pinyin-row .mw-status { margin-left: auto; }
+
+/* ── PROGRESS BAR ── */
+.mw-progress-wrap {
+  padding: 0.4rem 0 0.6rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.mw-progress-bar {
+  flex: 1; height: 6px; border-radius: 3px;
+  background: linear-gradient(to right, #e74c3c, #f1c40f, #2ecc71);
+  overflow: hidden; position: relative;
+}
+.mw-progress-cover {
+  position: absolute; top: 0; right: 0; height: 100%;
+  background: #d5d5d8;
+  z-index: 1;
+  transition: width 0.4s ease;
+}
+.mw-progress-label {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  color: var(--dim); letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* ── BUILD PANEL ── */
+.mw-build-row {
+  display: flex; gap: 0.5rem; align-items: center;
+  flex-wrap: wrap; margin-bottom: 0.4rem;
+}
+.mw-build-row label {
+  font-family: 'Cormorant Garamond', serif; font-size: 0.85rem;
+  color: var(--dim);
+}
+.mw-build-input, .mw-build-select {
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border); border-radius: 2px;
+  background: var(--bg); color: var(--ink);
+}
+.mw-build-input { width: 60px; }
+.mw-build-radio {
+  display: flex; flex-direction: column; gap: 0.3rem;
+  margin: 0.3rem 0;
+}
+.mw-build-radio label {
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  color: var(--dim); display: flex; align-items: center; gap: 0.3rem;
+  cursor: pointer;
+}
+.mw-build-checks {
+  display: flex; flex-direction: column; gap: 0.2rem;
+  padding-left: 1.2rem; margin-bottom: 0.4rem;
+}
+.mw-build-checks label {
+  font-family: 'DM Mono', monospace; font-size: 0.65rem;
+  color: var(--dim); display: flex; align-items: center; gap: 0.3rem;
+  cursor: pointer;
+}
+
 /* ── EMPTY STATE ── */
 .mw-empty {
   font-family: 'DM Mono', monospace; font-size: 0.75rem;
@@ -156,6 +256,7 @@ body.vertical-mode .mw-hanzi {
   window.__AUTH = @json($authUser);
   var MW_SAVED = @json($savedWords);
   var MW_COLLECTIONS = @json($collections);
+  var MW_PROGRESS = @json($wordProgress);
 </script>
 
 @include('partials.lexicon._site-header', ['backUrl' => route('lexicon.index'), 'backLabel' => 'Lexicon'])
@@ -188,11 +289,14 @@ function mwRender() {
     return categorizedIds.indexOf(s.wordObjectId) === -1;
   });
 
-  // ── Open All / Close All ──
+  // ── Open All / Close All + New Collection ──
   html += '<div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-bottom:0.5rem">';
+  html += '<button class="mw-action-btn" style="color:var(--accent)" onclick="mwNewCollection()">+ New Collection</button>';
+  html += '<span style="flex:1"></span>';
   html += '<button class="mw-action-btn" style="color:var(--accent)" onclick="mwExpandAll()">Open All</button>';
   html += '<button class="mw-action-btn" onclick="mwCollapseAll()">Close All</button>';
   html += '</div>';
+  html += '<div id="mwNewCollForm"></div>';
 
   // ── 1. Uncategorized (accordion, open by default) ──
   var uncatOpen = _accordionState['uncat'] !== undefined ? _accordionState['uncat'] : (localStorage.getItem('mw_accordion_uncat') !== 'false');
@@ -234,8 +338,24 @@ function mwRender() {
     }
     html += '<button class="mw-action-btn" onclick="event.stopPropagation();mwRenameCollection(' + c.id + ')">Rename</button>';
     html += '<button class="mw-action-btn" onclick="event.stopPropagation();mwImportCollection(' + c.id + ')">Import</button>';
-    html += '<button class="mw-action-btn danger" onclick="mwDeleteCollection(' + c.id + ')">Delete</button>';
+    html += '<button class="mw-action-btn" onclick="event.stopPropagation();mwBuildCollection(' + c.id + ')">Build</button>';
+    html += '<button class="mw-action-btn danger" onclick="event.stopPropagation();mwDeleteCollection(' + c.id + ')">Delete</button>';
     html += '</div>';
+
+    // ── Progress bar ──
+    if (c.words.length > 0) {
+      var learned = 0;
+      c.words.forEach(function(w) {
+        var p = MW_PROGRESS[w.wordObjectId];
+        if (p && p.pinyin_passed && p.definition_passed && p.usage_passed) learned++;
+      });
+      var pct = Math.round((learned / c.words.length) * 100);
+      var coverPct = 100 - pct;
+      html += '<div class="mw-progress-wrap">';
+      html += '<div class="mw-progress-bar"><div class="mw-progress-cover" style="width:' + coverPct + '%"></div></div>';
+      html += '<span class="mw-progress-label">' + learned + '/' + c.words.length + ' learned</span>';
+      html += '</div>';
+    }
 
     if (c.words.length === 0) {
       html += '<div class="mw-empty">No words in this collection yet.</div>';
@@ -336,22 +456,37 @@ function mwCollapseAll() {
 }
 
 function mwEntryHTML(s) {
-  return '<a href="/lexicon/' + s.smartId + '" class="mw-entry">'
+  return '<div class="mw-entry-wrap" id="mwEntry-' + s.wordObjectId + '">'
+    + '<a href="/lexicon/' + s.smartId + '" class="mw-entry">'
     + '<span class="mw-hanzi">' + escHtml(s.traditional) + '</span>'
     + '<div class="mw-mid">'
     + '<span class="mw-pinyin">' + escHtml(s.pinyin) + '</span>'
     + '<span class="mw-def">' + escHtml(s.definition) + '</span>'
     + (s.domain ? '<span class="mw-domain-chip">' + escHtml(s.domain) + '</span>' : '')
     + '</div>'
-    + '<button class="mw-unsave" onclick="mwUnsave(event,' + s.wordObjectId + ')" title="Unsave">&#9733;</button>'
-    + '</a>';
+    + '<button class="mw-unsave" onclick="mwShowCollectionPicker(event,' + s.wordObjectId + ')" title="Manage collections">&#9733;</button>'
+    + '</a>'
+    + '</div>';
+}
+
+function mwLearningStatus(wordObjectId) {
+  var p = MW_PROGRESS[wordObjectId];
+  if (!p) return '<span class="mw-status" title="Not yet tested (0/3)">🟥</span>';
+  var passed = (p.pinyin_passed ? 1 : 0) + (p.definition_passed ? 1 : 0) + (p.usage_passed ? 1 : 0);
+  var details = (p.pinyin_passed ? '✓' : '✗') + ' Pinyin  '
+              + (p.definition_passed ? '✓' : '✗') + ' Definition  '
+              + (p.usage_passed ? '✓' : '✗') + ' Usage';
+  if (passed >= 3) return '<span class="mw-status" title="Learned! ' + details + '">💚</span>';
+  if (passed >= 2) return '<span class="mw-status" title="' + passed + '/3 — ' + details + '">🟡</span>';
+  if (passed >= 1) return '<span class="mw-status" title="' + passed + '/3 — ' + details + '">🔶</span>';
+  return '<span class="mw-status" title="0/3 — ' + details + '">🟥</span>';
 }
 
 function mwCollEntryHTML(s, collectionId) {
   return '<a href="/lexicon/' + s.smartId + '" class="mw-entry">'
     + '<span class="mw-hanzi">' + escHtml(s.traditional) + '</span>'
     + '<div class="mw-mid">'
-    + '<span class="mw-pinyin">' + escHtml(s.pinyin) + '</span>'
+    + '<div class="mw-pinyin-row"><span class="mw-pinyin">' + escHtml(s.pinyin) + '</span>' + mwLearningStatus(s.wordObjectId) + '</div>'
     + '<span class="mw-def">' + escHtml(s.definition) + '</span>'
     + (s.domain ? '<span class="mw-domain-chip">' + escHtml(s.domain) + '</span>' : '')
     + '</div>'
@@ -432,7 +567,25 @@ function mwDeleteCollection(collectionId) {
   var section = document.querySelector('[data-collection-id="' + collectionId + '"]');
   var body = section ? section.querySelector('.mw-section-body') : null;
   if (!body) return;
-  showDeleteConfirm(body, 'Delete this collection? Words stay in your library.', function() {
+  // Remove any existing confirm bar first
+  var existing = body.querySelector('.confirm-delete-bar');
+  if (existing) { existing.remove(); return; }
+  // Insert right after the actions bar
+  var actions = body.querySelector('.mw-section-actions');
+  var bar = document.createElement('div');
+  bar.className = 'confirm-delete-bar';
+  bar.innerHTML = '<span class="confirm-delete-msg">Delete this collection? Words stay in your library.</span>'
+    + '<button class="confirm-delete-yes">Delete</button>'
+    + '<button class="confirm-delete-no">Cancel</button>';
+  bar.onclick = function(e) { e.stopPropagation(); };
+  if (actions && actions.nextSibling) {
+    body.insertBefore(bar, actions.nextSibling);
+  } else {
+    body.insertBefore(bar, body.firstChild);
+  }
+  bar.querySelector('.confirm-delete-yes').onclick = function(e) { e.stopPropagation(); bar.remove(); doDelete(); };
+  bar.querySelector('.confirm-delete-no').onclick = function(e) { e.stopPropagation(); bar.remove(); };
+  function doDelete() {
     fetch('/api/collections/' + collectionId, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
@@ -440,7 +593,7 @@ function mwDeleteCollection(collectionId) {
       MW_COLLECTIONS = MW_COLLECTIONS.filter(function(c) { return c.id !== collectionId; });
       mwRender();
     });
-  });
+  }
 }
 
 // ── IMPORT WORDS INTO COLLECTION ─────────────────────────────────────────────
@@ -544,6 +697,292 @@ function mwDoImport(collectionId) {
   };
 
   reader.readAsText(file);
+}
+
+// ── MY WORDS COLLECTION PICKER ──────────────────────────────────────────────
+var _mwCpDismissHandler = null;
+
+function mwShowCollectionPicker(event, wordObjectId) {
+  event.preventDefault();
+  event.stopPropagation();
+  mwDismissCollectionPicker();
+
+  var wrap = document.getElementById('mwEntry-' + wordObjectId);
+  if (!wrap) return;
+
+  var html = '<div class="mw-cp-title">Manage collections</div>';
+
+  // Unsave option
+  html += '<label class="mw-cp-item" style="color:var(--dim);border-bottom:1px solid var(--border);padding-bottom:0.35rem;margin-bottom:0.15rem">'
+    + '<input type="checkbox" onchange="mwCpUnsave(this,' + wordObjectId + ')">'
+    + '<span>Unsave word</span></label>';
+
+  // Collection list
+  MW_COLLECTIONS.forEach(function(c) {
+    var inColl = c.words.some(function(w) { return w.wordObjectId === wordObjectId; });
+    html += '<label class="mw-cp-item">'
+      + '<input type="checkbox"' + (inColl ? ' checked' : '') + ' onchange="mwCpToggle(' + c.id + ',' + wordObjectId + ',this)">'
+      + '<span>' + escHtml(c.name) + '</span></label>';
+  });
+
+  // New collection
+  html += '<div class="mw-cp-new">'
+    + '<input type="text" id="mwCpNewInput-' + wordObjectId + '" placeholder="New collection…" '
+    + 'onkeydown="if(event.key===\'Enter\')mwCpCreate(' + wordObjectId + ')">'
+    + '<button onclick="mwCpCreate(' + wordObjectId + ')" title="Create">+</button>'
+    + '</div>';
+
+  var popover = document.createElement('div');
+  popover.className = 'mw-cp';
+  popover.id = 'mwCollectionPicker';
+  popover.innerHTML = html;
+  wrap.appendChild(popover);
+
+  setTimeout(function() {
+    _mwCpDismissHandler = function(e) {
+      if (!e.target.closest('.mw-cp') && !e.target.closest('.mw-unsave')) {
+        mwDismissCollectionPicker();
+      }
+    };
+    document.addEventListener('click', _mwCpDismissHandler);
+  }, 10);
+}
+
+function mwDismissCollectionPicker() {
+  var el = document.getElementById('mwCollectionPicker');
+  if (el) el.remove();
+  if (_mwCpDismissHandler) {
+    document.removeEventListener('click', _mwCpDismissHandler);
+    _mwCpDismissHandler = null;
+  }
+}
+
+function mwCpToggle(collectionId, wordObjectId, checkbox) {
+  var method = checkbox.checked ? 'POST' : 'DELETE';
+  fetch('/api/collections/' + collectionId + '/words/' + wordObjectId, {
+    method: method,
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+  }).then(function(r) { return r.json(); }).then(function() {
+    // Find the word data from MW_SAVED
+    var wordData = MW_SAVED.find(function(s) { return s.wordObjectId === wordObjectId; });
+    var c = MW_COLLECTIONS.find(function(c) { return c.id === collectionId; });
+    if (!c) return;
+
+    if (checkbox.checked && wordData) {
+      if (!c.words.some(function(w) { return w.wordObjectId === wordObjectId; })) {
+        c.words.push(wordData);
+      }
+    } else {
+      c.words = c.words.filter(function(w) { return w.wordObjectId !== wordObjectId; });
+    }
+    mwDismissCollectionPicker();
+    mwRender();
+  });
+}
+
+function mwCpUnsave(checkbox, wordObjectId) {
+  if (!checkbox.checked) return;
+  fetch('/api/saved-words/' + wordObjectId, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+  }).then(function(r) { return r.json(); }).then(function() {
+    MW_SAVED = MW_SAVED.filter(function(s) { return s.wordObjectId !== wordObjectId; });
+    MW_COLLECTIONS.forEach(function(c) {
+      c.words = c.words.filter(function(s) { return s.wordObjectId !== wordObjectId; });
+    });
+    mwDismissCollectionPicker();
+    mwRender();
+  });
+}
+
+function mwCpCreate(wordObjectId) {
+  var input = document.getElementById('mwCpNewInput-' + wordObjectId);
+  if (!input || !input.value.trim()) return;
+  var name = input.value.trim();
+  input.disabled = true;
+
+  fetch('/api/collections', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+    body: JSON.stringify({ name: name }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(collection) {
+    return fetch('/api/collections/' + collection.id + '/words/' + wordObjectId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+    }).then(function() { return collection; });
+  })
+  .then(function(collection) {
+    var wordData = MW_SAVED.find(function(s) { return s.wordObjectId === wordObjectId; });
+    MW_COLLECTIONS.push({ id: collection.id, name: collection.name, nameZh: collection.name_zh, words: wordData ? [wordData] : [] });
+    mwDismissCollectionPicker();
+    mwRender();
+  });
+}
+
+// ── NEW COLLECTION ──────────────────────────────────────────────────────────
+function mwNewCollection() {
+  var formDiv = document.getElementById('mwNewCollForm');
+  if (!formDiv) return;
+  // Toggle — if form already showing, remove it
+  if (formDiv.innerHTML.trim()) { formDiv.innerHTML = ''; return; }
+
+  formDiv.innerHTML = ''
+    + '<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem;padding:0.5rem 0.6rem;border:1px solid var(--border);border-radius:4px;background:var(--surface)">'
+    + '<input type="text" id="mwNewCollInput" class="mw-rename-input" placeholder="Collection name…" style="flex:1;text-transform:none" onkeydown="if(event.key===\'Enter\')mwDoCreateCollection()">'
+    + '<button onclick="mwDoCreateCollection()" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;padding:0.3rem 0.6rem;background:var(--accent);color:white;border:none;border-radius:2px;cursor:pointer">Create</button>'
+    + '<button onclick="document.getElementById(\'mwNewCollForm\').innerHTML=\'\'" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;padding:0.3rem 0.5rem;background:none;border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--dim)">Cancel</button>'
+    + '</div>';
+
+  var input = document.getElementById('mwNewCollInput');
+  if (input) input.focus();
+}
+
+function mwDoCreateCollection() {
+  var input = document.getElementById('mwNewCollInput');
+  if (!input) return;
+  var name = input.value.trim();
+  if (!name) return;
+  input.disabled = true;
+
+  fetch('/api/collections', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+    body: JSON.stringify({ name: name }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(collection) {
+    MW_COLLECTIONS.push({ id: collection.id, name: collection.name, nameZh: collection.name_zh, words: [] });
+    document.getElementById('mwNewCollForm').innerHTML = '';
+    mwRender();
+    // Auto-open the new collection accordion
+    var cKey = 'coll-' + collection.id;
+    _accordionState[cKey] = true;
+    localStorage.setItem('mw_accordion_' + cKey, 'true');
+    mwRender();
+  })
+  .catch(function() {
+    input.disabled = false;
+    input.style.borderColor = '#c44';
+  });
+}
+
+// ── BUILD COLLECTION ─────────────────────────────────────────────────────────
+function mwBuildCollection(collectionId) {
+  var section = document.querySelector('[data-collection-id="' + collectionId + '"]');
+  var body = section ? section.querySelector('.mw-section-body') : null;
+  if (!body) return;
+
+  var existing = body.querySelector('.mw-build-panel');
+  if (existing) { existing.remove(); return; }
+
+  // Build collection checklist (exclude current)
+  var collChecks = '';
+  MW_COLLECTIONS.forEach(function(c) {
+    if (c.id !== collectionId) {
+      collChecks += '<label><input type="checkbox" value="' + c.id + '" checked> ' + escHtml(c.name) + ' (' + c.words.length + ')</label>';
+    }
+  });
+
+  var panel = document.createElement('div');
+  panel.className = 'mw-build-panel';
+  panel.innerHTML = ''
+    + '<div style="border:1px solid var(--border);border-radius:4px;padding:0.8rem;margin:0.5rem 0;background:var(--surface)">'
+    + '<div style="font-family:\'DM Mono\',monospace;font-size:0.7rem;color:var(--accent);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.05em">Build Collection</div>'
+    + '<div class="mw-build-row">'
+    + '<label>Randomly select</label>'
+    + '<input type="number" class="mw-build-input" id="mwBuildCount-' + collectionId + '" value="10" min="1" max="200">'
+    + '<label>words</label>'
+    + '</div>'
+    + '<div class="mw-build-row">'
+    + '<label>from</label>'
+    + '<select class="mw-build-select" id="mwBuildLevel-' + collectionId + '">'
+    + '<option value="novice1">Novice 1 準備級一級</option>'
+    + '<option value="novice2">Novice 2 準備級二級</option>'
+    + '<option value="entry">Entry 入門級</option>'
+    + '<option value="basic">Basic 基礎級</option>'
+    + '<option value="advanced">Advanced 進階級</option>'
+    + '<option value="high">High 高階級</option>'
+    + '<option value="fluency">Fluency 流利級</option>'
+    + '</select>'
+    + '</div>'
+    + '<div class="mw-build-row"><label>that are not in:</label></div>'
+    + '<div class="mw-build-radio" id="mwBuildExclusion-' + collectionId + '">'
+    + '<label><input type="radio" name="mwBuildMode-' + collectionId + '" value="all" checked onchange="mwBuildModeChange(' + collectionId + ')"> Any of my collections</label>'
+    + '<label><input type="radio" name="mwBuildMode-' + collectionId + '" value="selected" onchange="mwBuildModeChange(' + collectionId + ')"> Selected collections:</label>'
+    + '</div>'
+    + '<div class="mw-build-checks" id="mwBuildChecks-' + collectionId + '" style="display:none">'
+    + collChecks
+    + '</div>'
+    + '<div style="display:flex;gap:0.5rem;margin-top:0.3rem">'
+    + '<button onclick="mwDoBuild(' + collectionId + ')" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;padding:0.3rem 0.8rem;background:var(--accent);color:white;border:none;border-radius:2px;cursor:pointer">Build</button>'
+    + '<button onclick="this.closest(\'.mw-build-panel\').remove()" style="font-family:\'DM Mono\',monospace;font-size:0.7rem;padding:0.3rem 0.5rem;background:none;border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--dim)">Cancel</button>'
+    + '</div>'
+    + '<div id="mwBuildResult-' + collectionId + '" style="margin-top:0.5rem"></div>'
+    + '</div>';
+
+  body.insertBefore(panel, body.querySelector('.mw-progress-wrap') || body.querySelector('.mw-list') || body.querySelector('.mw-empty'));
+}
+
+function mwBuildModeChange(collectionId) {
+  var mode = document.querySelector('input[name="mwBuildMode-' + collectionId + '"]:checked').value;
+  var checks = document.getElementById('mwBuildChecks-' + collectionId);
+  if (checks) checks.style.display = mode === 'selected' ? 'flex' : 'none';
+}
+
+function mwDoBuild(collectionId) {
+  var count = parseInt(document.getElementById('mwBuildCount-' + collectionId).value) || 10;
+  var level = document.getElementById('mwBuildLevel-' + collectionId).value;
+  var mode = document.querySelector('input[name="mwBuildMode-' + collectionId + '"]:checked').value;
+  var resultDiv = document.getElementById('mwBuildResult-' + collectionId);
+
+  var excludedIds = [];
+  if (mode === 'selected') {
+    var checks = document.querySelectorAll('#mwBuildChecks-' + collectionId + ' input[type="checkbox"]:checked');
+    checks.forEach(function(cb) { excludedIds.push(parseInt(cb.value)); });
+  }
+
+  resultDiv.innerHTML = '<span style="color:var(--dim);font-size:0.75rem;font-style:italic">Building...</span>';
+
+  fetch('/api/collections/' + collectionId + '/build', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': csrf,
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      count: count,
+      tocfl_level: level,
+      exclusion_mode: mode,
+      excluded_collection_ids: excludedIds,
+    }),
+  })
+  .then(function(r) {
+    if (!r.ok) return r.text().then(function(t) { throw new Error('HTTP ' + r.status + ': ' + t); });
+    return r.json();
+  })
+  .then(function(data) {
+    if (data.error) {
+      resultDiv.innerHTML = '<span style="color:var(--rose);font-size:0.75rem">' + data.error + '</span>';
+      return;
+    }
+    var msg = '<span style="font-size:0.75rem;font-family:\'DM Mono\',monospace">';
+    msg += '<span style="color:var(--jade)">Added: ' + data.added + '</span>';
+    if (data.added < data.requested) {
+      msg += ' · <span style="color:var(--dim)">Only ' + data.available + ' available at this level</span>';
+    }
+    msg += ' · <span style="color:var(--dim)">Collection total: ' + data.total + '</span>';
+    msg += '</span>';
+    resultDiv.innerHTML = msg;
+    if (data.added > 0) {
+      setTimeout(function() { window.location.reload(); }, 1500);
+    }
+  })
+  .catch(function(err) {
+    resultDiv.innerHTML = '<span style="color:var(--rose);font-size:0.75rem">Build failed: ' + err.message + '</span>';
+  });
 }
 
 function escHtml(str) {

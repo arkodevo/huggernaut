@@ -18,6 +18,7 @@
   var CT_SENSES = @json($senses);
   var CT_DISTRACTORS = @json($distractors);
   var CT_COLLECTION = @json($collection);
+  var CT_WORD_PROGRESS = @json($wordProgress);
 </script>
 
 @include('partials.lexicon._site-header', ['backUrl' => '/my-words', 'backLabel' => 'My Words'])

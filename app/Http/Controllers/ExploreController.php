@@ -11,6 +11,7 @@ use App\Models\WordSense;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 
@@ -53,7 +54,8 @@ class ExploreController extends Controller
 
     // DB tocfl_level slugs → short form used by JS chips
     public const TOCFL_SLUG_MAP = [
-        'tocfl-prep'     => 'prep',
+        'tocfl-novice1'  => 'novice1',
+        'tocfl-novice2'  => 'novice2',
         'tocfl-entry'    => 'entry',
         'tocfl-basic'    => 'basic',
         'tocfl-advanced' => 'advanced',
@@ -63,12 +65,13 @@ class ExploreController extends Controller
 
     // tocfl slug → integer level (used for the `level` field in WORDS)
     private const TOCFL_NUM_MAP = [
-        'tocfl-prep'     => 1,
-        'tocfl-entry'    => 2,
-        'tocfl-basic'    => 3,
-        'tocfl-advanced' => 4,
-        'tocfl-high'     => 5,
-        'tocfl-fluency'  => 6,
+        'tocfl-novice1'  => 1,
+        'tocfl-novice2'  => 2,
+        'tocfl-entry'    => 3,
+        'tocfl-basic'    => 4,
+        'tocfl-advanced' => 5,
+        'tocfl-high'     => 6,
+        'tocfl-fluency'  => 7,
     ];
 
     // Designation slugs that belong to the register attribute
@@ -92,9 +95,9 @@ class ExploreController extends Controller
     public const POS_FULL_NAMES = [
         'V'       => 'Verb',
         'Vi'      => 'Intransitive Verb',
-        'Vp'      => 'Process Verb',
+        'Vp'      => 'Process Verb (Intransitive)',
         'Vpsep'   => 'Vp-sep / Separable Process Verb',
-        'Vpt'     => 'Process Verb (Telic)',
+        'Vpt'     => 'Process Verb (Transitive)',
         'Vs'      => 'Stative Verb',
         'Vsattr'  => 'Vs-attr / Stative Verb (Attributive)',
         'Vspred'  => 'Vs-pred / Stative Verb (Predicative)',
@@ -102,12 +105,15 @@ class ExploreController extends Controller
         'Vst'     => 'State-Transitive Verb',
         'Vaux'    => 'Auxiliary Verb',
         'Vsep'    => 'V-sep / Separable Verb',
+        'Vcomp'   => 'Verbal Complement',
         'N'       => 'Noun',
         'M'       => 'Measure Word',
         'Adv'     => 'Adverb',
         'Prep'    => 'Preposition',
         'Conj'    => 'Conjunction',
         'Ptc'     => 'Particle',
+        'Aux'     => 'Auxiliary',
+        'Intj'    => 'Interjection',
         'Det'     => 'Determiner',
         'Prn'     => 'Pronoun',
         'Num'     => 'Number',
@@ -134,6 +140,7 @@ class ExploreController extends Controller
                                                   ->orderBy('sort_order')
                                                   ->with('posLabel'),
                     'designations', // pivot — register + dimension
+                    'senseRelations.relationType',
                 ]),
             ])->published()->get();
 
@@ -296,6 +303,7 @@ class ExploreController extends Controller
             'usageNote'       => $definitions[0]['usageNote'] ?? '',
             'formula'         => $definitions[0]['formula'] ?? '',
             'senseIds'        => $senses->pluck('id')->values()->all(),
+            'alignment'       => $word->alignment,
         ];
     }
 
@@ -332,10 +340,10 @@ class ExploreController extends Controller
         $tocflShort = $tocflSlug ? (self::TOCFL_SLUG_MAP[$tocflSlug] ?? null) : null;
         $tocflNum   = $tocflSlug ? (self::TOCFL_NUM_MAP[$tocflSlug]  ?? null) : null;
 
-        // ── Definitions: pos abbreviation + def only (no formula/usageNote) ──
+        // ── Definitions: pos full name + def only (no formula/usageNote) ──
 
         $definitions = $senses->flatMap(fn ($s) => $s->definitions->map(fn ($d) => [
-            'pos' => $d->posLabel?->slug ?? '',
+            'pos' => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
             'def' => $d->definition_text,
         ]))->values()->all();
 
@@ -349,7 +357,15 @@ class ExploreController extends Controller
         $allDomains = $senses->flatMap(fn ($s) => $s->domains->pluck('slug'))
             ->unique()->values()->all();
 
+        // ── Relation proximity: union across all senses ───────────────────
+
+        $relProximity = $senses
+            ->flatMap(fn ($s) => $s->senseRelations
+                ->map(fn ($r) => self::REL_PROXIMITY[$r->relationType?->slug ?? ''] ?? null))
+            ->filter()->unique()->values()->all();
+
         return [
+            'wordObjectId'    => $word->id,
             'smart_id'        => $word->smart_id,
             'traditional'     => $word->traditional,
             'simplified'      => $word->simplified ?? $word->traditional,
@@ -364,6 +380,8 @@ class ExploreController extends Controller
             'tocfl'           => $tocflShort,
             'level'           => $tocflNum,
             'allDomains'      => $allDomains,
+            'relProximity'    => $relProximity,
+            'alignment'       => $word->alignment,
         ];
     }
 
@@ -416,27 +434,30 @@ class ExploreController extends Controller
 
         $shaped = $this->shapeWordObjectDetail($word);
 
-        // Build a word index for sentence segmentation (all word_objects)
-        $wordIndex = WordObject::query()
-            ->with(['senses' => fn ($q) => $q->orderBy('id')->limit(1)->with([
-                'pronunciation',
-                'definitions' => fn ($q) => $q->where('language_id', 1)->orderBy('sort_order')->limit(1)->with('posLabel'),
-                'tocflLevel',
-            ])])
-            ->get()
-            ->mapWithKeys(function ($wo) {
-                $s = $wo->senses->first();
-                if (!$s) return [];
-                return [$wo->traditional => [
-                    'smartId' => $wo->smart_id,
-                    'trad'    => $wo->traditional,
-                    'simp'    => $wo->simplified ?? $wo->traditional,
-                    'pinyin'  => $s->pronunciation?->pronunciation_text ?? '',
-                    'def'     => $s->definitions->first()?->definition_text ?? '',
-                    'pos'     => self::POS_FULL_NAMES[$s->definitions->first()?->posLabel?->slug ?? ''] ?? '',
-                    'tocfl'   => self::TOCFL_SLUG_MAP[$s->tocflLevel?->slug ?? ''] ?? null,
-                ]];
-            })->filter()->all();
+        // Build a word index for sentence segmentation (all word_objects).
+        // Cached for 2 hours — invalidate via Cache::forget('word_index_slim') after imports.
+        $wordIndex = Cache::remember('word_index_slim', 7200, function () {
+            return WordObject::query()
+                ->with(['senses' => fn ($q) => $q->orderBy('id')->limit(1)->with([
+                    'pronunciation',
+                    'definitions' => fn ($q) => $q->where('language_id', 1)->orderBy('sort_order')->limit(1)->with('posLabel'),
+                    'tocflLevel',
+                ])])
+                ->get()
+                ->mapWithKeys(function ($wo) {
+                    $s = $wo->senses->first();
+                    if (!$s) return [];
+                    return [$wo->traditional => [
+                        'smartId' => $wo->smart_id,
+                        'trad'    => $wo->traditional,
+                        'simp'    => $wo->simplified ?? $wo->traditional,
+                        'pinyin'  => $s->pronunciation?->pronunciation_text ?? '',
+                        'def'     => $s->definitions->first()?->definition_text ?? '',
+                        'pos'     => self::POS_FULL_NAMES[$s->definitions->first()?->posLabel?->slug ?? ''] ?? '',
+                        'tocfl'   => self::TOCFL_SLUG_MAP[$s->tocflLevel?->slug ?? ''] ?? null,
+                    ]];
+                })->filter()->all();
+        });
 
         return view('word-detail', [
             'word'      => $shaped,
@@ -609,6 +630,8 @@ class ExploreController extends Controller
                 'collocations'    => $collocations,
                 'relations'       => $relations,
                 'family'          => $family,
+                'alignment'       => $sense->alignment,
+                'source'          => $sense->source,
             ];
         })->values()->all();
 
@@ -645,6 +668,10 @@ class ExploreController extends Controller
             ])->values()->all(),
             'senses'          => $shapedSenses,
             'family'          => $allFamily,
+            'alignment'       => $word->alignment,
+            'subtlexRank'     => $word->subtlex_rank,
+            'subtlexPpm'      => $word->subtlex_ppm ? (float) $word->subtlex_ppm : null,
+            'subtlexCd'       => $word->subtlex_cd  ? (float) $word->subtlex_cd  : null,
         ];
     }
 

@@ -131,8 +131,9 @@ class DefaultIconThemeSeeder extends Seeder
             'pragmatic'   => ['icon' => '🐟', 'alt' => 'Pragmatic — discourse and pragmatic function'],
             'figurative'  => ['icon' => '🦂', 'alt' => 'Figurative — rhetorical and figurative usage'],
 
-            // TOCFL Level — Moon phases (🌑 prep → 🌝 fluency)
-            'tocfl-prep'     => ['icon' => '🌑', 'alt' => 'TOCFL Prep — total beginner'],
+            // TOCFL Level — Moon phases (🌑 novice → 🌝 fluency)
+            'tocfl-novice1'  => ['icon' => '🌑', 'alt' => 'TOCFL Novice 1 — total beginner'],
+            'tocfl-novice2'  => ['icon' => '🌑', 'alt' => 'TOCFL Novice 2 — early beginner'],
             'tocfl-entry'    => ['icon' => '🌒', 'alt' => 'TOCFL Entry — early learner'],
             'tocfl-basic'    => ['icon' => '🌓', 'alt' => 'TOCFL Basic — foundational'],
             'tocfl-advanced' => ['icon' => '🌔', 'alt' => 'TOCFL Advanced — upper intermediate'],

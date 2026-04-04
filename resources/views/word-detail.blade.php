@@ -235,39 +235,20 @@
   border-radius: 2px;
   padding: 0.5rem 0.6rem 0.5rem 0.6rem;
   display: flex; flex-direction: column; gap: 0.5rem;
+  overflow: hidden; word-wrap: break-word;
   position: relative;
   overflow: hidden;
 }
-.wd-sense.wd-sense-single {
+.wd-sense.wd-sense-single { /* deprecated — kept for safety */
   border: none; background: none;
   padding: 0 0.75rem;
   margin-top: 0;
 }
-/* Single-sense: hero flows into sense content as one continuous card */
-body.wd-single-sense .wd-header {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-body.wd-single-sense .wd-header-char {
-  border-bottom: none;
-  border-radius: 2px 2px 0 0;
-  margin-bottom: 0;
-}
-body.wd-single-sense .wd-main {
-  padding-top: 0;
-}
-body.wd-single-sense .wd-sense-single {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-top: none;
-  border-radius: 0 0 2px 2px;
-  padding: 0.5rem 0.6rem 0.75rem 0.6rem;
-}
-/* Multi-sense: tighten gap between hero and first sense */
-body.wd-multi-sense .wd-main {
+/* Tighten gap between hero and sense blocks */
+.wd-main {
   padding-top: 0.6rem;
 }
-body.wd-multi-sense .wd-header {
+.wd-header {
   border-bottom: none;
 }
 .wd-sense-header {
@@ -283,6 +264,12 @@ body.wd-multi-sense .wd-header {
   margin: -0.5rem -0.6rem 0.25rem -0.6rem;
 }
 /* ── HERO ACTIONS (star + share beneath pinyin) ── */
+.wd-word-meta {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem 0.3rem;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.04em;
+  color: var(--dim); margin-top: 0.25rem; opacity: 0.75;
+}
+.wd-word-meta-dot { opacity: 0.4; margin: 0 0.1rem; }
 .wd-hero-actions {
   display: flex; gap: 0.5rem; margin-top: 0.35rem;
 }
@@ -619,7 +606,6 @@ body.wd-multi-sense .wd-header {
 /* ── RESPONSIVE ── */
 @media (min-width: 768px) {
   .wd-main { padding: 1.5rem 2rem; }
-  body.wd-single-sense .wd-main { padding-top: 0; }
   .wd-attrs { grid-template-columns: repeat(3, 1fr); }
 }
 </style>
@@ -663,6 +649,15 @@ body.wd-multi-sense .wd-header {
         </div>
 
         <div class="iface-group">
+          <div class="iface-group-label">VERB PRESENTATION</div>
+          <div class="wd-toggle" id="wdVerbPresentationToggle">
+            <button class="wd-toggle-btn active" id="wdBtnVerbConsolidated" onclick="wdSetVerbPresentation('consolidated')">Consolidated</button>
+            <button class="wd-toggle-btn" id="wdBtnVerbIntricate" onclick="wdSetVerbPresentation('intricate')">Intricate 精細</button>
+          </div>
+          <div class="iface-hint">Consolidated: V-t · V-i · V-sep. Intricate: full taxonomy Va-t · Vp-i · Vs-sep…</div>
+        </div>
+
+        <div class="iface-group">
           <div class="iface-group-label">SYMBOLS</div>
           <div class="wd-toggle" id="wdIconsToggle">
             <button class="wd-toggle-btn active" id="wdBtnIconsOn" onclick="wdSetIcons('on')">On</button>
@@ -679,6 +674,15 @@ body.wd-multi-sense .wd-header {
         </div>
 
         <div class="iface-group">
+          <div class="iface-group-label">PINYIN FORMAT</div>
+          <div class="wd-toggle" id="wdPinyinDisplayToggle">
+            <button class="wd-toggle-btn active" id="wdBtnPinyinAccented" onclick="wdSetPinyinDisplay('accented')">Diacritic biǎo</button>
+            <button class="wd-toggle-btn" id="wdBtnPinyinNumeric" onclick="wdSetPinyinDisplay('numeric')">Numeric biao3</button>
+          </div>
+          <div class="iface-hint">Tone marks (biǎo) or numeric tones (biao3)</div>
+        </div>
+
+        <div class="iface-group">
           <div class="iface-group-label">TEXT ORIENTATION</div>
           <div class="wd-toggle" id="wdTextDirToggle">
             <button class="wd-toggle-btn active" id="wdBtnHoriz" onclick="wdSetTextDir('horizontal')">Horizontal 橫</button>
@@ -690,6 +694,18 @@ body.wd-multi-sense .wd-header {
           <div class="iface-group-label">SECTIONS</div>
           <div class="iface-section-toggles" id="wdSectionToggles"></div>
           <div class="iface-hint">Hide sections globally</div>
+        </div>
+
+        <div class="iface-group">
+          <div class="iface-group-label">POS ALIGNMENT</div>
+          <div style="display:flex;flex-direction:column;gap:0.3rem">
+            <label style="display:flex;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--dim);cursor:pointer">
+              <input type="checkbox" id="wdAlignShowPartial" checked onchange="wdSetAlignmentFilter()"> 🤨 Partial
+            </label>
+            <label style="display:flex;align-items:center;gap:0.4rem;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--dim);cursor:pointer">
+              <input type="checkbox" id="wdAlignShowDisputed" checked onchange="wdSetAlignmentFilter()"> 😵‍💫 Disputed
+            </label>
+          </div>
         </div>
 
         <div class="iface-group">
@@ -785,13 +801,36 @@ const LABELS = {
 };
 
 // ── SETTINGS STATE ──
-let scriptMode   = localStorage.getItem('scriptMode')   || 'traditional';
-let langMode     = localStorage.getItem('langMode')     || 'both';
-let iconsMode    = localStorage.getItem('iconsMode')     || 'on';
-let pinyinMode   = localStorage.getItem('pinyinMode')    || 'on';
-let currentLevel = localStorage.getItem('currentLevel')  || 'developing';
-let fontScale    = parseInt(localStorage.getItem('fontScale')) || 100;
-let textDir      = localStorage.getItem('textDir') || 'horizontal';
+let scriptMode      = localStorage.getItem('scriptMode')      || 'traditional';
+let langMode        = localStorage.getItem('langMode')        || 'both';
+let iconsMode       = localStorage.getItem('iconsMode')       || 'on';
+let pinyinMode      = localStorage.getItem('pinyinMode')      || 'on';
+let currentLevel    = localStorage.getItem('currentLevel')    || 'developing';
+let fontScale       = parseInt(localStorage.getItem('fontScale')) || 100;
+let textDir         = localStorage.getItem('textDir')         || 'horizontal';
+let verbPresentation  = localStorage.getItem('verbPresentation')  || 'consolidated';
+let pinyinDisplay     = localStorage.getItem('pinyinDisplay')     || 'accented';
+
+// POS Alignment filter — shared with SRP via localStorage
+let wdAlignShowPartial = localStorage.getItem('alignShowPartial') !== 'false';
+let wdAlignShowDisputed = localStorage.getItem('alignShowDisputed') !== 'false';
+
+function wdAlignmentVisible(alignment) {
+  if (!alignment || alignment === 'full') return true;
+  if (alignment === 'partial') return wdAlignShowPartial;
+  if (alignment === 'disputed') return wdAlignShowDisputed;
+  return true;
+}
+
+function wdSetAlignmentFilter() {
+  const partialEl = document.getElementById('wdAlignShowPartial');
+  const disputedEl = document.getElementById('wdAlignShowDisputed');
+  wdAlignShowPartial = partialEl ? partialEl.checked : true;
+  wdAlignShowDisputed = disputedEl ? disputedEl.checked : true;
+  localStorage.setItem('alignShowPartial', wdAlignShowPartial);
+  localStorage.setItem('alignShowDisputed', wdAlignShowDisputed);
+  wdRender();
+}
 
 // Derived UI mode
 function deriveUiMode() {
@@ -1104,6 +1143,26 @@ function wdSetTextDir(mode) {
   renderPage();
 }
 
+function wdSetPinyinDisplay(mode) {
+  pinyinDisplay = mode;
+  localStorage.setItem('pinyinDisplay', mode);
+  if (window.syncPref) syncPref('pinyinDisplay', mode);
+  document.getElementById('wdBtnPinyinAccented').classList.toggle('active', mode === 'accented');
+  document.getElementById('wdBtnPinyinNumeric').classList.toggle('active', mode === 'numeric');
+  wdUpdatePill('wdPinyinDisplayToggle');
+  renderPage();
+}
+
+function wdSetVerbPresentation(mode) {
+  verbPresentation = mode;
+  localStorage.setItem('verbPresentation', mode);
+  if (window.syncPref) syncPref('verbPresentation', mode);
+  document.getElementById('wdBtnVerbConsolidated').classList.toggle('active', mode === 'consolidated');
+  document.getElementById('wdBtnVerbIntricate').classList.toggle('active', mode === 'intricate');
+  wdUpdatePill('wdVerbPresentationToggle');
+  renderPage();
+}
+
 // ── SAVE/UNSAVE WORD ──
 function _csrfHeader() {
   return document.querySelector('meta[name="csrf-token"]').content;
@@ -1381,7 +1440,7 @@ function charDisplay() {
 
 function primaryPinyin() {
   const p = (WORD.pronunciations || []).find(p => p.isPrimary);
-  return p ? p.text : '';
+  return p ? formatPinyin(p.text) : '';
 }
 
 // ── Shared domain chip builder: two-tier layout ────────────────────────
@@ -1449,22 +1508,25 @@ function renderHeader() {
   ).join('');
 
   // Collect unique POS across all definitions
+  // Collect POS with per-sense alignment
   const allPOS = [];
   const seenPOS = {};
   senses.forEach(s => {
     (s.definitions || []).forEach(d => {
       if (d.pos && !seenPOS[d.pos]) {
-        seenPOS[d.pos] = true;
+        seenPOS[d.pos] = { alignment: s.alignment || WORD.alignment };
         allPOS.push(d.pos);
       }
     });
   });
   const posHTML = allPOS.length ? `<div class="card-pos-summary">${allPOS.map(p => {
-    const enText = posDisplay(p) + ' \u00b7 ' + (POS_ABBR[p] || p);
+    const enText = posDisplayLabel(p) + ' \u00b7 ' + posLabel(p);
     const zhText = POS_ZH[p] || posDisplay(p);
     const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
     const display = preferred === 'zh' ? zhText : (uiMode === 'all' || uiMode === 'en-zh') ? enText + ' ' + zhText : enText;
-    return `<span class="card-pos-hdr" data-en="${enText}" data-zh="${zhText}" data-state="${preferred}" onclick="toggleLangChip(event,this)">${display}</span>`;
+    const alignIcon = posAlignIcon(seenPOS[p]?.alignment);
+    const iconHTML = alignIcon ? `<span class="pos-align-icon">${alignIcon}</span>` : '';
+    return `<span class="card-pos-hdr" data-en="${enText}" data-zh="${zhText}" data-state="${preferred}" onclick="toggleLangChip(event,this)">${display}${iconHTML}</span>`;
   }).join('')}</div>` : '';
 
   const pinyin = primaryPinyin();
@@ -1487,6 +1549,13 @@ function renderHeader() {
       ${domainHTML ? `<div class="card-domain-row">${domainHTML}</div>` : ''}
       ${posHTML}
       ${pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${pinyin}</span></div>` : ''}
+      ${(() => {
+        const bits = [];
+        if (WORD.subtlexRank) bits.push(`<span title="${langText('Frequency rank (SUBTLEX-CH)', '使用頻率排名')}">#${WORD.subtlexRank.toLocaleString()}</span>`);
+        if (WORD.radical) bits.push(`<span title="${langText('Radical', '部首')}">${WORD.radical.character} ${langText(WORD.radical.meaning, WORD.radical.meaningZh || WORD.radical.meaning)}</span>`);
+        if (WORD.strokesTrad) bits.push(`<span>${WORD.strokesTrad}${langText(' strokes', ' 筆')}</span>`);
+        return bits.length ? `<div class="wd-word-meta">${bits.join('<span class="wd-word-meta-dot">·</span>')}</div>` : '';
+      })()}
       <div class="wd-hero-actions">
         ${wordSaveBtn}
         ${wordShareBtn}
@@ -1521,6 +1590,15 @@ function renderIdentity() {
   if (w.strokesSimp && w.strokesSimp !== w.strokesTrad) rows.push(`<span>${langText('Strokes (simp.)', '筆畫（簡）')}: <strong>${w.strokesSimp}</strong></span>`);
   if (w.structure) rows.push(`<span>${langText('Structure', '結構')}: <strong>${w.structure}</strong></span>`);
 
+  // SUBTLEX-CH frequency
+  if (w.subtlexRank) {
+    const ppm = w.subtlexPpm != null ? (w.subtlexPpm >= 1 ? w.subtlexPpm.toFixed(1) : w.subtlexPpm.toFixed(2)) : null;
+    rows.push(`<span>${langText('Frequency', '使用頻率')}: <strong>#${w.subtlexRank.toLocaleString()}</strong>${ppm ? ` <span style="opacity:0.55;font-size:0.8em">${ppm}/M</span>` : ''}</span>`);
+  }
+  if (w.subtlexCd != null) {
+    rows.push(`<span>${langText('Contextual Diversity', '語境多樣性')}: <strong>${w.subtlexCd}%</strong> <span style="opacity:0.55;font-size:0.8em">${langText('of films/shows', '影視作品')}</span></span>`);
+  }
+
   if (!charGrid && !rows.length) return '';
 
   return `<div class="wd-identity">
@@ -1531,34 +1609,18 @@ function renderIdentity() {
 }
 
 // ── RENDER: SENSE ──
-function renderSense(sense, idx) {
+function renderSense(sense, idx, totalOverride) {
   const parts = [];
 
-  // Sense header: badge + domain chip (full-width, matching header) + pinyin
-  // Save star is now word-level only (rendered in hero area)
-  const totalSenses = (WORD.senses || []).length;
-  const isSingle = totalSenses === 1;
+  // Sense header: stripe + domain + pinyin (no character repetition — hero shows it)
+  const totalSenses = totalOverride || (WORD.senses || []).length;
 
-  // Single-sense: add a subtle HR divider between hero identity and sense content
-  if (isSingle) {
-    parts.push(`<hr style="border:none;border-top:1px solid var(--border);margin:0.5rem 0 0.75rem">`);
-  }
+  parts.push(`<div class="wd-sense-stripe">${idx + 1} of ${totalSenses}</div>`);
 
-  let senseHdrHTML = '';
-  if (!isSingle) {
-    // Multi-sense: show stripe, then character + domain + pinyin block
-    parts.push(`<div class="wd-sense-stripe">${idx + 1} of ${totalSenses}</div>`);
-    // Character mini-hero for each sense — reuses exact same classes as the main hero
-    const senseChar = charDisplay();
-    const domainHTML = sense.domain ? `<div class="card-domain-row">${buildDomainChipHTML(sense.domain, sense.secondaryDomains)}</div>` : '';
-    const pinyinHTML = sense.pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${sense.pinyin}</span></div>` : '';
-    parts.push(`<div class="wd-header-char" style="background:transparent;border:none;padding:0.4rem 0 0.3rem;margin:0">
-      <span class="hanzi-char">${senseChar}</span>
-      <div class="card-hdr-mid">
-        ${domainHTML}
-        ${pinyinHTML}
-      </div>
-    </div>`);
+  const domainHTML = sense.domain ? `<div class="card-domain-row">${buildDomainChipHTML(sense.domain, sense.secondaryDomains)}</div>` : '';
+  const pinyinHTML = sense.pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${formatPinyin(sense.pinyin)}</span></div>` : '';
+  if (domainHTML || pinyinHTML) {
+    parts.push(`<div style="padding:0.3rem 0">${domainHTML}${pinyinHTML}</div>`);
   }
 
   // Definitions
@@ -1567,7 +1629,7 @@ function renderSense(sense, idx) {
       const fml = d.formula || '';
       const fmlDisplay = scriptMode === 'simplified' && WORD.traditional !== WORD.simplified ? fml.replace(new RegExp(WORD.traditional.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), WORD.simplified) : fml;
       return `<div class="card-def-row">
-        ${d.pos ? `<span class="card-pos" data-abbr="${POS_ABBR[d.pos] || d.pos}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}</span>` : ''}
+        ${d.pos ? `<span class="card-pos" data-abbr="${posLabel(d.pos)}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}${posAlignIcon(sense.alignment || WORD.alignment) ? '<span class="pos-align-icon">' + posAlignIcon(sense.alignment || WORD.alignment) + '</span>' : ''}</span>` : ''}
         <span class="card-definition">${d.def}</span>
       </div>
       ${fmlDisplay ? `<div class="card-formula">${fmlDisplay}</div>` : ''}
@@ -1619,7 +1681,7 @@ function renderSense(sense, idx) {
     parts.push(renderWorkshop(sense, idx));
   }
 
-  return `<div class="wd-sense${isSingle ? ' wd-sense-single' : ''}">${parts.join('')}</div>`;
+  return `<div class="wd-sense">${parts.join('')}</div>`;
 }
 
 // ── RENDER: RELATION CARD ──
@@ -1627,7 +1689,7 @@ function renderRelCard(r) {
   const tocflLabel = r.tocfl && LABELS.tocfl[r.tocfl] ? (iconsMode === 'on' ? LABELS.tocfl[r.tocfl].icon : LABELS.tocfl[r.tocfl].en) : '';
   return `<a class="wd-rel-card" href="/lexicon/${r.smartId}" onclick="pushTrail('${r.smartId}','${r.traditional}')">
     <span class="wd-rel-card-char">${r.traditional}</span>
-    <span class="wd-rel-card-pinyin">${r.pinyin || ''}</span>
+    <span class="wd-rel-card-pinyin">${formatPinyin(r.pinyin)}</span>
     ${r.posAbbr ? `<span class="wd-rel-card-pos">${r.posAbbr}</span>` : ''}
     <span class="wd-rel-card-def">${r.def || ''}</span>
     ${tocflLabel ? `<span class="wd-rel-card-tocfl">${tocflLabel}</span>` : ''}
@@ -1811,9 +1873,10 @@ function renderPage() {
 
   const sections = [];
 
-  // Section 1: Core (always visible — senses)
-  (WORD.senses || []).forEach((sense, i) => {
-    sections.push(renderSense(sense, i));
+  // Section 1: Core (always visible — senses, filtered by alignment preference)
+  const visibleSenses = (WORD.senses || []).filter(s => wdAlignmentVisible(s.alignment));
+  visibleSenses.forEach((sense, i) => {
+    sections.push(renderSense(sense, i, visibleSenses.length));
   });
 
   // Section 2: Stroke (stub)
@@ -1857,8 +1920,7 @@ function renderPage() {
 
   // Apply single/multi-sense body class
   const senseCount = (WORD.senses || []).length;
-  document.body.classList.toggle('wd-single-sense', senseCount === 1);
-  document.body.classList.toggle('wd-multi-sense', senseCount > 1);
+  // Single/multi-sense now use the same layout — no body class needed
 
   // Apply pinyin mode
   document.body.classList.toggle('wd-no-pinyin', pinyinMode === 'off');
@@ -1890,6 +1952,20 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('wdBtnHoriz').classList.remove('active');
     document.getElementById('wdBtnVert').classList.add('active');
   }
+  if (verbPresentation === 'intricate') {
+    document.getElementById('wdBtnVerbConsolidated').classList.remove('active');
+    document.getElementById('wdBtnVerbIntricate').classList.add('active');
+  }
+  if (pinyinDisplay === 'numeric') {
+    document.getElementById('wdBtnPinyinAccented').classList.remove('active');
+    document.getElementById('wdBtnPinyinNumeric').classList.add('active');
+  }
+
+  // POS Alignment filter
+  const wdAlignPartialEl = document.getElementById('wdAlignShowPartial');
+  const wdAlignDisputedEl = document.getElementById('wdAlignShowDisputed');
+  if (wdAlignPartialEl) wdAlignPartialEl.checked = wdAlignShowPartial;
+  if (wdAlignDisputedEl) wdAlignDisputedEl.checked = wdAlignShowDisputed;
 
   applyLevelFonts(currentLevel);
   renderSectionToggles();
@@ -1905,7 +1981,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Init pills after render
   requestAnimationFrame(() => {
-    ['wdScriptToggle','wdLangToggle','wdIconsToggle','wdPinyinToggle','wdTextDirToggle','wdViewModeToggle'].forEach(wdUpdatePill);
+    ['wdScriptToggle','wdLangToggle','wdIconsToggle','wdPinyinToggle','wdPinyinDisplayToggle','wdTextDirToggle','wdViewModeToggle','wdVerbPresentationToggle'].forEach(wdUpdatePill);
   });
 
   // Back to top

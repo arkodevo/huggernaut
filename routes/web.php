@@ -53,6 +53,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name(
 Route::get('/chinese-names', [PageController::class, 'chineseNames'])->name('chinese-names');
 Route::get('/translation', [PageController::class, 'translation'])->name('translation');
 Route::get('/idioms', [PageController::class, 'idioms'])->name('idioms');
+Route::get('/help', [PageController::class, 'help'])->name('help');
 
 // ── Learner pages (auth required) ────────────────────────────────────────────
 
@@ -83,6 +84,7 @@ Route::middleware('auth')->prefix('api')->group(function () {
     Route::delete('/collections/{collection}', [CollectionController::class, 'destroy']);
     Route::post('/collections/{collection}/words/{wordObjectId}', [CollectionController::class, 'addWord']);
     Route::post('/collections/{collection}/import', [CollectionController::class, 'importWords']);
+    Route::post('/collections/{collection}/build', [CollectionController::class, 'build']);
     Route::delete('/collections/{collection}/words/{wordObjectId}', [CollectionController::class, 'removeWord']);
 
     // Workshop (造句) — save & delete require auth
@@ -91,6 +93,9 @@ Route::middleware('auth')->prefix('api')->group(function () {
 
     // Fluency level (profile setting for 師父)
     Route::put('/user/fluency-level', [WorkshopController::class, 'updateFluencyLevel']);
+
+    // Word learning progress
+    Route::post('/word-progress/{wordObjectId}/learned', [CollectionTestController::class, 'markLearned']);
 
     // Collection testing
     Route::post('/collection-tests', [CollectionTestController::class, 'store']);
@@ -172,6 +177,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         ->name('words.senses.edit');
     Route::put('words/{word}/senses/{sense}', [WordSenseController::class, 'update'])
         ->name('words.senses.update');
+    Route::delete('words/{word}/senses/{sense}', [WordSenseController::class, 'destroy'])
+        ->name('words.senses.destroy');
     Route::patch('senses/{sense}/status', [WordSenseController::class, 'updateStatus'])
         ->name('senses.status');
 

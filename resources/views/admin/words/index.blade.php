@@ -6,7 +6,8 @@
 @php
     // Level icons — used in table columns
     $tocflIcons = [
-        'tocfl-prep'     => '🌑',
+        'tocfl-novice1'  => '🌑',
+        'tocfl-novice2'  => '🌑',
         'tocfl-entry'    => '🌒',
         'tocfl-basic'    => '🌓',
         'tocfl-advanced' => '🌔',
@@ -22,7 +23,7 @@
         'hsk-6' => '🎋',
     ];
 
-    $hasActiveFilter = collect(['q','status','tocfl_level','hsk_level','pos','register','dimension','domain','secondary_domain'])
+    $hasActiveFilter = collect(['q','status','alignment','source','tocfl_level','hsk_level','pos','register','dimension','domain','secondary_domain'])
         ->some(fn ($k) => request()->filled($k));
 @endphp
 
@@ -42,12 +43,12 @@
                 </button>
                 <div x-show="open" @click.outside="open = false" x-transition
                      class="absolute right-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
-                    <a href="{{ route('admin.words.export', array_merge(request()->only(['q','status','tocfl_level','hsk_level','pos','register','dimension','domain','secondary_domain']), ['mode' => 'foundational'])) }}"
+                    <a href="{{ route('admin.words.export', array_merge(request()->only(['q','status','alignment','source','tocfl_level','hsk_level','pos','register','dimension','domain','secondary_domain']), ['mode' => 'foundational'])) }}"
                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <span class="font-medium">Foundational</span>
                         <span class="block text-xs text-gray-400">One row per word</span>
                     </a>
-                    <a href="{{ route('admin.words.export', array_merge(request()->only(['q','status','tocfl_level','hsk_level','pos','register','dimension','domain','secondary_domain']), ['mode' => 'by_sense'])) }}"
+                    <a href="{{ route('admin.words.export', array_merge(request()->only(['q','status','alignment','source','tocfl_level','hsk_level','pos','register','dimension','domain','secondary_domain']), ['mode' => 'by_sense'])) }}"
                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <span class="font-medium">By Sense</span>
                         <span class="block text-xs text-gray-400">One row per sense + definition</span>
@@ -67,8 +68,13 @@
 
     {{-- Row 1: text search + status --}}
     <div class="flex flex-wrap gap-2">
-        <input name="q" value="{{ request('q') }}" placeholder="Search character or definition…"
-               class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-64">
+        <div class="relative" style="width:16rem">
+            <input name="q" id="adminSearchInput" value="{{ request('q') }}" placeholder="Search character or definition…"
+                   autocomplete="off"
+                   class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full"
+                   onfocus="showSearchHistory()" oninput="showSearchHistory()">
+            <div id="adminSearchHistory" class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 hidden mt-0.5 max-h-48 overflow-y-auto"></div>
+        </div>
 
         <select name="status"
                 class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
@@ -76,6 +82,15 @@
             @foreach (['draft', 'review', 'published'] as $s)
                 <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
             @endforeach
+        </select>
+
+        <select name="alignment"
+                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <option value="">Alignment</option>
+            <option value="full"     {{ request('alignment') === 'full'     ? 'selected' : '' }}>🤓 Full</option>
+            <option value="partial"  {{ request('alignment') === 'partial'  ? 'selected' : '' }}>🤨 Partial</option>
+            <option value="disputed" {{ request('alignment') === 'disputed' ? 'selected' : '' }}>😵‍💫 Disputed</option>
+            <option value="none"     {{ request('alignment') === 'none'     ? 'selected' : '' }}>— Unset</option>
         </select>
 
         <button type="submit"
@@ -89,8 +104,16 @@
         @endif
     </div>
 
-    {{-- Row 2: level + POS + designation filters --}}
+    {{-- Row 2: source + level + POS + designation filters --}}
     <div class="flex flex-wrap gap-2">
+
+        {{-- Source --}}
+        <select name="source"
+                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <option value="">Source</option>
+            <option value="tocfl"     {{ request('source') === 'tocfl'     ? 'selected' : '' }}>TOCFL</option>
+            <option value="editorial" {{ request('source') === 'editorial' ? 'selected' : '' }}>Editorial</option>
+        </select>
 
         {{-- TOCFL Level --}}
         <select name="tocfl_level"
@@ -124,7 +147,7 @@
                 @if ($parent->children->isNotEmpty())
                     <optgroup label="{{ $parent->slug }}">
                         <option value="{{ $parent->id }}" {{ request('pos') == $parent->id ? 'selected' : '' }}>
-                            {{ $parent->slug }} — All
+                            {{ $parent->slug }}
                         </option>
                         @foreach ($parent->children as $child)
                             <option value="{{ $child->id }}" {{ request('pos') == $child->id ? 'selected' : '' }}>
@@ -217,7 +240,7 @@
 
 @php
     $sortUrl = fn (string $col) => route('admin.words.index', array_merge(
-        request()->only(['q', 'status', 'tocfl_level', 'hsk_level', 'pos', 'register', 'dimension', 'domain', 'secondary_domain']),
+        request()->only(['q', 'status', 'alignment', 'source', 'tocfl_level', 'hsk_level', 'pos', 'register', 'dimension', 'domain', 'secondary_domain']),
         [
             'sort'      => $col,
             'direction' => ($sort === $col && $direction === 'asc') ? 'desc' : 'asc',
@@ -266,7 +289,17 @@
             <tbody class="divide-y divide-gray-100">
                 @foreach ($words as $word)
                     @php
+                        // When a level filter is active, prefer showing the sense that
+                        // actually matches — otherwise fall back to the first sense.
                         $firstSense = $word->senses->first();
+                        if (request('tocfl_level')) {
+                            $matched = $word->senses->firstWhere('tocfl_level_id', request('tocfl_level'));
+                            if ($matched) $firstSense = $matched;
+                        } elseif (request('hsk_level')) {
+                            $matched = $word->senses->firstWhere('hsk_level_id', request('hsk_level'));
+                            if ($matched) $firstSense = $matched;
+                        }
+
                         $pinyin     = $firstSense?->pronunciation?->pronunciation_text;
                         $firstDef   = $firstSense?->definitions->first();
                         $pos        = $firstDef?->posLabel?->slug;
@@ -295,20 +328,16 @@
 
                         {{-- POS · Definition --}}
                         <td class="px-5 py-3">
-                            @if ($firstDef)
-                                <p class="text-gray-800">
-                                    @if ($pos)
-                                        <span class="font-mono text-xs text-gray-400 mr-1">{{ $pos }}</span>·
-                                    @endif
-                                    {{ Str::limit($defText, 65) }}
-                                </p>
-                            @endif
-                            @if ($extra > 0)
-                                <a href="{{ route('admin.words.show', $word) }}"
-                                   class="text-xs text-indigo-500 hover:text-indigo-700 mt-0.5 inline-block">
-                                    +{{ $extra }} more
-                                </a>
-                            @endif
+                            @foreach ($word->senses as $sense)
+                                @foreach ($sense->definitions->where('language_id', 1) as $def)
+                                    <p class="text-gray-800{{ !$loop->parent->first || !$loop->first ? ' mt-1 pt-1 border-t border-gray-100' : '' }}">
+                                        @if ($def->posLabel?->slug)
+                                            <span class="font-mono text-xs text-gray-400 mr-1">{{ $def->posLabel->slug }}</span>·
+                                        @endif
+                                        {{ Str::limit($def->definition_text, 65) }}
+                                    </p>
+                                @endforeach
+                            @endforeach
                         </td>
 
                         {{-- TOCFL --}}
@@ -358,5 +387,79 @@
 </div>
 
 @endif
+
+@push('scripts')
+<script>
+(function() {
+    const HISTORY_KEY = 'admin_search_history';
+    const MAX_HISTORY = 20;
+    const input = document.getElementById('adminSearchInput');
+    const dropdown = document.getElementById('adminSearchHistory');
+    if (!input || !dropdown) return;
+
+    function getHistory() {
+        try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+    }
+
+    function saveHistory(term) {
+        if (!term.trim()) return;
+        let history = getHistory().filter(h => h !== term.trim());
+        history.unshift(term.trim());
+        if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    function showSearchHistory() {
+        const history = getHistory();
+        const q = input.value.trim().toLowerCase();
+        const filtered = q ? history.filter(h => h.toLowerCase().includes(q)) : history;
+        if (filtered.length === 0) { dropdown.classList.add('hidden'); return; }
+
+        dropdown.innerHTML = filtered.map(h =>
+            `<div class="px-3 py-1.5 text-sm cursor-pointer hover:bg-indigo-50 flex justify-between items-center group" onclick="selectHistory(this, '${h.replace(/'/g, "\\'")}')">
+                <span>${h}</span>
+                <button onclick="event.stopPropagation(); removeHistory('${h.replace(/'/g, "\\'")}', this)" class="text-gray-300 hover:text-red-400 text-xs opacity-0 group-hover:opacity-100">&times;</button>
+            </div>`
+        ).join('') + `<div class="px-3 py-1 text-xs text-gray-400 border-t cursor-pointer hover:bg-gray-50" onclick="clearHistory()">Clear history</div>`;
+        dropdown.classList.remove('hidden');
+    }
+
+    window.showSearchHistory = showSearchHistory;
+
+    window.selectHistory = function(el, term) {
+        input.value = term;
+        dropdown.classList.add('hidden');
+        input.form.submit();
+    };
+
+    window.removeHistory = function(term, btn) {
+        let history = getHistory().filter(h => h !== term);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        showSearchHistory();
+    };
+
+    window.clearHistory = function() {
+        localStorage.removeItem(HISTORY_KEY);
+        dropdown.classList.add('hidden');
+    };
+
+    // Save current search to history on page load
+    const currentQ = input.value.trim();
+    if (currentQ) saveHistory(currentQ);
+
+    // Hide dropdown on click outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#adminSearchInput') && !e.target.closest('#adminSearchHistory')) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Submit on Enter saves to history
+    input.form.addEventListener('submit', function() {
+        saveHistory(input.value);
+    });
+})();
+</script>
+@endpush
 
 @endsection

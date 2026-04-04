@@ -33,6 +33,7 @@ class PosLabelSeeder extends Seeder
             ['slug' => 'Num',  'sort_order' => 10, 'en' => 'Number',               'zh' => '數詞'],
             ['slug' => 'IE',   'sort_order' => 11, 'en' => 'Idiomatic Expression', 'zh' => '慣用語'],
             ['slug' => 'Ph',   'sort_order' => 12, 'en' => 'Phrase',               'zh' => '片語'],
+            ['slug' => 'CE',   'sort_order' => 13, 'en' => 'Chengyu',              'zh' => '成語'],
         ];
 
         foreach ($topLevel as $data) {
@@ -53,9 +54,9 @@ class PosLabelSeeder extends Seeder
 
         $verbSubtypes = [
             ['slug' => 'Vi',      'sort_order' => 1,  'en' => 'Intransitive Verb',                          'zh' => '不及物動詞'],
-            ['slug' => 'Vp',      'sort_order' => 2,  'en' => 'Process Verb (covers transitive action)',     'zh' => '動態動詞'],
+            ['slug' => 'Vp',      'sort_order' => 2,  'en' => 'Process Verb (Intransitive)',                 'zh' => '過程不及物動詞'],
             ['slug' => 'Vpsep',   'sort_order' => 3,  'en' => 'Vp-sep / Separable Process Verb',            'zh' => '離合動態動詞'],
-            ['slug' => 'Vpt',     'sort_order' => 4,  'en' => 'Process Verb (Telic)',                       'zh' => '完結動詞'],
+            ['slug' => 'Vpt',     'sort_order' => 4,  'en' => 'Process Verb (Transitive)',                  'zh' => '過程及物動詞'],
             ['slug' => 'Vs',      'sort_order' => 5,  'en' => 'Stative Verb',                               'zh' => '狀態動詞'],
             ['slug' => 'Vsattr',  'sort_order' => 6,  'en' => 'Vs-attr / Stative Verb (Attributive)',       'zh' => '限定狀態動詞'],
             ['slug' => 'Vspred',  'sort_order' => 7,  'en' => 'Vs-pred / Stative Verb (Predicative)',       'zh' => '謂語狀態動詞'],

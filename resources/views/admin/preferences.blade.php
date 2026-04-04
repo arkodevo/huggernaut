@@ -81,6 +81,61 @@
     </div>
 </section>
 
+{{-- ── Verb Presentation ────────────────────────────────────────────────────── --}}
+<section class="max-w-3xl bg-white rounded-xl border border-gray-200 p-6 mb-6">
+    <h2 class="text-sm font-semibold text-gray-900 mb-1">Verb Presentation</h2>
+    <p class="text-xs text-gray-500 mb-5">
+        Controls how verb POS tags are displayed across the admin panel and word detail pages.
+        Intricate shows the full TOCFL taxonomy; Consolidated collapses subtypes to three learner-friendly labels.
+    </p>
+
+    @php
+        $verbModes = [
+            [
+                'key'      => 'intricate',
+                'label'    => 'Intricate',
+                'sublabel' => '精細',
+                'note'     => 'Full TOCFL taxonomy — V, Vi, Vt, Vp, Vpt, Vs, Vst, Vsep, Vpsep, Vssep, Vaux…',
+                'example'  => 'e.g. 離婚 → Vpsep · 喜歡 → Vst · 完成 → Vpt',
+            ],
+            [
+                'key'      => 'consolidated',
+                'label'    => 'Consolidated',
+                'sublabel' => '簡化',
+                'note'     => 'Three learner-friendly labels — transitive verb, intransitive verb, separable verb.',
+                'example'  => 'e.g. 離婚 → separable · 喜歡 → transitive · 完成 → transitive',
+            ],
+        ];
+    @endphp
+
+    <div class="grid grid-cols-2 gap-4">
+        @foreach ($verbModes as $mode)
+            <form method="POST" action="{{ route('admin.preferences.update') }}">
+                @csrf
+                <input type="hidden" name="verb_presentation" value="{{ $mode['key'] }}">
+                <button type="submit"
+                        class="w-full text-left rounded-xl border-2 p-4 transition-all
+                               {{ $verbPresentation === $mode['key']
+                                   ? 'border-indigo-500 bg-indigo-50'
+                                   : 'border-gray-200 hover:border-gray-300 bg-white' }}">
+
+                    <div class="flex items-baseline gap-2 mb-2">
+                        <span class="text-base font-semibold text-gray-900">{{ $mode['label'] }}</span>
+                        <span class="text-sm text-gray-400" style="font-family: BiauKai, STKaiti, KaiTi, serif">{{ $mode['sublabel'] }}</span>
+                    </div>
+
+                    <p class="text-xs text-gray-600 mb-2">{{ $mode['note'] }}</p>
+                    <p class="text-xs text-gray-400 font-mono">{{ $mode['example'] }}</p>
+
+                    @if ($verbPresentation === $mode['key'])
+                        <span class="mt-3 inline-block text-xs font-medium text-indigo-600">✓ Active</span>
+                    @endif
+                </button>
+            </form>
+        @endforeach
+    </div>
+</section>
+
 {{-- Future preferences sections go here --}}
 
 @endsection

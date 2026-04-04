@@ -20,6 +20,10 @@ class WordObject extends Model
         'strokes_simp',
         'structure',
         'status',
+        'alignment',
+        'subtlex_rank',
+        'subtlex_ppm',
+        'subtlex_cd',
     ];
 
     public function radical(): BelongsTo
