@@ -13,7 +13,7 @@ class LearnerLoginController extends Controller
     public function showForm(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('lexicon.index');
+            return redirect()->route('dashboard');
         }
 
         return view('auth.login');
@@ -32,7 +32,7 @@ class LearnerLoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('lexicon.index'));
+        return redirect()->intended(route('dashboard'));
     }
 
     public function logout(Request $request): RedirectResponse
@@ -41,6 +41,6 @@ class LearnerLoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('lexicon.index');
+        return redirect()->route('dashboard');
     }
 }

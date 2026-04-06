@@ -2,6 +2,10 @@
 @extends('admin.layout')
 @section('title', $word->traditional)
 
+@push('styles')
+    @include('admin.partials.attr-chips')
+@endpush
+
 @section('content')
 
 {{-- Header --}}
@@ -149,9 +153,23 @@
     @else
         <ul class="divide-y divide-gray-100">
             @foreach ($word->senses as $sense)
-                <li class="px-5 py-4">
+                @php
+                    $byAttr = $sense->designations->groupBy(fn ($d) => $d->attribute?->slug ?? '');
+                    $registers  = $byAttr->get('register',  collect());
+                    $dimensions = $byAttr->get('dimension',  collect());
+                    $primaryDomain   = $sense->domains->first();
+                    $secondaryDomains = $sense->domains->slice(1);
+                    $enDefs = $sense->definitions->where('language_id', 1);
+                    $zhDefs = $sense->definitions->where('language_id', 2);
+                    $valencyMap = [0 => 'Intransitive', 1 => 'Transitive', 2 => 'Ditransitive'];
+                @endphp
+                <li class="px-5 py-4" x-data="{ open: false }">
+                    {{-- Summary row (always visible) --}}
                     <div class="flex items-start justify-between">
-                        <div class="flex items-center gap-3">
+                        <button type="button" @click="open = !open" class="flex items-center gap-3 text-left group">
+                            <svg class="w-4 h-4 text-indigo-500 transition-transform shrink-0" :class="open && 'rotate-90'" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
                             <span class="text-sm text-gray-700">{{ $sense->pronunciation ? PinyinHelper::toMarked($sense->pronunciation->pronunciation_text) : '—' }}</span>
                             @if($sense->pronunciation)
                                 <span class="text-xs font-mono text-gray-400">{{ $sense->pronunciation->pronunciation_text }}</span>
@@ -163,7 +181,7 @@
                             @if ($sense->hskLevel)
                                 <span class="text-xs text-gray-400">HSK: {{ $sense->hskLevel->labels->first()?->label ?? $sense->hskLevel->slug }}</span>
                             @endif
-                        </div>
+                        </button>
                         <div class="flex items-center gap-3 shrink-0">
                             <a href="{{ route('admin.words.senses.edit', [$word, $sense]) }}"
                                class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Edit →</a>
@@ -179,9 +197,10 @@
                         </div>
                     </div>
 
-                    @if ($sense->definitions->isNotEmpty())
-                        <ul class="mt-2 space-y-0.5">
-                            @foreach ($sense->definitions->take(3) as $def)
+                    {{-- Compact definition preview (always visible) --}}
+                    @if ($enDefs->isNotEmpty())
+                        <ul class="mt-2 ml-6 space-y-0.5">
+                            @foreach ($enDefs->take(3) as $def)
                                 <li class="text-sm text-gray-600">
                                     <span class="text-xs font-mono text-indigo-600">{{ $def->posLabel->slug ?? '' }}</span>
                                     {{ $def->definition_text }}
@@ -189,6 +208,227 @@
                             @endforeach
                         </ul>
                     @endif
+                    @if ($zhDefs->isNotEmpty())
+                        <ul class="mt-1 ml-6 space-y-0.5">
+                            @foreach ($zhDefs->take(3) as $def)
+                                <li class="text-sm text-gray-500">
+                                    <span class="text-xs font-mono text-indigo-600">{{ $def->posLabel->slug ?? '' }}</span>
+                                    <span class="cn">{{ $def->definition_text }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    {{-- Expanded detail (accordion) --}}
+                    <div x-show="open" x-transition.duration.150ms class="mt-4 ml-6 space-y-4">
+
+                        {{-- ── All Definitions ──────────────────────────── --}}
+                        @if ($sense->definitions->count() > 3)
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">All Definitions ({{ $sense->definitions->count() }})</h4>
+                                <ul class="space-y-0.5">
+                                    @foreach ($sense->definitions as $def)
+                                        <li class="text-sm text-gray-600">
+                                            <span class="text-xs text-gray-400">[{{ $def->language->code ?? '?' }}]</span>
+                                            <span class="text-xs font-mono text-indigo-600">{{ $def->posLabel->slug ?? '' }}</span>
+                                            {{ $def->definition_text }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        {{-- ── Reading / Source ──────────────────────────── --}}
+                        @if ($sense->source || $sense->alignment)
+                            <div class="flex flex-wrap gap-x-2 gap-y-1 text-sm">
+                                @if ($sense->source)
+                                    <span class="text-gray-600">Source: {{ ucfirst($sense->source) }}</span>
+                                @endif
+                                @if ($sense->source && $sense->alignment)
+                                    <span class="text-gray-400">&nbsp;|&nbsp;</span>
+                                @endif
+                                @if ($sense->alignment)
+                                    @php $aIcon = ['full' => '💚', 'partial' => '🟡', 'disputed' => '🟥'][$sense->alignment] ?? ''; @endphp
+                                    <span class="text-gray-600">Alignment: {{ ucfirst($sense->alignment) }} {{ $aIcon }}</span>
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- ── Attribute Cards (learner-style grid) ─────── --}}
+                        @php
+                            $registerIcons    = ['literary'=>'🦋','formal'=>'🐝','standard'=>'🐞','colloquial'=>'🪲','informal'=>'🦗','slang'=>'🕷️'];
+                            $connotationIcons = ['positive'=>'☀️','positive-dominant'=>'🌤️','neutral'=>'⛅','negative-dominant'=>'🌥️','negative'=>'⛈️','context-dependent'=>'🌦️'];
+                            $connotationClass = ['positive'=>'conno-pos','positive-dominant'=>'conno-pos','neutral'=>'conno-neu','negative-dominant'=>'conno-neg','negative'=>'conno-neg','context-dependent'=>'conno-ctx'];
+                            $channelIcons     = ['spoken-only'=>'🦎','spoken-dominant'=>'🐍','channel-balanced'=>'🦜','written-dominant'=>'🦚','written-only'=>'🐉'];
+                            $dimensionIcons   = ['abstract'=>'🐙','concrete'=>'🐢','internal'=>'🐟','external'=>'🦂','dim-fluid'=>'🦀','aspectual'=>'🐡','grammatical'=>'🪼','spatial'=>'🐚','pragmatic'=>'🦑','temporal'=>'🐠'];
+                            $intensityIcons   = [1=>'🌸',2=>'🌼',3=>'🪷',4=>'🌻',5=>'🌺'];
+                            $intensityLabels  = [1=>'Faint',2=>'Mild',3=>'Moderate',4=>'Strong',5=>'Blazing'];
+                            $hasCards = $sense->channel || $sense->connotation || $sense->semanticMode || $sense->sensitivity
+                                     || $registers->isNotEmpty() || $dimensions->isNotEmpty() || $sense->intensity;
+                        @endphp
+                        @if ($hasCards)
+                            <div class="admin-attrs">
+                                @if ($registers->isNotEmpty())
+                                    <div class="card-attr attr-register">
+                                        <div class="card-attr-header">Register</div>
+                                        <div class="card-attr-value multi">
+                                            @foreach ($registers as $des)
+                                                <span class="attr-val-item">
+                                                    <span class="attr-icon">{{ $registerIcons[$des->slug] ?? '' }}</span>
+                                                    <span class="attr-label">{{ $des->labels->first()?->label ?? ucfirst($des->slug) }}</span>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if ($sense->connotation)
+                                    <div class="card-attr attr-connotation {{ $connotationClass[$sense->connotation->slug] ?? 'conno-neu' }}">
+                                        <div class="card-attr-header">Connotation</div>
+                                        <div class="card-attr-value">
+                                            <span class="attr-icon">{{ $connotationIcons[$sense->connotation->slug] ?? '' }}</span>
+                                            <span class="attr-label">{{ $sense->connotation->labels->first()?->label ?? ucfirst($sense->connotation->slug) }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if ($sense->channel)
+                                    <div class="card-attr attr-channel">
+                                        <div class="card-attr-header">Channel</div>
+                                        <div class="card-attr-value">
+                                            <span class="attr-icon">{{ $channelIcons[$sense->channel->slug] ?? '' }}</span>
+                                            <span class="attr-label">{{ $sense->channel->labels->first()?->label ?? ucfirst($sense->channel->slug) }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if ($dimensions->isNotEmpty())
+                                    <div class="card-attr attr-dimension">
+                                        <div class="card-attr-header">Dimension</div>
+                                        <div class="card-attr-value multi">
+                                            @foreach ($dimensions as $des)
+                                                <span class="attr-val-item">
+                                                    <span class="attr-icon">{{ $dimensionIcons[$des->slug] ?? '' }}</span>
+                                                    <span class="attr-label">{{ $des->labels->first()?->label ?? ucfirst($des->slug) }}</span>
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if ($sense->intensity)
+                                    <div class="card-attr attr-intensity">
+                                        <div class="card-attr-header">Intensity</div>
+                                        <div class="card-attr-value">
+                                            <span class="attr-icon">{{ $intensityIcons[$sense->intensity] ?? '' }}</span>
+                                            <span class="attr-label">{{ $intensityLabels[$sense->intensity] ?? $sense->intensity }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if ($sense->semanticMode)
+                                    <div class="card-attr attr-semantic-mode">
+                                        <div class="card-attr-header">Semantic Mode</div>
+                                        <div class="card-attr-value">
+                                            <span class="attr-label">{{ $sense->semanticMode->labels->first()?->label ?? ucfirst($sense->semanticMode->slug) }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if ($sense->sensitivity)
+                                    <div class="card-attr attr-sensitivity">
+                                        <div class="card-attr-header">Sensitivity</div>
+                                        <div class="card-attr-value">
+                                            <span class="attr-label">{{ $sense->sensitivity->labels->first()?->label ?? ucfirst($sense->sensitivity->slug) }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- ── Formula / Usage / Traps ───────────────────── --}}
+                        @if ($sense->formula || $sense->usage_note || $sense->learner_traps || (isset($sense->valency) && $sense->valency !== null))
+                            <div class="space-y-1.5">
+                                @if (isset($sense->valency) && $sense->valency !== null)
+                                    <p class="text-sm text-gray-600"><span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Valency:</span> {{ $valencyMap[$sense->valency] ?? $sense->valency }}</p>
+                                @endif
+                                @if ($sense->formula)
+                                    <p class="text-sm text-gray-700 font-mono bg-gray-50 rounded px-2.5 py-1.5 border border-gray-200">{{ $sense->formula }}</p>
+                                @endif
+                                @if ($sense->usage_note)
+                                    <div class="text-sm bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
+                                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Usage Note</span>
+                                        <p class="text-amber-900 mt-0.5">{{ $sense->usage_note }}</p>
+                                    </div>
+                                @endif
+                                @if ($sense->learner_traps)
+                                    <div class="text-sm bg-red-50 border border-red-200 rounded px-2.5 py-1.5">
+                                        <span class="text-xs font-semibold text-red-600 uppercase tracking-wide">Learner Traps</span>
+                                        <p class="text-red-900 mt-0.5">{{ $sense->learner_traps }}</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- ── Domains ───────────────────────────────────── --}}
+                        @if ($sense->domains->isNotEmpty())
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Domains</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @if ($primaryDomain)
+                                        <span class="inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-xs text-emerald-700 font-medium">
+                                            {{ $primaryDomain->labels->first()?->label ?? $primaryDomain->slug }}
+                                        </span>
+                                    @endif
+                                    @foreach ($secondaryDomains as $dom)
+                                        <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                                            {{ $dom->labels->first()?->label ?? $dom->slug }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- ── Examples ──────────────────────────────────── --}}
+                        @if ($sense->examples->isNotEmpty())
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Examples ({{ $sense->examples->count() }})</h4>
+                                <ul class="space-y-2">
+                                    @foreach ($sense->examples as $ex)
+                                        <li class="text-sm border-l-2 {{ $ex->is_suppressed ? 'border-red-200 opacity-60' : 'border-gray-200' }} pl-3">
+                                            <p class="cn text-gray-800">{{ $ex->chinese_text }}</p>
+                                            @if ($ex->english_text)
+                                                <p class="text-gray-500 text-xs mt-0.5">{{ $ex->english_text }}</p>
+                                            @endif
+                                            <div class="flex gap-2 mt-0.5">
+                                                <span class="text-xs text-gray-400">{{ $ex->source }}</span>
+                                                @if ($ex->is_suppressed)
+                                                    <span class="text-xs text-red-400">suppressed</span>
+                                                @endif
+                                            </div>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        {{-- ── Relations ─────────────────────────────────── --}}
+                        @if ($sense->senseRelations->isNotEmpty())
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Relations ({{ $sense->senseRelations->count() }})</h4>
+                                <ul class="space-y-0.5">
+                                    @foreach ($sense->senseRelations as $rel)
+                                        <li class="text-sm text-gray-600">
+                                            <span class="text-xs font-mono text-purple-600">{{ $rel->relationType->labels->first()?->label ?? $rel->relationType->slug ?? '?' }}</span>
+                                            →
+                                            <span class="cn font-medium">{{ $rel->related_word_text }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                    </div>
                 </li>
             @endforeach
         </ul>

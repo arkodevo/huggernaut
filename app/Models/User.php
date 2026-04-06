@@ -53,6 +53,7 @@ class User extends Authenticatable
         'pm_type',
         'pm_last_four',
         'trial_ends_at',
+        'last_active_at',
     ];
 
     protected $hidden = [
@@ -67,6 +68,7 @@ class User extends Authenticatable
             'password'             => 'hashed',
             'ai_credits_reset_at'  => 'datetime',
             'trial_ends_at'        => 'datetime',
+            'last_active_at'       => 'datetime',
             'points_balance'              => 'integer',
             'points_total_earned'         => 'integer',
             'filter_attribute_overrides'  => 'array',

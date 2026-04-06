@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PreferencesController;
 use App\Http\Controllers\Admin\SearchLogController;
 use App\Http\Controllers\Admin\SearchNotFoundController;
 use App\Http\Controllers\Admin\ShifuEngagementController;
+use App\Http\Controllers\Admin\CsvImportController;
 use App\Http\Controllers\Admin\WordObjectController;
 use App\Http\Controllers\Admin\WordPronunciationController;
 use App\Http\Controllers\Admin\WordSenseController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Api\WorkshopController;
 use App\Http\Controllers\CollectionTestController;
 use App\Http\Controllers\Api\ChineseNameController;
 use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\LearnerDashboardController;
 use App\Http\Controllers\MyWordsController;
 use App\Http\Controllers\MyWritingsController;
 use App\Http\Controllers\PageController;
@@ -57,6 +59,7 @@ Route::get('/help', [PageController::class, 'help'])->name('help');
 
 // ── Learner pages (auth required) ────────────────────────────────────────────
 
+Route::get('/dashboard', [LearnerDashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 Route::get('/my-words', [MyWordsController::class, 'index'])->name('my-words')->middleware('auth');
 Route::get('/my-writings', [MyWritingsController::class, 'index'])->name('my-writings')->middleware('auth');
 Route::get('/my-words/test/{collection}', [CollectionTestController::class, 'show'])->name('my-words.test')->middleware('auth');
@@ -93,6 +96,10 @@ Route::middleware('auth')->prefix('api')->group(function () {
 
     // Fluency level (profile setting for 師父)
     Route::put('/user/fluency-level', [WorkshopController::class, 'updateFluencyLevel']);
+
+    // Dashboard daily message
+    Route::post('/dashboard/daily-message', [LearnerDashboardController::class, 'generateDailyMessage']);
+    Route::patch('/dashboard/daily-message/feedback', [LearnerDashboardController::class, 'feedbackDailyMessage']);
 
     // Word learning progress
     Route::post('/word-progress/{wordObjectId}/learned', [CollectionTestController::class, 'markLearned']);
@@ -155,6 +162,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Words (WordObject) -------------------------------------------------------
     Route::get('words', [WordObjectController::class, 'index'])->name('words.index');
     Route::get('words/export', [WordObjectController::class, 'export'])->name('words.export');
+    Route::get('words/csv-import', [CsvImportController::class, 'showUpload'])->name('words.csv-import');
+    Route::post('words/csv-import/process', [CsvImportController::class, 'process'])->name('words.csv-import.process');
+    Route::post('words/csv-import/enrich', [CsvImportController::class, 'enrichWord'])->name('words.csv-import.enrich');
+    Route::post('words/csv-import/save-word', [CsvImportController::class, 'saveWord'])->name('words.csv-import.save-word');
+    Route::get('words/csv-import/next', [CsvImportController::class, 'processNext'])->name('words.csv-import.next');
     Route::get('words/create', [WordObjectController::class, 'create'])->name('words.create');
     Route::post('words', [WordObjectController::class, 'store'])->name('words.store');
     Route::get('words/{word}', [WordObjectController::class, 'show'])->name('words.show');

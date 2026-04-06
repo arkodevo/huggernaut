@@ -24,6 +24,7 @@ class WordObject extends Model
         'subtlex_rank',
         'subtlex_ppm',
         'subtlex_cd',
+        'shifu_reviewed_at',
     ];
 
     public function radical(): BelongsTo
@@ -39,17 +40,6 @@ class WordObject extends Model
     public function senses(): HasMany
     {
         return $this->hasMany(WordSense::class);
-    }
-
-    // Word senses that list this word_object as a collocation partner.
-    public function collocatingWordSenses(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            WordSense::class,
-            'word_sense_collocations',
-            'collocation_word_object_id',
-            'word_sense_id'
-        )->using(WordSenseCollocation::class)->withTimestamps();
     }
 
     public function scopePublished($query)

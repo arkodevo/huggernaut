@@ -300,11 +300,78 @@
     </div>
   </div>
 
+  {{-- Learning Preferences --}}
+  @php
+    $prefs = $user->ui_preferences ?? [];
+    $learnedRequires = $prefs['learned_requires'] ?? ['pinyin', 'definition', 'usage'];
+  @endphp
+  <div class="pf-section" id="learning-preferences">
+    <div class="pf-section-title">Learning Preferences</div>
+    <div class="pf-card">
+      <div class="pf-field" style="margin-bottom:0.8rem">
+        <div class="pf-label" style="margin-bottom:0.5rem">What counts as "learned"?</div>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:var(--dim);margin:0 0 0.6rem">
+          Select which tests must be passed for a word to count as fully learned.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:0.45rem">
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--ink)">
+            <input type="checkbox" id="lpPinyin" value="pinyin" {{ in_array('pinyin', $learnedRequires) ? 'checked' : '' }}
+                   onchange="saveLearningPrefs()" style="accent-color:var(--accent)"> Pinyin
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--ink)">
+            <input type="checkbox" id="lpDefinition" value="definition" {{ in_array('definition', $learnedRequires) ? 'checked' : '' }}
+                   onchange="saveLearningPrefs()" style="accent-color:var(--accent)"> Definition
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--ink)">
+            <input type="checkbox" id="lpUsage" value="usage" {{ in_array('usage', $learnedRequires) ? 'checked' : '' }}
+                   onchange="saveLearningPrefs()" style="accent-color:var(--accent)"> Usage (writing with 師父)
+          </label>
+        </div>
+        <div id="lpMsg" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--jade);margin-top:0.4rem"></div>
+        <div id="lpError" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--rose);margin-top:0.4rem"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 function pfCsrf() {
   return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
+async function saveLearningPrefs() {
+  const checks = ['lpPinyin', 'lpDefinition', 'lpUsage'];
+  const selected = checks
+    .filter(id => document.getElementById(id).checked)
+    .map(id => document.getElementById(id).value);
+
+  const msg = document.getElementById('lpMsg');
+  const err = document.getElementById('lpError');
+  msg.style.display = 'none';
+  err.style.display = 'none';
+
+  if (selected.length === 0) {
+    err.textContent = 'At least one test must be selected.';
+    err.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/preferences', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': pfCsrf(), 'Accept': 'application/json' },
+      body: JSON.stringify({ learned_requires: selected }),
+    });
+    if (res.ok) {
+      msg.textContent = 'Saved';
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 2000);
+    }
+  } catch (e) {
+    err.textContent = 'Error saving';
+    err.style.display = 'block';
+  }
 }
 
 async function savePllName() {

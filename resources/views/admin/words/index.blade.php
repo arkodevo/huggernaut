@@ -56,6 +56,10 @@
                 </div>
             </div>
         @endif
+        <a href="{{ route('admin.words.csv-import') }}"
+           class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-indigo-300 bg-indigo-50 text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors">
+            ↑ Import CSV
+        </a>
         <a href="{{ route('admin.words.create') }}"
            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors">
             + Add word
@@ -113,6 +117,17 @@
             <option value="">Source</option>
             <option value="tocfl"     {{ request('source') === 'tocfl'     ? 'selected' : '' }}>TOCFL</option>
             <option value="editorial" {{ request('source') === 'editorial' ? 'selected' : '' }}>Editorial</option>
+        </select>
+
+        {{-- Enriched By --}}
+        <select name="enriched_by"
+                class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <option value="">Enrichment</option>
+            <option value="huiming" {{ request('enriched_by') === 'huiming' ? 'selected' : '' }}>惠明 Huiming</option>
+            <option value="shifu"   {{ request('enriched_by') === 'shifu'   ? 'selected' : '' }}>師父 Shifu</option>
+            <option value="guangliu" {{ request('enriched_by') === 'guangliu' ? 'selected' : '' }}>光流 Guangliu</option>
+            <option value="luoyi"   {{ request('enriched_by') === 'luoyi'   ? 'selected' : '' }}>絡一 Luoyi</option>
+            <option value="none"    {{ request('enriched_by') === 'none'    ? 'selected' : '' }}>— Not enriched</option>
         </select>
 
         {{-- TOCFL Level --}}
@@ -238,6 +253,32 @@
 {{-- ── Results ──────────────────────────────────────────────────────────── --}}
 @else
 
+{{-- Check for CJK terms not in DB --}}
+@if (request()->filled('q'))
+    @php
+        $rawQ2 = request('q');
+        $missingTerms = [];
+        preg_match_all('/[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}]+/u', $rawQ2, $m2);
+        if (! empty($m2[0])) {
+            $foundTrads = \App\Models\WordObject::whereIn('traditional', $m2[0])
+                ->orWhereIn('simplified', $m2[0])
+                ->pluck('traditional')->toArray();
+            $missingTerms = array_values(array_filter($m2[0], fn ($t) => ! in_array($t, $foundTrads)));
+        }
+    @endphp
+    @if (! empty($missingTerms))
+        <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
+            <p class="text-sm text-amber-800">
+                Not in database: <span class="cn font-medium">{{ implode('、', $missingTerms) }}</span>
+            </p>
+            <button data-terms="{{ implode(',', $missingTerms) }}" onclick="quickShifuImport(this.dataset.terms.split(','))"
+                    class="px-3 py-1.5 rounded-lg bg-indigo-600 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors shrink-0 ml-3">
+                Import with 師父
+            </button>
+        </div>
+    @endif
+@endif
+
 @php
     $sortUrl = fn (string $col) => route('admin.words.index', array_merge(
         request()->only(['q', 'status', 'alignment', 'source', 'tocfl_level', 'hsk_level', 'pos', 'register', 'dimension', 'domain', 'secondary_domain']),
@@ -256,7 +297,33 @@
 
 <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
     @if ($words->isEmpty())
-        <p class="px-5 py-8 text-sm text-gray-400 text-center">No words match those filters.</p>
+        <div class="px-5 py-8 text-center">
+            <p class="text-sm text-gray-400 mb-3">No words match those filters.</p>
+            @if (request()->filled('q'))
+                @php
+                    // Extract CJK terms from the search query
+                    $rawQ = request('q');
+                    $cjkTerms = [];
+                    preg_match_all('/[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}]+/u', $rawQ, $matches);
+                    if (! empty($matches[0])) {
+                        $existing = \App\Models\WordObject::whereIn('traditional', $matches[0])
+                            ->orWhereIn('simplified', $matches[0])
+                            ->pluck('traditional')->toArray();
+                        $cjkTerms = array_values(array_filter($matches[0], fn ($t) => ! in_array($t, $existing)));
+                    }
+                @endphp
+                @if (! empty($cjkTerms))
+                    <p class="text-sm text-gray-600 mb-2">
+                        {{ count($cjkTerms) === 1 ? '1 word' : count($cjkTerms) . ' words' }} not in database:
+                        <span class="cn font-medium text-gray-900">{{ implode('、', $cjkTerms) }}</span>
+                    </p>
+                    <button data-terms="{{ implode(',', $cjkTerms) }}" onclick="quickShifuImport(this.dataset.terms.split(','))"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors">
+                        Import with 師父
+                    </button>
+                @endif
+            @endif
+        </div>
     @else
         <table class="min-w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-200">
@@ -389,6 +456,34 @@
 @endif
 
 @push('scripts')
+<script>
+function quickShifuImport(terms) {
+    var csv = terms.join('\n');
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var file = new File([blob], 'quick-import.csv', { type: 'text/csv' });
+    var formData = new FormData();
+    formData.append('csv_file', file);
+    formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+    fetch('{{ route("admin.words.csv-import.process") }}', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+        body: formData,
+    }).then(function(r) {
+        if (r.redirected) {
+            window.location.href = r.url;
+        } else {
+            return r.text();
+        }
+    }).then(function(html) {
+        if (html) {
+            document.open();
+            document.write(html);
+            document.close();
+        }
+    });
+}
+</script>
 <script>
 (function() {
     const HISTORY_KEY = 'admin_search_history';

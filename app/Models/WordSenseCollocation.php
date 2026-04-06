@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-// Sense-level collocations resolve to a word_object (not a sense), because
-// collocational partners are typically identified orthographically.
-class WordSenseCollocation extends Pivot
+// Collocations stored as text — segmentation and linking happens at render time.
+class WordSenseCollocation extends Model
 {
     protected $table = 'word_sense_collocations';
 
@@ -14,6 +14,11 @@ class WordSenseCollocation extends Pivot
 
     protected $fillable = [
         'word_sense_id',
-        'collocation_word_object_id',
+        'collocation_text',
     ];
+
+    public function sense(): BelongsTo
+    {
+        return $this->belongsTo(WordSense::class, 'word_sense_id');
+    }
 }

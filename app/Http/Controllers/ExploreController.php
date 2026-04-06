@@ -282,18 +282,18 @@ class ExploreController extends Controller
             'intensity'       => $primary->intensity ?? 2,
             'tocfl'           => $tocflShort,
             'level'           => $tocflNum,
-            'domain'          => $primary->domains->firstWhere('pivot.is_primary', true)?->slug,
+            'domain'          => $primary->domains->first()?->slug,
             'allDomains'      => $senses->flatMap(fn ($s) => $s->domains->pluck('slug'))
                                     ->unique()->values()->all(),
             'domainPairs'     => $senses->flatMap(function ($s) {
-                                    $primary = $s->domains->firstWhere('pivot.is_primary', true);
-                                    if (! $primary) return [];
-                                    $secondaries = $s->domains->where('pivot.is_primary', false);
-                                    if ($secondaries->isEmpty()) {
-                                        return [['p' => $primary->slug, 's' => null]];
+                                    $first = $s->domains->first();
+                                    if (! $first) return [];
+                                    $others = $s->domains->slice(1);
+                                    if ($others->isEmpty()) {
+                                        return [['p' => $first->slug, 's' => null]];
                                     }
-                                    return $secondaries->map(fn ($d) => [
-                                        'p' => $primary->slug, 's' => $d->slug,
+                                    return $others->map(fn ($d) => [
+                                        'p' => $first->slug, 's' => $d->slug,
                                     ]);
                                 })->unique(fn ($d) => $d['p'] . '~' . ($d['s'] ?? ''))
                                   ->values()->all(),
@@ -407,28 +407,7 @@ class ExploreController extends Controller
                                                   ->where('is_public', true)
                                                   ->orderBy('id'),
                 'collocations',
-                'senseRelations'  => fn ($q) => $q->with([
-                    'relationType',
-                    'relatedSense' => fn ($q) => $q->with([
-                        'wordObject',
-                        'pronunciation',
-                        'definitions' => fn ($q) => $q->where('language_id', 1)
-                                                       ->orderBy('sort_order')
-                                                       ->with('posLabel'),
-                        'tocflLevel',
-                    ]),
-                ]),
-                'inverseSenseRelations' => fn ($q) => $q->with([
-                    'relationType',
-                    'wordSense' => fn ($q) => $q->with([
-                        'wordObject',
-                        'pronunciation',
-                        'definitions' => fn ($q) => $q->where('language_id', 1)
-                                                       ->orderBy('sort_order')
-                                                       ->with('posLabel'),
-                        'tocflLevel',
-                    ]),
-                ]),
+                'senseRelations' => fn ($q) => $q->with('relationType'),
             ]),
         ])->where('smart_id', $smartId)->firstOrFail();
 
@@ -531,11 +510,10 @@ class ExploreController extends Controller
                 'zh'   => $d->labels?->firstWhere('language_id', 2)?->label,
             ];
 
-            $primaryDomain = $sense->domains->firstWhere('pivot.is_primary', true);
-            $domainShaped  = $primaryDomain ? $shapeDomainDesig($primaryDomain) : null;
+            $domainShaped = $sense->domains->first() ? $shapeDomainDesig($sense->domains->first()) : null;
 
             $secondaryDomainsShaped = $sense->domains
-                ->where('pivot.is_primary', false)
+                ->slice(1)
                 ->map($shapeDomainDesig)
                 ->values()->all();
 
@@ -559,45 +537,39 @@ class ExploreController extends Controller
                 'compounds'     => [],
             ];
 
-            $shapeRelated = function (WordSense $related, ?string $note = null) {
+            // Build a lookup of word_objects for linking relation targets
+            $allRelatedTexts = $sense->senseRelations->pluck('related_word_text')->unique()->values();
+            $relatedWords = $allRelatedTexts->isNotEmpty()
+                ? WordObject::whereIn('traditional', $allRelatedTexts)
+                    ->with(['senses' => fn ($q) => $q->with([
+                        'pronunciation',
+                        'definitions' => fn ($q) => $q->where('language_id', 1)->orderBy('sort_order')->with('posLabel'),
+                        'tocflLevel',
+                    ])])
+                    ->get()
+                    ->keyBy('traditional')
+                : collect();
+
+            $shapeRelated = function (string $text, ?string $note = null) use ($relatedWords) {
+                $word = $relatedWords->get($text);
+                $sense = $word?->senses->first();
                 return [
-                    'traditional' => $related->wordObject?->traditional,
-                    'smartId'     => $related->wordObject?->smart_id,
-                    'pinyin'      => $related->pronunciation?->pronunciation_text ?? '',
-                    'pos'         => self::POS_FULL_NAMES[$related->definitions->first()?->posLabel?->slug ?? ''] ?? '',
-                    'posAbbr'     => $related->definitions->first()?->posLabel?->slug ?? '',
-                    'def'         => $related->definitions->first()?->definition_text ?? '',
-                    'tocfl'       => self::TOCFL_SLUG_MAP[$related->tocflLevel?->slug ?? ''] ?? null,
+                    'traditional' => $text,
+                    'smartId'     => $word?->smart_id,
+                    'pinyin'      => $sense?->pronunciation?->pronunciation_text ?? '',
+                    'pos'         => $sense ? (self::POS_FULL_NAMES[$sense->definitions->first()?->posLabel?->slug ?? ''] ?? '') : '',
+                    'posAbbr'     => $sense?->definitions->first()?->posLabel?->slug ?? '',
+                    'def'         => $sense?->definitions->first()?->definition_text ?? '',
+                    'tocfl'       => self::TOCFL_SLUG_MAP[$sense?->tocflLevel?->slug ?? ''] ?? null,
                     'note'        => $note,
+                    'exists'      => (bool) $word,
                 ];
             };
 
-            // Forward relations (this sense → related sense)
+            // Forward relations (this sense → related word text)
             foreach ($sense->senseRelations as $rel) {
                 $typeSlug = $rel->relationType?->slug ?? '';
-                $related  = $rel->relatedSense;
-                if (!$related?->wordObject) continue;
-                $shaped = $shapeRelated($related, $rel->editorial_note);
-
-                match ($typeSlug) {
-                    'synonym_close'    => $relations['synonymClose'][]    = $shaped,
-                    'synonym_related'  => $relations['synonymRelated'][]  = $shaped,
-                    'antonym'          => $relations['antonym'][]         = $shaped,
-                    'contrast'         => $relations['contrast'][]        = $shaped,
-                    'register_variant' => $relations['registerVariant'][] = $shaped,
-                    'derivative'       => $family['derivatives'][]        = $shaped,
-                    'family_member'    => $family['familyMembers'][]      = $shaped,
-                    'compound'         => $family['compounds'][]          = $shaped,
-                    default            => null,
-                };
-            }
-
-            // Inverse relations (related sense → this sense)
-            foreach ($sense->inverseSenseRelations as $rel) {
-                $typeSlug = $rel->relationType?->slug ?? '';
-                $source   = $rel->wordSense;
-                if (!$source?->wordObject) continue;
-                $shaped = $shapeRelated($source, $rel->editorial_note);
+                $shaped = $shapeRelated($rel->related_word_text, $rel->editorial_note);
 
                 match ($typeSlug) {
                     'synonym_close'    => $relations['synonymClose'][]    = $shaped,

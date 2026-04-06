@@ -18,7 +18,7 @@ class WordObjectController extends Controller
 {
     // ── Filter keys used in both index() and export() ────────────────────────
 
-    private const FILTER_KEYS = ['q', 'status', 'alignment', 'source', 'tocfl_level', 'hsk_level', 'pos', 'register', 'dimension', 'domain', 'secondary_domain'];
+    private const FILTER_KEYS = ['q', 'status', 'alignment', 'source', 'enriched_by', 'tocfl_level', 'hsk_level', 'pos', 'register', 'dimension', 'domain', 'secondary_domain'];
 
     // ── Index ─────────────────────────────────────────────────────────────────
 
@@ -148,10 +148,9 @@ class WordObjectController extends Controller
                     $register  = $byAttr->get('register',  collect())->pluck('slug')->implode(', ');
                     $dimension = $byAttr->get('dimension',  collect())->pluck('slug')->implode(', ');
 
-                    // Domains
-                    $primaryDomain    = $sense->domains->firstWhere('pivot.is_primary', true)?->slug ?? '';
-                    $secondaryDomains = $sense->domains->filter(fn ($d) => !$d->pivot->is_primary)
-                                              ->pluck('slug')->implode(', ');
+                    // Domains (ordered, first = most relevant)
+                    $primaryDomain    = $sense->domains->first()?->slug ?? '';
+                    $secondaryDomains = $sense->domains->slice(1)->pluck('slug')->implode(', ');
 
                     // Examples (up to 2)
                     $exs  = $sense->examples->values();
@@ -224,6 +223,15 @@ class WordObjectController extends Controller
 
         if ($request->filled('source')) {
             $query->whereHas('senses', fn ($s) => $s->where('source', $request->source));
+        }
+
+        if ($request->filled('enriched_by')) {
+            $val = $request->enriched_by;
+            if ($val === 'none') {
+                $query->whereHas('senses', fn ($s) => $s->whereNull('enriched_by'));
+            } else {
+                $query->whereHas('senses', fn ($s) => $s->where('enriched_by', $val));
+            }
         }
 
         if ($request->filled('tocfl_level')) {
@@ -381,10 +389,22 @@ class WordObjectController extends Controller
         $word->load([
             'radical',
             'pronunciations.pronunciationSystem',
-            'senses.pronunciation',
-            'senses.tocflLevel.labels',
-            'senses.hskLevel.labels',
-            'senses.definitions.posLabel',
+            'senses' => fn ($q) => $q->orderBy('id')->with([
+                'pronunciation',
+                'tocflLevel.labels',
+                'hskLevel.labels',
+                'definitions' => fn ($q) => $q->orderBy('sort_order')->with(['posLabel', 'language']),
+                'channel.labels',
+                'connotation.labels',
+                'semanticMode.labels',
+                'sensitivity.labels',
+                'designations.attribute',
+                'domains' => fn ($q) => $q->with(['labels' => fn ($q) => $q->where('language_id', 1)]),
+                'examples' => fn ($q) => $q->orderBy('id'),
+                'senseRelations' => fn ($q) => $q->with([
+                    'relationType.labels' => fn ($q) => $q->where('language_id', 1),
+                ]),
+            ]),
         ]);
 
         return view('admin.words.show', compact('word'));

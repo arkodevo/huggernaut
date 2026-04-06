@@ -1,0 +1,3421 @@
+[
+    {
+        "traditional": "土壤",
+        "simplified": "土壤",
+        "smart_id": "u571f_u58e4",
+        "senses": [
+            {
+                "pinyin": "tu3rang3",
+                "pos": "N",
+                "source": "tocfl",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "soil",
+                    "zh-TW": "土壤；植物生長的泥土層，也可比喻事物生長發展的基礎環境"
+                },
+                "formula": "[植物] 在 土壤 中生長",
+                "usage_note": "Scientific and agricultural term for soil as a growing medium.",
+                "learner_traps": "比「泥土」更正式，常用於科學或農業語境。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [],
+                "intensity": 1,
+                "domains": [
+                    "nature",
+                    "science"
+                ],
+                "relations": [],
+                "collocations": [],
+                "examples": [
+                    {
+                        "chinese": "這片土壤很適合種菜。",
+                        "english": "This soil is well suited for growing vegetables."
+                    },
+                    {
+                        "chinese": "自由的社會比較容易形成創新的土壤。",
+                        "english": "A free society more easily forms fertile ground for innovation."
+                    }
+                ]
+            },
+            {
+                "pinyin": "tu3rang3",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "foundation; basis; breeding ground for development",
+                    "zh-TW": "基礎；孕育發展的環境條件"
+                },
+                "formula": "[事物] 的土壤",
+                "usage_note": "Metaphorical use referring to conditions that foster growth or development.",
+                "learner_traps": "隱喻用法，指培養或發展某事物的環境條件。",
+                "register": [
+                    "formal"
+                ],
+                "connotation": "neutral",
+                "channel": "written-dominant",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "philosophy",
+                    "society",
+                    "culture"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "溫床"
+                    ],
+                    "synonym_related": [
+                        "基礎",
+                        "環境"
+                    ],
+                    "contrast": [
+                        "障礙",
+                        "阻力"
+                    ]
+                },
+                "collocations": [
+                    "文化土壤",
+                    "創新土壤",
+                    "腐敗的土壤"
+                ],
+                "examples": [
+                    {
+                        "chinese": "這個社會為創新提供了良好的土壤。",
+                        "english": "This society provides good soil for innovation."
+                    },
+                    {
+                        "chinese": "民主需要自由的土壤才能茁壯成長。",
+                        "english": "Democracy needs the soil of freedom to flourish."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "能量",
+        "simplified": "能量",
+        "smart_id": "u80fd_u91cf",
+        "senses": [
+            {
+                "pinyin": "neng2liang4",
+                "pos": "N",
+                "source": "tocfl",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "energy",
+                    "zh-TW": "能量；可產生作用的力量，也可比喻精神力量"
+                },
+                "formula": "[物質] 的能量",
+                "usage_note": "Scientific term for energy in physics, chemistry, and related fields.",
+                "learner_traps": "不要和「力量」混淆；「能量」更科學，「力量」更一般。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [],
+                "intensity": 1,
+                "domains": [
+                    "science",
+                    "emotion"
+                ],
+                "relations": [],
+                "collocations": [],
+                "examples": [
+                    {
+                        "chinese": "運動能幫助身體釋放多餘能量。",
+                        "english": "Exercise can help the body release excess energy."
+                    },
+                    {
+                        "chinese": "他的話總是帶來正面能量。",
+                        "english": "His words always bring positive energy."
+                    }
+                ]
+            },
+            {
+                "pinyin": "neng2liang4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "vitality; vigor; spiritual energy",
+                    "zh-TW": "活力；精神力量"
+                },
+                "formula": "[人] 有正面能量",
+                "usage_note": "Metaphorical use referring to personal vitality, positive attitude, or spiritual strength.",
+                "learner_traps": "這是比喻用法，不是物理學的能量概念。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "emotion",
+                    "health",
+                    "personal",
+                    "philosophy"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "活力"
+                    ],
+                    "synonym_related": [
+                        "精神",
+                        "氣質"
+                    ],
+                    "antonym": [
+                        "負能量"
+                    ],
+                    "contrast": [
+                        "疲勞",
+                        "消極"
+                    ]
+                },
+                "collocations": [
+                    "正面能量",
+                    "負面能量",
+                    "充滿能量"
+                ],
+                "examples": [
+                    {
+                        "chinese": "她總是充滿正面能量。",
+                        "english": "She is always full of positive energy."
+                    },
+                    {
+                        "chinese": "運動可以增加你的能量。",
+                        "english": "Exercise can increase your energy."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "看破",
+        "simplified": "看破",
+        "smart_id": "u770b_u7834",
+        "senses": [
+            {
+                "pinyin": "kan4po4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "see through; penetrate the truth of something",
+                    "zh-TW": "看穿；洞察事物的真相"
+                },
+                "formula": "看破 [事物\/真相]",
+                "usage_note": "Often implies gaining wisdom or understanding about the nature of things, especially illusions or deceptions.",
+                "learner_traps": "不要和「看穿」完全混用；「看破」更強調對事物本質的深刻理解。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "cognition",
+                    "philosophy",
+                    "perception"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "看穿"
+                    ],
+                    "synonym_related": [
+                        "洞察",
+                        "識破",
+                        "參透"
+                    ],
+                    "antonym": [
+                        "迷惑"
+                    ],
+                    "contrast": [
+                        "看錯",
+                        "誤解"
+                    ]
+                },
+                "collocations": [
+                    "看破紅塵",
+                    "看破真相"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他終於看破了這個騙局。",
+                        "english": "He finally saw through this scam."
+                    },
+                    {
+                        "chinese": "年紀大了，很多事情都看破了。",
+                        "english": "With age, he has seen through many things."
+                    }
+                ]
+            },
+            {
+                "pinyin": "kan4po4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "become disillusioned with worldly matters; see through the vanity of life",
+                    "zh-TW": "對世俗事物不再執著；看透人生的虛幻"
+                },
+                "formula": "看破 [紅塵\/世事\/名利]",
+                "usage_note": "Often used in Buddhist or philosophical contexts to describe spiritual enlightenment or detachment from worldly desires.",
+                "learner_traps": "這個意思帶有佛教或哲學色彩，不是單純的「理解」。",
+                "register": [
+                    "standard",
+                    "literary"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract",
+                    "aspectual"
+                ],
+                "intensity": 4,
+                "domains": [
+                    "philosophy",
+                    "religion",
+                    "emotion",
+                    "life"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "看淡"
+                    ],
+                    "synonym_related": [
+                        "超脫",
+                        "放下",
+                        "覺悟"
+                    ],
+                    "antonym": [
+                        "執著",
+                        "迷戀"
+                    ],
+                    "contrast": [
+                        "追求",
+                        "貪戀"
+                    ]
+                },
+                "collocations": [
+                    "看破紅塵",
+                    "看破名利",
+                    "看破世事"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他看破紅塵，決定出家修行。",
+                        "english": "He became disillusioned with worldly matters and decided to become a monk."
+                    },
+                    {
+                        "chinese": "經歷了這麼多，她已經看破了名利。",
+                        "english": "After going through so much, she has seen through fame and fortune."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "洞察",
+        "simplified": "洞察",
+        "smart_id": "u6d1e_u5bdf",
+        "senses": [
+            {
+                "pinyin": "dong4cha2",
+                "pos": "V",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "perceive clearly; gain insight into; see through",
+                    "zh-TW": "深刻地觀察和理解；看透事物的本質"
+                },
+                "formula": "洞察 [現象\/問題\/真相]",
+                "usage_note": "Often used in formal contexts to describe deep understanding or penetrating observation.",
+                "learner_traps": "比「觀察」更深入，強調看透本質；不是簡單的「看見」。",
+                "register": [
+                    "formal",
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "written-dominant",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "cognition",
+                    "perception",
+                    "philosophy"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "洞悉"
+                    ],
+                    "synonym_related": [
+                        "觀察",
+                        "理解",
+                        "領悟"
+                    ],
+                    "antonym": [
+                        "忽視"
+                    ],
+                    "contrast": [
+                        "表面觀察",
+                        "誤解"
+                    ]
+                },
+                "collocations": [
+                    "洞察力",
+                    "洞察真相",
+                    "深入洞察"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他能洞察人心，總是知道別人在想什麼。",
+                        "english": "He can see into people's hearts and always knows what others are thinking."
+                    },
+                    {
+                        "chinese": "這位學者洞察了社會問題的根源。",
+                        "english": "This scholar gained insight into the root causes of social problems."
+                    }
+                ]
+            },
+            {
+                "pinyin": "dong4cha2",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "insight; penetrating observation; deep understanding",
+                    "zh-TW": "深刻的見解；透徹的觀察；深入的理解"
+                },
+                "formula": "[主體] 的洞察",
+                "usage_note": "Used to refer to the quality or result of deep understanding.",
+                "learner_traps": "作為名詞時，常與「力」組成「洞察力」。",
+                "register": [
+                    "formal",
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "written-dominant",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "abstract",
+                    "internal"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "cognition",
+                    "philosophy",
+                    "education"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "見解"
+                    ],
+                    "synonym_related": [
+                        "理解",
+                        "認知",
+                        "智慧"
+                    ],
+                    "antonym": [
+                        "無知"
+                    ],
+                    "contrast": [
+                        "表面認識",
+                        "偏見"
+                    ]
+                },
+                "collocations": [
+                    "獨特的洞察",
+                    "深刻洞察",
+                    "重要洞察"
+                ],
+                "examples": [
+                    {
+                        "chinese": "她的洞察幫助我們解決了這個難題。",
+                        "english": "Her insight helped us solve this difficult problem."
+                    },
+                    {
+                        "chinese": "這本書提供了對人性的深刻洞察。",
+                        "english": "This book provides deep insights into human nature."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "識破",
+        "simplified": "识破",
+        "smart_id": "u8b58_u7834",
+        "senses": [
+            {
+                "pinyin": "shi2po4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "see through; expose; detect",
+                    "zh-TW": "看穿；揭穿；察覺"
+                },
+                "formula": "識破 [騙局\/陰謀\/真相]",
+                "usage_note": "Used when discovering hidden truth or exposing deception through insight or investigation.",
+                "learner_traps": "不能說「識破得很清楚」，因為「破」是結果補語，已經表示完成。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "cognition",
+                    "perception",
+                    "social-relations"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "看穿"
+                    ],
+                    "synonym_related": [
+                        "揭穿",
+                        "發現",
+                        "察覺"
+                    ],
+                    "antonym": [
+                        "隱瞒"
+                    ],
+                    "contrast": [
+                        "相信",
+                        "受騙"
+                    ]
+                },
+                "collocations": [
+                    "識破騙局",
+                    "識破陰謀",
+                    "識破真相"
+                ],
+                "examples": [
+                    {
+                        "chinese": "警察很快就識破了他的謊言。",
+                        "english": "The police quickly saw through his lies."
+                    },
+                    {
+                        "chinese": "這個騙局終於被識破了。",
+                        "english": "This scam was finally exposed."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "參透",
+        "simplified": "参透",
+        "smart_id": "u53c3_u900f",
+        "senses": [
+            {
+                "pinyin": "can1tou4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "penetrate and understand thoroughly; see through to the essence",
+                    "zh-TW": "深入理解；看透本質"
+                },
+                "formula": "參透 [道理\/真相\/奧秘]",
+                "usage_note": "Often used for deep philosophical or spiritual understanding.",
+                "learner_traps": "不是簡單的「理解」，而是深層的洞察和領悟。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "cognition",
+                    "philosophy",
+                    "education"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "洞察",
+                        "領悟"
+                    ],
+                    "synonym_related": [
+                        "理解",
+                        "明白",
+                        "看透"
+                    ],
+                    "antonym": [
+                        "迷惑"
+                    ],
+                    "contrast": [
+                        "困惑",
+                        "不解"
+                    ]
+                },
+                "collocations": [
+                    "參透真理",
+                    "參透人生",
+                    "參透奧秘"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他終於參透了人生的真諦。",
+                        "english": "He finally penetrated the true meaning of life."
+                    },
+                    {
+                        "chinese": "這個道理很深奧，不容易參透。",
+                        "english": "This principle is profound and not easy to see through."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "看錯",
+        "simplified": "看错",
+        "smart_id": "u770b_u932f",
+        "senses": [
+            {
+                "pinyin": "kan4 cuo4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "to see wrongly; to misread; to look at incorrectly",
+                    "zh-TW": "看得不正確；看得不對；誤看"
+                },
+                "formula": "看錯 [Object]",
+                "usage_note": "Resultative compound indicating incorrect visual perception or reading.",
+                "learner_traps": "錯 is a resultative complement showing the wrong outcome of seeing, not a separate action.",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "negative-dominant",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "external"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "perception",
+                    "cognition"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "誤看"
+                    ],
+                    "synonym_related": [
+                        "看漏",
+                        "看偏"
+                    ],
+                    "antonym": [
+                        "看對",
+                        "看準"
+                    ],
+                    "contrast": [
+                        "看清",
+                        "看懂"
+                    ]
+                },
+                "collocations": [
+                    "看錯人",
+                    "看錯字",
+                    "看錯時間"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我看錯了時間，以為現在是三點。",
+                        "english": "I misread the time and thought it was three o'clock."
+                    },
+                    {
+                        "chinese": "你看錯人了，我不是你要找的那個人。",
+                        "english": "You've got the wrong person; I'm not the one you're looking for."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "看淡",
+        "simplified": "看淡",
+        "smart_id": "u770b_u6de1",
+        "senses": [
+            {
+                "pinyin": "kan4dan4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "view lightly; take a detached view of; regard as unimportant",
+                    "zh-TW": "以淡然的態度看待；不太在意；視為不重要"
+                },
+                "formula": "看淡 [事情\/名利\/得失]",
+                "usage_note": "Often used in contexts of philosophical detachment or emotional maturity.",
+                "learner_traps": "不是「看不清楚」的意思，而是「不太重視」的意思。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "philosophy",
+                    "emotion",
+                    "cognition",
+                    "values"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "淡然"
+                    ],
+                    "synonym_related": [
+                        "放下",
+                        "看開"
+                    ],
+                    "antonym": [
+                        "看重",
+                        "執著"
+                    ],
+                    "contrast": [
+                        "在意",
+                        "計較"
+                    ]
+                },
+                "collocations": [
+                    "看淡名利",
+                    "看淡得失",
+                    "看淡一切"
+                ],
+                "examples": [
+                    {
+                        "chinese": "經歷了這麼多事情，他已經看淡了名利。",
+                        "english": "Having experienced so much, he has come to view fame and fortune lightly."
+                    },
+                    {
+                        "chinese": "年紀大了，對很多事情都看淡了。",
+                        "english": "As I've gotten older, I've become more detached about many things."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "放下",
+        "simplified": "放下",
+        "smart_id": "u653e_u4e0b",
+        "senses": [
+            {
+                "pinyin": "fang4 xia4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "put down; set down",
+                    "zh-TW": "將物品置於較低處或放置"
+                },
+                "formula": "把 [物品] 放下",
+                "usage_note": "Resultative compound indicating downward placement of objects.",
+                "learner_traps": "不是分離動詞；「下」是結果補語，不能說「放了下」。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "spatial"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "daily-living",
+                    "movement"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "放置"
+                    ],
+                    "synonym_related": [
+                        "擱下",
+                        "擺下"
+                    ],
+                    "antonym": [
+                        "拿起",
+                        "舉起"
+                    ],
+                    "contrast": [
+                        "放上"
+                    ]
+                },
+                "collocations": [
+                    "放下書",
+                    "放下包"
+                ],
+                "examples": [
+                    {
+                        "chinese": "請把書放下。",
+                        "english": "Please put the book down."
+                    },
+                    {
+                        "chinese": "他放下手中的杯子。",
+                        "english": "He put down the cup in his hand."
+                    }
+                ]
+            },
+            {
+                "pinyin": "fang4 xia4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "let go of; release emotionally",
+                    "zh-TW": "不再執著；釋懷"
+                },
+                "formula": "放下 [心理負擔\/執著]",
+                "usage_note": "Metaphorical use for emotional or psychological release.",
+                "learner_traps": "比喻用法，表示心理上的釋放，不是物理動作。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive-dominant",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "emotion",
+                    "philosophy",
+                    "cognition"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "釋懷"
+                    ],
+                    "synonym_related": [
+                        "放開",
+                        "捨棄"
+                    ],
+                    "antonym": [
+                        "執著",
+                        "緊抓"
+                    ],
+                    "contrast": [
+                        "拿起"
+                    ]
+                },
+                "collocations": [
+                    "放下包袱",
+                    "放下仇恨"
+                ],
+                "examples": [
+                    {
+                        "chinese": "你應該放下過去的痛苦。",
+                        "english": "You should let go of past pain."
+                    },
+                    {
+                        "chinese": "學會放下才能獲得內心平靜。",
+                        "english": "Learning to let go brings inner peace."
+                    }
+                ]
+            },
+            {
+                "pinyin": "fang4 xia4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "stop; cease doing",
+                    "zh-TW": "停止進行；中斷"
+                },
+                "formula": "放下 [工作\/活動]",
+                "usage_note": "Used for stopping activities or work temporarily or permanently.",
+                "learner_traps": "指停止活動，不是物理的放置動作。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-dominant",
+                "dimension": [
+                    "temporal"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "daily-living",
+                    "work"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "停止"
+                    ],
+                    "synonym_related": [
+                        "中斷",
+                        "暫停"
+                    ],
+                    "antonym": [
+                        "開始",
+                        "繼續"
+                    ],
+                    "contrast": [
+                        "拿起"
+                    ]
+                },
+                "collocations": [
+                    "放下工作",
+                    "放下手邊的事"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他放下手邊的工作去接電話。",
+                        "english": "He stopped his work to answer the phone."
+                    },
+                    {
+                        "chinese": "請放下你在做的事情。",
+                        "english": "Please stop what you're doing."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "貪戀",
+        "simplified": "贪恋",
+        "smart_id": "u8caa_u6200",
+        "senses": [
+            {
+                "pinyin": "tan1lian4",
+                "pos": "Vst",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "covet; be greedy for; crave excessively",
+                    "zh-TW": "過分渴望；貪求"
+                },
+                "formula": "貪戀 [名詞]",
+                "usage_note": "Formal term expressing excessive desire or attachment, often with moral disapproval.",
+                "learner_traps": "比「喜歡」或「想要」更強烈，帶有負面評價。",
+                "register": [
+                    "formal"
+                ],
+                "connotation": "negative",
+                "channel": "written-dominant",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "internal"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "emotion",
+                    "values",
+                    "personal"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "貪求"
+                    ],
+                    "synonym_related": [
+                        "渴望",
+                        "迷戀"
+                    ],
+                    "antonym": [
+                        "淡泊",
+                        "知足"
+                    ],
+                    "contrast": [
+                        "珍惜"
+                    ]
+                },
+                "collocations": [
+                    "貪戀權力",
+                    "貪戀財富",
+                    "貪戀美色"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他貪戀權力，不願意退休。",
+                        "english": "He covets power and is unwilling to retire."
+                    },
+                    {
+                        "chinese": "不要貪戀物質享受。",
+                        "english": "Don't be greedy for material pleasures."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "享用",
+        "simplified": "享用",
+        "smart_id": "u4eab_u7528",
+        "senses": [
+            {
+                "pinyin": "xiang3yong4",
+                "pos": "V",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "enjoy; make use of; partake of",
+                    "zh-TW": "享受使用；受用"
+                },
+                "formula": "享用 [食物\/設施\/服務]",
+                "usage_note": "Often used with food, facilities, or services that one benefits from or takes pleasure in using.",
+                "learner_traps": "比「使用」更強調享受的感覺，不只是單純的使用。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "external"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "daily-living",
+                    "personal",
+                    "leisure"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "享受"
+                    ],
+                    "synonym_related": [
+                        "使用",
+                        "受用",
+                        "品嚐"
+                    ],
+                    "contrast": [
+                        "浪費",
+                        "拒絕"
+                    ]
+                },
+                "collocations": [
+                    "享用美食",
+                    "享用服務",
+                    "享用設施"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我們在餐廳享用了豐盛的晚餐。",
+                        "english": "We enjoyed a sumptuous dinner at the restaurant."
+                    },
+                    {
+                        "chinese": "住客可以免費享用飯店的健身房。",
+                        "english": "Guests can enjoy free use of the hotel's gym."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "充電",
+        "simplified": "充电",
+        "smart_id": "u5145_u96fb",
+        "senses": [
+            {
+                "pinyin": "chong1dian4",
+                "pos": "Vi",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "charge (a battery); recharge",
+                    "zh-TW": "為電池補充電力"
+                },
+                "formula": "[Device] 充電",
+                "usage_note": "Used for electronic devices and batteries.",
+                "learner_traps": "不及物動詞，不說「充電手機」，要說「給手機充電」。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [],
+                "intensity": 1,
+                "domains": [
+                    "technology",
+                    "daily-living"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "充能",
+                        "蓄電"
+                    ],
+                    "antonym": [
+                        "放電"
+                    ],
+                    "contrast": [
+                        "斷電",
+                        "沒電"
+                    ]
+                },
+                "collocations": [
+                    "手機充電",
+                    "充電器",
+                    "充電線"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我的手機需要充電了。",
+                        "english": "My phone needs to charge."
+                    },
+                    {
+                        "chinese": "電動車正在充電。",
+                        "english": "The electric car is charging."
+                    }
+                ]
+            },
+            {
+                "pinyin": "chong1dian4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "charge (something); recharge (a device)",
+                    "zh-TW": "為某物補充電力"
+                },
+                "formula": "給 [Device] 充電",
+                "usage_note": "Transitive use with 給 or direct object placement.",
+                "learner_traps": "常用「給...充電」的結構，直接說「充電手機」較不自然。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [],
+                "intensity": 1,
+                "domains": [
+                    "technology",
+                    "daily-living"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "充能",
+                        "供電"
+                    ],
+                    "antonym": [
+                        "斷電"
+                    ],
+                    "contrast": [
+                        "耗電",
+                        "用電"
+                    ]
+                },
+                "collocations": [
+                    "給手機充電",
+                    "充電完成"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我給平板充電。",
+                        "english": "I'm charging the tablet."
+                    },
+                    {
+                        "chinese": "充電器可以同時充電兩個設備。",
+                        "english": "The charger can charge two devices simultaneously."
+                    }
+                ]
+            },
+            {
+                "pinyin": "chong1dian4",
+                "pos": "Vi",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "recharge oneself; refresh; rejuvenate",
+                    "zh-TW": "恢復精神；補充能量"
+                },
+                "formula": "[Person] 充電",
+                "usage_note": "Metaphorical use for personal energy restoration.",
+                "learner_traps": "比喻用法，指人恢復精神，不是真的充電。",
+                "register": [
+                    "informal",
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "internal"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "personal",
+                    "health",
+                    "emotion"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "休息",
+                        "放鬆",
+                        "恢復"
+                    ],
+                    "antonym": [
+                        "疲憊"
+                    ],
+                    "contrast": [
+                        "消耗",
+                        "透支"
+                    ]
+                },
+                "collocations": [
+                    "週末充電",
+                    "度假充電"
+                ],
+                "examples": [
+                    {
+                        "chinese": "週末在家充電，準備下週的工作。",
+                        "english": "I'm recharging at home on the weekend, preparing for next week's work."
+                    },
+                    {
+                        "chinese": "旅行是最好的充電方式。",
+                        "english": "Traveling is the best way to recharge."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "啟程",
+        "simplified": "启程",
+        "smart_id": "u555f_u7a0b",
+        "senses": [
+            {
+                "pinyin": "qi3cheng2",
+                "pos": "Vi",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "set out; depart on a journey",
+                    "zh-TW": "出發；開始旅程"
+                },
+                "formula": "啟程前往 [地點]",
+                "usage_note": "Formal term for beginning a journey or trip.",
+                "learner_traps": "比「出發」更正式；多用於書面語或正式場合。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "temporal",
+                    "spatial"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "travel",
+                    "movement"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "出發"
+                    ],
+                    "synonym_related": [
+                        "動身",
+                        "起程"
+                    ],
+                    "antonym": [
+                        "抵達",
+                        "到達"
+                    ],
+                    "contrast": [
+                        "返回"
+                    ]
+                },
+                "collocations": [
+                    "啟程前往",
+                    "準備啟程",
+                    "即將啟程"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我們明天清晨啟程前往北京。",
+                        "english": "We will set out for Beijing tomorrow morning."
+                    },
+                    {
+                        "chinese": "旅行團準備啟程了。",
+                        "english": "The tour group is ready to depart."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "執",
+        "simplified": "执",
+        "smart_id": "u57f7",
+        "senses": [
+            {
+                "pinyin": "zhi2",
+                "pos": "V",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "hold; grasp; take hold of",
+                    "zh-TW": "握住；拿住；抓住"
+                },
+                "formula": "執 [Object]",
+                "usage_note": "Often used in formal or literary contexts for physical grasping.",
+                "learner_traps": "比「拿」更正式，多用於書面語。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "concrete"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "daily-living",
+                    "movement"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "握"
+                    ],
+                    "synonym_related": [
+                        "拿",
+                        "抓",
+                        "持"
+                    ],
+                    "antonym": [
+                        "放",
+                        "鬆"
+                    ],
+                    "contrast": [
+                        "丟"
+                    ]
+                },
+                "collocations": [
+                    "執筆",
+                    "執手"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他執筆寫字。",
+                        "english": "He holds the pen to write."
+                    },
+                    {
+                        "chinese": "執子之手，與子偕老。",
+                        "english": "Hold your hand and grow old together with you."
+                    }
+                ]
+            },
+            {
+                "pinyin": "zhi2",
+                "pos": "V",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "persist in; stick to; insist on",
+                    "zh-TW": "堅持；固執；執意"
+                },
+                "formula": "執 [Opinion\/Position]",
+                "usage_note": "Can be positive (persistence) or negative (stubbornness) depending on context.",
+                "learner_traps": "可以是褒義（堅持）也可以是貶義（固執），要看語境。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "context-dependent",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "personality",
+                    "cognition"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "堅持"
+                    ],
+                    "synonym_related": [
+                        "固執",
+                        "執著"
+                    ],
+                    "antonym": [
+                        "放棄",
+                        "妥協"
+                    ],
+                    "contrast": [
+                        "變通",
+                        "靈活"
+                    ]
+                },
+                "collocations": [
+                    "執意",
+                    "執著",
+                    "偏執"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他執意要去。",
+                        "english": "He insists on going."
+                    },
+                    {
+                        "chinese": "不要太執著於過去。",
+                        "english": "Don't be too attached to the past."
+                    }
+                ]
+            },
+            {
+                "pinyin": "zhi2",
+                "pos": "V",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "carry out; execute; implement",
+                    "zh-TW": "執行；實施；進行"
+                },
+                "formula": "執 [Task\/Duty\/Law]",
+                "usage_note": "Formal term used in official, legal, or administrative contexts.",
+                "learner_traps": "正式用語，多用於公文、法律等正式場合。",
+                "register": [
+                    "formal"
+                ],
+                "connotation": "neutral",
+                "channel": "written-dominant",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "concrete"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "work",
+                    "law",
+                    "politics"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "執行"
+                    ],
+                    "synonym_related": [
+                        "實施",
+                        "進行",
+                        "履行"
+                    ],
+                    "antonym": [
+                        "違反",
+                        "廢止"
+                    ],
+                    "contrast": [
+                        "計劃",
+                        "準備"
+                    ]
+                },
+                "collocations": [
+                    "執法",
+                    "執政",
+                    "執勤"
+                ],
+                "examples": [
+                    {
+                        "chinese": "警察執法要公正。",
+                        "english": "Police must enforce the law fairly."
+                    },
+                    {
+                        "chinese": "他正在執勤。",
+                        "english": "He is on duty."
+                    }
+                ]
+            },
+            {
+                "pinyin": "zhi2",
+                "pos": "V",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "be in charge of; manage; control",
+                    "zh-TW": "掌管；主持；控制"
+                },
+                "formula": "執 [Authority\/Power]",
+                "usage_note": "Used in contexts of authority, leadership, or control.",
+                "learner_traps": "多用於正式場合，表示掌握權力或責任。",
+                "register": [
+                    "formal"
+                ],
+                "connotation": "neutral",
+                "channel": "written-dominant",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "work",
+                    "politics",
+                    "social-relations"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "掌管"
+                    ],
+                    "synonym_related": [
+                        "主持",
+                        "控制",
+                        "管理"
+                    ],
+                    "antonym": [
+                        "服從",
+                        "聽從"
+                    ],
+                    "contrast": [
+                        "協助",
+                        "配合"
+                    ]
+                },
+                "collocations": [
+                    "執政",
+                    "執掌",
+                    "執權"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他執政十年。",
+                        "english": "He has been in power for ten years."
+                    },
+                    {
+                        "chinese": "由誰執掌這個部門？",
+                        "english": "Who is in charge of this department?"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "好事",
+        "simplified": "好事",
+        "smart_id": "u597d_u4e8b",
+        "senses": [
+            {
+                "pinyin": "hao3shi4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "good deed; charitable act; virtuous action",
+                    "zh-TW": "善行；慈善行為；有德行的事情"
+                },
+                "formula": "做好事 \/ 行好事",
+                "usage_note": "Refers to morally positive actions or charitable deeds.",
+                "learner_traps": "注意聲調：好事（hǎo shì）是好的事情，好事（hào shì）是喜歡多管閒事。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "values",
+                    "social-relations",
+                    "personal"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "善行"
+                    ],
+                    "synonym_related": [
+                        "善事",
+                        "德行"
+                    ],
+                    "antonym": [
+                        "壞事",
+                        "惡行"
+                    ],
+                    "contrast": [
+                        "麻煩事"
+                    ]
+                },
+                "collocations": [
+                    "做好事",
+                    "行好事",
+                    "好事多磨"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他經常做好事幫助別人。",
+                        "english": "He often does good deeds to help others."
+                    },
+                    {
+                        "chinese": "這真是一件好事。",
+                        "english": "This is really a good thing."
+                    }
+                ]
+            },
+            {
+                "pinyin": "hao4shi4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "meddling; busybody behavior; interfering in others' affairs",
+                    "zh-TW": "多管閒事；愛管別人事情的行為"
+                },
+                "formula": "愛好事 \/ 好事的人",
+                "usage_note": "Describes someone who likes to meddle in others' business, often used critically.",
+                "learner_traps": "這個意思的「好事」讀作hào shì，不是hǎo shì。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "negative",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "social-relations",
+                    "personality",
+                    "communication"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "多管閒事"
+                    ],
+                    "synonym_related": [
+                        "愛管閒事",
+                        "雞婆"
+                    ],
+                    "antonym": [
+                        "不聞不問"
+                    ],
+                    "contrast": [
+                        "冷漠"
+                    ]
+                },
+                "collocations": [
+                    "愛好事",
+                    "好事者",
+                    "好事的人"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他很愛好事，什麼都要管。",
+                        "english": "He's very meddlesome and wants to interfere in everything."
+                    },
+                    {
+                        "chinese": "別那麼好事，這不關你的事。",
+                        "english": "Don't be such a busybody, this is none of your business."
+                    }
+                ]
+            },
+            {
+                "pinyin": "hao3shi4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "happy occasion; joyful event; celebration",
+                    "zh-TW": "喜事；值得慶祝的事情；歡樂的場合"
+                },
+                "formula": "有好事 \/ 遇到好事",
+                "usage_note": "Often refers to weddings, births, promotions, or other celebratory events.",
+                "learner_traps": "在婚禮等場合，「好事」特指喜慶的事情。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "emotion",
+                    "social-relations",
+                    "entertainment"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "喜事"
+                    ],
+                    "synonym_related": [
+                        "喜慶",
+                        "慶事"
+                    ],
+                    "antonym": [
+                        "喪事",
+                        "不幸"
+                    ],
+                    "contrast": [
+                        "憂事"
+                    ]
+                },
+                "collocations": [
+                    "好事近了",
+                    "雙喜臨門",
+                    "好事成雙"
+                ],
+                "examples": [
+                    {
+                        "chinese": "聽說你家有好事了？",
+                        "english": "I heard there's a happy occasion in your family?"
+                    },
+                    {
+                        "chinese": "好事近了，他們快要結婚了。",
+                        "english": "Good news is coming - they're getting married soon."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "常用",
+        "simplified": "常用",
+        "smart_id": "u5e38_u7528",
+        "senses": [
+            {
+                "pinyin": "chang2yong4",
+                "pos": "Vsattr",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "commonly used; frequently used",
+                    "zh-TW": "經常使用的；頻繁使用的"
+                },
+                "formula": "常用 [Noun]",
+                "usage_note": "Attributive adjective describing things that are used regularly or frequently.",
+                "learner_traps": "只能作定語，不能說「這個很常用」，要說「這個很常見」或「這個經常用到」。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "temporal"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "language",
+                    "daily-living"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "常見"
+                    ],
+                    "synonym_related": [
+                        "普通",
+                        "一般"
+                    ],
+                    "antonym": [
+                        "罕用"
+                    ],
+                    "contrast": [
+                        "專用",
+                        "特殊"
+                    ]
+                },
+                "collocations": [
+                    "常用字",
+                    "常用詞",
+                    "常用語",
+                    "常用工具"
+                ],
+                "examples": [
+                    {
+                        "chinese": "這些都是常用字。",
+                        "english": "These are all commonly used characters."
+                    },
+                    {
+                        "chinese": "請準備常用工具。",
+                        "english": "Please prepare commonly used tools."
+                    }
+                ]
+            },
+            {
+                "pinyin": "chang2 yong4",
+                "pos": "Adv",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "often use; frequently use",
+                    "zh-TW": "經常使用；頻繁使用"
+                },
+                "formula": "常用 [Object]",
+                "usage_note": "Adverbial phrase meaning to use something regularly or frequently.",
+                "learner_traps": "作副詞時要分開讀，「常」修飾「用」；作形容詞時連讀。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "temporal"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "daily-living",
+                    "language"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "經常用",
+                        "常常用"
+                    ],
+                    "synonym_related": [
+                        "頻繁使用",
+                        "多用"
+                    ],
+                    "antonym": [
+                        "很少用",
+                        "不常用"
+                    ],
+                    "contrast": [
+                        "偶爾用",
+                        "臨時用"
+                    ]
+                },
+                "collocations": [
+                    "常用這個",
+                    "常用電腦",
+                    "常用手機"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我常用這支筆寫字。",
+                        "english": "I often use this pen to write."
+                    },
+                    {
+                        "chinese": "他常用電腦工作。",
+                        "english": "He frequently uses the computer for work."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "未嘗不是",
+        "simplified": "未尝不是",
+        "smart_id": "u672a_u5617_u4e0d_u662f",
+        "senses": [
+            {
+                "pinyin": "wei4 chang2 bu4 shi4",
+                "pos": "Adv",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "might well be; could very well be; not necessarily untrue",
+                    "zh-TW": "也許是；可能是；不見得不對"
+                },
+                "formula": "未嘗不是 [Statement\/Possibility]",
+                "usage_note": "Literary expression used to suggest something might be true or valid, often in contemplative or analytical contexts.",
+                "learner_traps": "雙重否定結構，意思是肯定的；比直接說「是」更委婉。",
+                "register": [
+                    "formal",
+                    "literary"
+                ],
+                "connotation": "neutral",
+                "channel": "written-dominant",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "cognition",
+                    "communication"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "也許是",
+                        "可能是",
+                        "說不定"
+                    ],
+                    "antonym": [
+                        "絕對不是",
+                        "肯定不是"
+                    ],
+                    "contrast": [
+                        "確實是",
+                        "必然是"
+                    ]
+                },
+                "collocations": [
+                    "未嘗不是好事",
+                    "未嘗不是辦法"
+                ],
+                "examples": [
+                    {
+                        "chinese": "這樣做未嘗不是一個好辦法。",
+                        "english": "This approach might well be a good solution."
+                    },
+                    {
+                        "chinese": "他的建議未嘗不是有道理的。",
+                        "english": "His suggestion could very well be reasonable."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "無常",
+        "simplified": "无常",
+        "smart_id": "u7121_u5e38",
+        "senses": [
+            {
+                "pinyin": "wu2chang2",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "impermanence; transience; the Buddhist concept that all things are temporary",
+                    "zh-TW": "無常；變化無定；佛教中指一切事物都是暫時的概念"
+                },
+                "formula": "人生無常",
+                "usage_note": "Core Buddhist philosophical concept; also used in general contexts about life's unpredictability.",
+                "learner_traps": "不只是「變化」，更強調事物本質上的暫時性和不可預測性。",
+                "register": [
+                    "formal"
+                ],
+                "connotation": "neutral",
+                "channel": "written-dominant",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract",
+                    "temporal"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "philosophy",
+                    "religion",
+                    "life"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "變化"
+                    ],
+                    "synonym_related": [
+                        "變遷",
+                        "流轉"
+                    ],
+                    "antonym": [
+                        "永恆"
+                    ],
+                    "contrast": [
+                        "穩定",
+                        "恆常"
+                    ]
+                },
+                "collocations": [
+                    "人生無常",
+                    "世事無常"
+                ],
+                "examples": [
+                    {
+                        "chinese": "佛教教導我們要接受生命的無常。",
+                        "english": "Buddhism teaches us to accept the impermanence of life."
+                    },
+                    {
+                        "chinese": "世事無常，我們要珍惜當下。",
+                        "english": "Life is unpredictable, so we should cherish the present moment."
+                    }
+                ]
+            },
+            {
+                "pinyin": "wu2chang2",
+                "pos": "Vs",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "be impermanent; be changeable; be unpredictable",
+                    "zh-TW": "變化無定；不穩定；無法預測"
+                },
+                "formula": "[Subject] 很無常",
+                "usage_note": "Used to describe situations, emotions, or conditions that are unstable or unpredictable.",
+                "learner_traps": "作為形容詞時，通常不用「很」修飾，多用於書面語。",
+                "register": [
+                    "formal",
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "written-dominant",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract",
+                    "temporal"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "philosophy",
+                    "daily-living"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "多變"
+                    ],
+                    "synonym_related": [
+                        "不穩定",
+                        "變幻"
+                    ],
+                    "antonym": [
+                        "穩定"
+                    ],
+                    "contrast": [
+                        "固定",
+                        "持久"
+                    ]
+                },
+                "collocations": [
+                    "情況無常",
+                    "命運無常"
+                ],
+                "examples": [
+                    {
+                        "chinese": "天氣無常，出門要帶傘。",
+                        "english": "The weather is unpredictable, so bring an umbrella when going out."
+                    },
+                    {
+                        "chinese": "股市行情無常，投資要謹慎。",
+                        "english": "Stock market conditions are volatile, so investment requires caution."
+                    }
+                ]
+            },
+            {
+                "pinyin": "wu2chang2",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "death; the grim reaper; supernatural being that takes souls",
+                    "zh-TW": "死神；勾魂使者；帶走靈魂的超自然存在"
+                },
+                "formula": "無常來臨",
+                "usage_note": "Traditional Chinese folk belief personification of death; used in classical literature and religious contexts.",
+                "learner_traps": "這是傳統文化中對死神的稱呼，不同於佛教的「無常」概念。",
+                "register": [
+                    "literary",
+                    "formal"
+                ],
+                "connotation": "negative",
+                "channel": "written-dominant",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 4,
+                "domains": [
+                    "religion",
+                    "culture",
+                    "life"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "死神"
+                    ],
+                    "synonym_related": [
+                        "閻王",
+                        "鬼差"
+                    ],
+                    "contrast": [
+                        "生命",
+                        "長壽"
+                    ]
+                },
+                "collocations": [
+                    "無常來臨",
+                    "無常索命"
+                ],
+                "examples": [
+                    {
+                        "chinese": "古人相信無常會來帶走人的靈魂。",
+                        "english": "Ancient people believed that the grim reaper would come to take away human souls."
+                    },
+                    {
+                        "chinese": "小說中描述無常現身的恐怖場面。",
+                        "english": "The novel describes the terrifying scene of the grim reaper's appearance."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "無緣",
+        "simplified": "无缘",
+        "smart_id": "u7121_u7de3",
+        "senses": [
+            {
+                "pinyin": "wu2yuan2",
+                "pos": "Vs",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "having no fate or destiny to be together; lacking affinity",
+                    "zh-TW": "沒有緣分；缺乏因緣"
+                },
+                "formula": "[Person] 和 [Person] 無緣",
+                "usage_note": "Often used to express regret about missed connections or relationships that were not meant to be.",
+                "learner_traps": "不是「沒有原因」的意思；「緣」指緣分、因緣，不是「原因」。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "negative-dominant",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-dominant",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "philosophy",
+                    "emotion",
+                    "social-relations"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "無分",
+                        "沒緣分"
+                    ],
+                    "antonym": [
+                        "有緣"
+                    ],
+                    "contrast": [
+                        "有分",
+                        "投緣"
+                    ]
+                },
+                "collocations": [
+                    "無緣相見",
+                    "無緣無故"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我們兩個人無緣，還是分手吧。",
+                        "english": "We have no fate together, let's break up."
+                    },
+                    {
+                        "chinese": "他和那份工作無緣，面試沒有通過。",
+                        "english": "He had no luck with that job; he didn't pass the interview."
+                    }
+                ]
+            },
+            {
+                "pinyin": "wu2yuan2",
+                "pos": "Adv",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "for no reason; without cause",
+                    "zh-TW": "沒有原因地；無故地"
+                },
+                "formula": "無緣 [Verb]",
+                "usage_note": "Usually appears in the phrase 無緣無故, meaning 'for no reason at all'.",
+                "learner_traps": "常和「無故」連用成「無緣無故」，意思是「沒有任何原因」。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "negative-dominant",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "communication",
+                    "daily-living"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "無故"
+                    ],
+                    "synonym_related": [
+                        "莫名其妙",
+                        "平白"
+                    ],
+                    "contrast": [
+                        "有理",
+                        "合理"
+                    ]
+                },
+                "collocations": [
+                    "無緣無故"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他無緣無故就生氣了。",
+                        "english": "He got angry for no reason at all."
+                    },
+                    {
+                        "chinese": "不要無緣無故批評別人。",
+                        "english": "Don't criticize others without cause."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "甜蜜",
+        "simplified": "甜蜜",
+        "smart_id": "u751c_u871c",
+        "senses": [
+            {
+                "pinyin": "tian2mi4",
+                "pos": "Vs",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "sweet; having a sweet taste",
+                    "zh-TW": "味道甘甜的"
+                },
+                "formula": "[食物] 很甜蜜",
+                "usage_note": "Describes the literal sweet taste of food or drinks.",
+                "learner_traps": "比「甜」更強調濃郁的甜味感受。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "concrete"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "food",
+                    "perception"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "甘甜"
+                    ],
+                    "synonym_related": [
+                        "甜",
+                        "香甜"
+                    ],
+                    "antonym": [
+                        "苦澀"
+                    ],
+                    "contrast": [
+                        "酸",
+                        "鹹"
+                    ]
+                },
+                "collocations": [
+                    "甜蜜的味道",
+                    "甜蜜可口"
+                ],
+                "examples": [
+                    {
+                        "chinese": "這個蛋糕吃起來很甜蜜。",
+                        "english": "This cake tastes very sweet."
+                    },
+                    {
+                        "chinese": "蜂蜜有甜蜜的味道。",
+                        "english": "Honey has a sweet taste."
+                    }
+                ]
+            },
+            {
+                "pinyin": "tian2mi4",
+                "pos": "Vs",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "sweet; blissful; happy and romantic",
+                    "zh-TW": "幸福美好的；充滿愛意的"
+                },
+                "formula": "[關係\/生活] 很甜蜜",
+                "usage_note": "Metaphorical use describing romantic relationships, happy moments, or blissful experiences.",
+                "learner_traps": "常用於描述愛情關係，不只是字面上的甜味。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "abstract",
+                    "internal"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "emotion",
+                    "personal",
+                    "social-relations"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "幸福"
+                    ],
+                    "synonym_related": [
+                        "美好",
+                        "浪漫",
+                        "溫馨"
+                    ],
+                    "antonym": [
+                        "痛苦",
+                        "苦澀"
+                    ],
+                    "contrast": [
+                        "冷淡",
+                        "平淡"
+                    ]
+                },
+                "collocations": [
+                    "甜蜜的愛情",
+                    "甜蜜的回憶",
+                    "甜蜜的笑容"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他們過著甜蜜的新婚生活。",
+                        "english": "They are living a sweet newlywed life."
+                    },
+                    {
+                        "chinese": "這是我們最甜蜜的回憶。",
+                        "english": "This is our sweetest memory."
+                    }
+                ]
+            },
+            {
+                "pinyin": "tian2mi4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "sweetness; sweet taste or feeling",
+                    "zh-TW": "甜味；甜蜜的感覺"
+                },
+                "formula": "感受到甜蜜",
+                "usage_note": "Used as a noun to refer to the quality of sweetness, either literal or metaphorical.",
+                "learner_traps": "可以指味覺上的甜味，也可以指情感上的甜蜜感受。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "balanced",
+                "dimension": [
+                    "abstract",
+                    "concrete"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "perception",
+                    "emotion"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "甜味",
+                        "幸福感"
+                    ],
+                    "antonym": [
+                        "苦味",
+                        "痛苦"
+                    ],
+                    "contrast": [
+                        "酸味",
+                        "冷漠"
+                    ]
+                },
+                "collocations": [
+                    "品嚐甜蜜",
+                    "享受甜蜜"
+                ],
+                "examples": [
+                    {
+                        "chinese": "她臉上露出了甜蜜。",
+                        "english": "Sweetness appeared on her face."
+                    },
+                    {
+                        "chinese": "這種甜蜜讓人難忘。",
+                        "english": "This sweetness is unforgettable."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "看透",
+        "simplified": "看透",
+        "smart_id": "u770b_u900f",
+        "senses": [
+            {
+                "pinyin": "kan4tou4",
+                "pos": "Vpt",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "see through; understand thoroughly; penetrate the truth of something",
+                    "zh-TW": "徹底了解；洞察真相；看穿事物的本質"
+                },
+                "formula": "看透 [事物\/人心\/真相]",
+                "usage_note": "Resultative compound indicating complete understanding or perception through something.",
+                "learner_traps": "不只是視覺上的「看穿」，更多指心理或智慧上的洞察。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "cognition",
+                    "perception",
+                    "philosophy"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "看穿"
+                    ],
+                    "synonym_related": [
+                        "洞察",
+                        "明白",
+                        "了解"
+                    ],
+                    "antonym": [
+                        "迷惑"
+                    ],
+                    "contrast": [
+                        "看錯",
+                        "誤解"
+                    ]
+                },
+                "collocations": [
+                    "看透人心",
+                    "看透真相"
+                ],
+                "examples": [
+                    {
+                        "chinese": "經過這件事，我終於看透了他的真面目。",
+                        "english": "After this incident, I finally saw through his true nature."
+                    },
+                    {
+                        "chinese": "她很快就看透了這個騙局。",
+                        "english": "She quickly saw through this scam."
+                    }
+                ]
+            },
+            {
+                "pinyin": "kan4tou4",
+                "pos": "Vp",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "become disillusioned; see through the vanity of worldly affairs",
+                    "zh-TW": "看破紅塵；對世事感到幻滅；不再執著"
+                },
+                "formula": "看透 [世事\/人生\/紅塵]",
+                "usage_note": "Often implies a sense of disillusionment or detachment from worldly concerns.",
+                "learner_traps": "這個意思帶有消極或超脫的色彩，不同於單純的「理解」。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "negative-dominant",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 4,
+                "domains": [
+                    "philosophy",
+                    "emotion",
+                    "life"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "看破"
+                    ],
+                    "synonym_related": [
+                        "超脫",
+                        "幻滅",
+                        "覺悟"
+                    ],
+                    "antonym": [
+                        "執著"
+                    ],
+                    "contrast": [
+                        "沉迷",
+                        "迷戀"
+                    ]
+                },
+                "collocations": [
+                    "看透世事",
+                    "看透人生"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他看透了名利，決定隱居山林。",
+                        "english": "He became disillusioned with fame and fortune and decided to retreat to the mountains."
+                    },
+                    {
+                        "chinese": "年紀大了，什麼都看透了。",
+                        "english": "With age, he has seen through everything."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "緣分",
+        "simplified": "缘分",
+        "smart_id": "u7de3_u5206",
+        "senses": [
+            {
+                "pinyin": "yuan2fen4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "fate; destiny; predestined relationship",
+                    "zh-TW": "命運安排的關係；註定的緣份"
+                },
+                "formula": "有緣分 \/ [Person] 和 [Person] 的緣分",
+                "usage_note": "Often used to describe meaningful relationships that seem destined or fated to occur.",
+                "learner_traps": "不只是「運氣」，更強調人與人之間註定的關係。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive-dominant",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "abstract",
+                    "temporal"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "philosophy",
+                    "emotion",
+                    "social-relations",
+                    "culture"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "緣份"
+                    ],
+                    "synonym_related": [
+                        "命運",
+                        "因緣",
+                        "機緣"
+                    ],
+                    "contrast": [
+                        "巧合",
+                        "偶然"
+                    ]
+                },
+                "collocations": [
+                    "有緣分",
+                    "沒緣分",
+                    "珍惜緣分"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我們能相遇真是有緣分。",
+                        "english": "It's really fate that we could meet."
+                    },
+                    {
+                        "chinese": "他們的緣分已盡，只好分手了。",
+                        "english": "Their destined relationship has ended, so they had to break up."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "表象",
+        "simplified": "表象",
+        "smart_id": "u8868_u8c61",
+        "senses": [
+            {
+                "pinyin": "biao3xiang4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "surface appearance; outward manifestation",
+                    "zh-TW": "表面現象；外在表現"
+                },
+                "formula": "[事物] 的表象",
+                "usage_note": "Refers to what appears on the surface, often contrasted with deeper reality or essence.",
+                "learner_traps": "不要和「現象」混淆；「表象」強調表面性，「現象」較中性。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "external",
+                    "abstract"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "perception",
+                    "philosophy",
+                    "cognition"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "現象",
+                        "外表"
+                    ],
+                    "antonym": [
+                        "本質",
+                        "實質"
+                    ],
+                    "contrast": [
+                        "內在",
+                        "真相"
+                    ]
+                },
+                "collocations": [
+                    "表象現象",
+                    "虛假表象"
+                ],
+                "examples": [
+                    {
+                        "chinese": "不要被表象迷惑，要看清事情的本質。",
+                        "english": "Don't be deceived by surface appearances; see the essence of things clearly."
+                    },
+                    {
+                        "chinese": "這只是表象，真正的問題在更深層。",
+                        "english": "This is just a surface manifestation; the real problem lies deeper."
+                    }
+                ]
+            },
+            {
+                "pinyin": "biao3xiang4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "mental representation; image in consciousness",
+                    "zh-TW": "心理表象；意識中的影像"
+                },
+                "formula": "形成 [事物] 的表象",
+                "usage_note": "Technical term in psychology and philosophy referring to mental images or representations.",
+                "learner_traps": "專業術語，多用於心理學或哲學語境中。",
+                "register": [
+                    "formal"
+                ],
+                "connotation": "neutral",
+                "channel": "written-dominant",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "cognition",
+                    "philosophy",
+                    "education"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "意象",
+                        "印象"
+                    ],
+                    "contrast": [
+                        "概念",
+                        "實體"
+                    ]
+                },
+                "collocations": [
+                    "心理表象",
+                    "視覺表象"
+                ],
+                "examples": [
+                    {
+                        "chinese": "記憶中的表象往往不夠準確。",
+                        "english": "Mental representations in memory are often inaccurate."
+                    },
+                    {
+                        "chinese": "他腦海中形成了清晰的表象。",
+                        "english": "A clear mental image formed in his mind."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "親情",
+        "simplified": "亲情",
+        "smart_id": "u89aa_u60c5",
+        "senses": [
+            {
+                "pinyin": "qin1qing2",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "family affection; kinship; familial love",
+                    "zh-TW": "親人之間的感情；血緣關係產生的愛"
+                },
+                "formula": "[親人] 之間的親情",
+                "usage_note": "Refers to the emotional bond between family members, especially blood relatives.",
+                "learner_traps": "不同於「友情」或「愛情」；專指家人間的感情。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "family",
+                    "emotion",
+                    "personal",
+                    "social-relations"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "骨肉之情"
+                    ],
+                    "synonym_related": [
+                        "家庭感情",
+                        "血緣之愛"
+                    ],
+                    "contrast": [
+                        "友情",
+                        "愛情",
+                        "師生情"
+                    ]
+                },
+                "collocations": [
+                    "珍惜親情",
+                    "親情可貴",
+                    "濃厚的親情"
+                ],
+                "examples": [
+                    {
+                        "chinese": "親情是世界上最珍貴的感情。",
+                        "english": "Family affection is the most precious emotion in the world."
+                    },
+                    {
+                        "chinese": "他們兄弟之間的親情很深厚。",
+                        "english": "The family bond between the brothers is very deep."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "語境",
+        "simplified": "语境",
+        "smart_id": "u8a9e_u5883",
+        "senses": [
+            {
+                "pinyin": "yu3jing4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "context; linguistic context",
+                    "zh-TW": "語言環境；上下文脈絡"
+                },
+                "formula": "在 [語境] 中理解",
+                "usage_note": "Academic and formal term for linguistic or situational context.",
+                "learner_traps": "不要與「環境」混淆；「語境」專指語言使用的情境脈絡。",
+                "register": [
+                    "formal",
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "written-dominant",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "language",
+                    "communication",
+                    "education"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "上下文"
+                    ],
+                    "synonym_related": [
+                        "情境",
+                        "脈絡",
+                        "背景"
+                    ],
+                    "contrast": [
+                        "字面意思"
+                    ]
+                },
+                "collocations": [
+                    "語境分析",
+                    "語境理解",
+                    "脫離語境"
+                ],
+                "examples": [
+                    {
+                        "chinese": "這個詞的意思要根據語境來判斷。",
+                        "english": "The meaning of this word should be determined according to the context."
+                    },
+                    {
+                        "chinese": "脫離語境很難理解這句話的真正含義。",
+                        "english": "It's difficult to understand the true meaning of this sentence without context."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "雨水",
+        "simplified": "雨水",
+        "smart_id": "u96e8_u6c34",
+        "senses": [
+            {
+                "pinyin": "yu3shui3",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "rainwater; precipitation",
+                    "zh-TW": "從天空降下的水；降水"
+                },
+                "formula": "收集雨水 \/ 雨水充足",
+                "usage_note": "Natural water from precipitation, commonly used in weather contexts.",
+                "learner_traps": "不要和「雨」混淆；「雨水」強調水本身，「雨」指下雨的現象。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "concrete"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "weather",
+                    "nature",
+                    "environment"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "降水",
+                        "雨露"
+                    ],
+                    "contrast": [
+                        "地下水",
+                        "自來水"
+                    ]
+                },
+                "collocations": [
+                    "收集雨水",
+                    "雨水充足",
+                    "雨水不足"
+                ],
+                "examples": [
+                    {
+                        "chinese": "農民收集雨水來澆灌農作物。",
+                        "english": "Farmers collect rainwater to irrigate crops."
+                    },
+                    {
+                        "chinese": "今年雨水充足，莊稼長得很好。",
+                        "english": "This year there's been plenty of rainwater, so the crops are growing well."
+                    }
+                ]
+            },
+            {
+                "pinyin": "yu3shui3",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "Rain Water (second solar term of the year)",
+                    "zh-TW": "二十四節氣中的第二個節氣"
+                },
+                "formula": "雨水節氣 \/ 雨水時節",
+                "usage_note": "One of the 24 solar terms in traditional Chinese calendar, occurring around February 19th.",
+                "learner_traps": "這是專有名詞，指特定的節氣，不是一般的雨水。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "temporal"
+                ],
+                "intensity": 1,
+                "domains": [
+                    "time",
+                    "culture",
+                    "nature"
+                ],
+                "relations": {
+                    "synonym_related": [
+                        "節氣",
+                        "立春"
+                    ],
+                    "contrast": [
+                        "大雪",
+                        "白露"
+                    ]
+                },
+                "collocations": [
+                    "雨水節氣",
+                    "雨水時節"
+                ],
+                "examples": [
+                    {
+                        "chinese": "雨水過後，天氣開始變暖。",
+                        "english": "After Rain Water, the weather starts to get warmer."
+                    },
+                    {
+                        "chinese": "雨水是二十四節氣中的第二個。",
+                        "english": "Rain Water is the second of the twenty-four solar terms."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "靈性",
+        "simplified": "灵性",
+        "smart_id": "u9748_u6027",
+        "senses": [
+            {
+                "pinyin": "ling2xing4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "spirituality; spiritual nature",
+                    "zh-TW": "精神性；靈魂的本質"
+                },
+                "formula": "追求靈性 \/ [Person] 的靈性",
+                "usage_note": "Refers to the spiritual aspect of human nature or religious consciousness.",
+                "learner_traps": "不同於「理性」；「靈性」強調精神和靈魂層面。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "abstract",
+                    "internal"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "religion",
+                    "philosophy",
+                    "values",
+                    "cognition"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "精神性"
+                    ],
+                    "synonym_related": [
+                        "靈魂",
+                        "心靈"
+                    ],
+                    "antonym": [
+                        "物質性"
+                    ],
+                    "contrast": [
+                        "理性",
+                        "感性"
+                    ]
+                },
+                "collocations": [
+                    "追求靈性",
+                    "靈性修養",
+                    "靈性成長"
+                ],
+                "examples": [
+                    {
+                        "chinese": "她一直在追求內心的靈性成長。",
+                        "english": "She has been pursuing inner spiritual growth."
+                    },
+                    {
+                        "chinese": "這本書探討人類的靈性本質。",
+                        "english": "This book explores the spiritual nature of humanity."
+                    }
+                ]
+            },
+            {
+                "pinyin": "ling2xing4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "intelligence; cleverness; mental agility",
+                    "zh-TW": "聰明；機靈；智慧"
+                },
+                "formula": "很有靈性 \/ 展現靈性",
+                "usage_note": "Describes mental sharpness or quick understanding, often used for animals or people.",
+                "learner_traps": "可以用來形容動物的聰明，不只是人類。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "cognition",
+                    "personality",
+                    "education"
+                ],
+                "relations": {
+                    "antonym": [
+                        "愚笨"
+                    ],
+                    "contrast": [
+                        "遲鈍",
+                        "呆板"
+                    ],
+                    "synonym_close": [
+                        "聰明"
+                    ],
+                    "synonym_related": [
+                        "智慧",
+                        "機靈"
+                    ]
+                },
+                "collocations": [
+                    "很有靈性",
+                    "靈性十足",
+                    "展現靈性"
+                ],
+                "examples": [
+                    {
+                        "chinese": "這隻狗很有靈性，能聽懂主人的話。",
+                        "english": "This dog is very intelligent and can understand its owner's words."
+                    },
+                    {
+                        "chinese": "小孩子的眼神充滿靈性。",
+                        "english": "The child's eyes are full of intelligence."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "珍惜",
+        "simplified": "珍惜",
+        "smart_id": "u73cd_u60dc",
+        "senses": [
+            {
+                "pinyin": "zhen1xi1",
+                "pos": "V",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "treasure; cherish; value highly",
+                    "zh-TW": "重視；愛惜；視為珍貴"
+                },
+                "formula": "珍惜 [Object\/Person\/Opportunity]",
+                "usage_note": "Expresses deep appreciation and careful protection of something valuable.",
+                "learner_traps": "不只是「喜歡」，還包含「保護」和「不浪費」的意思。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "emotion",
+                    "values",
+                    "personal",
+                    "social-relations"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "愛惜"
+                    ],
+                    "synonym_related": [
+                        "重視",
+                        "寶貴",
+                        "愛護"
+                    ],
+                    "antonym": [
+                        "浪費",
+                        "糟蹋"
+                    ],
+                    "contrast": [
+                        "忽視",
+                        "輕視"
+                    ]
+                },
+                "collocations": [
+                    "珍惜時間",
+                    "珍惜機會",
+                    "珍惜友誼",
+                    "珍惜生命"
+                ],
+                "examples": [
+                    {
+                        "chinese": "我們應該珍惜每一個學習的機會。",
+                        "english": "We should treasure every learning opportunity."
+                    },
+                    {
+                        "chinese": "她很珍惜和家人在一起的時光。",
+                        "english": "She cherishes the time spent with her family."
+                    },
+                    {
+                        "chinese": "請珍惜現在擁有的一切。",
+                        "english": "Please value everything you have now."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "陽光",
+        "simplified": "阳光",
+        "smart_id": "u967d_u5149",
+        "senses": [
+            {
+                "pinyin": "yang2guang1",
+                "pos": "Vs",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "sunny; cheerful; optimistic",
+                    "zh-TW": "開朗的；樂觀的；積極向上的"
+                },
+                "formula": "[人] 很陽光",
+                "usage_note": "Describes positive personality traits, often used for people who are cheerful and optimistic.",
+                "learner_traps": "這是比喻用法，不是指真的太陽光；用來形容人的性格。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "metaphorical-dominant",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 2,
+                "domains": [
+                    "personality",
+                    "emotion",
+                    "values"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "開朗"
+                    ],
+                    "synonym_related": [
+                        "樂觀",
+                        "積極",
+                        "活潑"
+                    ],
+                    "antonym": [
+                        "陰沉",
+                        "消極"
+                    ],
+                    "contrast": [
+                        "內向",
+                        "憂鬱"
+                    ]
+                },
+                "collocations": [
+                    "陽光男孩",
+                    "陽光女孩",
+                    "很陽光"
+                ],
+                "examples": [
+                    {
+                        "chinese": "他是個很陽光的人。",
+                        "english": "He is a very cheerful person."
+                    },
+                    {
+                        "chinese": "她總是保持陽光的心態。",
+                        "english": "She always maintains a sunny attitude."
+                    }
+                ]
+            },
+            {
+                "pinyin": "yang2guang1",
+                "pos": "N",
+                "source": "tocfl",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "sunlight",
+                    "zh-TW": "陽光；太陽的光"
+                },
+                "formula": "陽光照射 [地方]",
+                "usage_note": "Natural light from the sun.",
+                "learner_traps": "不要和「日光」完全混用；「陽光」更常用於日常對話。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [],
+                "intensity": 1,
+                "domains": [
+                    "weather",
+                    "nature"
+                ],
+                "relations": [],
+                "collocations": [],
+                "examples": [
+                    {
+                        "chinese": "今天的陽光很溫暖。",
+                        "english": "Today's sunlight is very warm."
+                    },
+                    {
+                        "chinese": "他喜歡坐在陽光下看書。",
+                        "english": "He likes sitting in the sunlight to read."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "領悟",
+        "simplified": "领悟",
+        "smart_id": "u9818_u609f",
+        "senses": [
+            {
+                "pinyin": "ling3wu4",
+                "pos": "V",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "comprehend; understand deeply; grasp the essence of",
+                    "zh-TW": "理解；深刻明白；領會要旨"
+                },
+                "formula": "領悟 [道理\/真理\/含義]",
+                "usage_note": "Often implies sudden or profound understanding, deeper than simple comprehension.",
+                "learner_traps": "比「理解」更深刻，常指突然明白或深層的體悟。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "cognition",
+                    "education",
+                    "philosophy"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "領會",
+                        "體悟"
+                    ],
+                    "synonym_related": [
+                        "理解",
+                        "明白",
+                        "懂得"
+                    ],
+                    "antonym": [
+                        "困惑"
+                    ],
+                    "contrast": [
+                        "記憶",
+                        "背誦"
+                    ]
+                },
+                "collocations": [
+                    "領悟真理",
+                    "領悟道理",
+                    "突然領悟"
+                ],
+                "examples": [
+                    {
+                        "chinese": "經過老師的解釋，他終於領悟了這個數學概念。",
+                        "english": "After the teacher's explanation, he finally comprehended this mathematical concept."
+                    },
+                    {
+                        "chinese": "她在冥想中領悟到生命的意義。",
+                        "english": "She grasped the meaning of life during meditation."
+                    }
+                ]
+            },
+            {
+                "pinyin": "ling3wu4",
+                "pos": "N",
+                "source": "editorial",
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "comprehension; understanding; insight; realization",
+                    "zh-TW": "理解；領會；洞察；體悟"
+                },
+                "formula": "[深刻的\/突然的] 領悟",
+                "usage_note": "Refers to the state or process of deep understanding, often with spiritual or philosophical connotations.",
+                "learner_traps": "作名詞時常搭配形容詞，如「深刻的領悟」、「突然的領悟」。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "positive",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [
+                    "internal",
+                    "abstract"
+                ],
+                "intensity": 3,
+                "domains": [
+                    "cognition",
+                    "philosophy",
+                    "education"
+                ],
+                "relations": {
+                    "synonym_close": [
+                        "體悟",
+                        "感悟"
+                    ],
+                    "synonym_related": [
+                        "理解",
+                        "認識",
+                        "洞察"
+                    ],
+                    "antonym": [
+                        "迷惑"
+                    ],
+                    "contrast": [
+                        "知識",
+                        "記憶"
+                    ]
+                },
+                "collocations": [
+                    "深刻的領悟",
+                    "突然的領悟",
+                    "獲得領悟"
+                ],
+                "examples": [
+                    {
+                        "chinese": "這次失敗給了他深刻的領悟。",
+                        "english": "This failure gave him profound insight."
+                    },
+                    {
+                        "chinese": "她的領悟能力很強，總能快速理解複雜的問題。",
+                        "english": "Her comprehension ability is strong; she can always quickly understand complex problems."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "traditional": "電池",
+        "simplified": "电池",
+        "smart_id": "u96fb_u6c60",
+        "senses": [
+            {
+                "pinyin": "dian4chi2",
+                "pos": "N",
+                "source": null,
+                "enriched_by": "shifu",
+                "definitions": {
+                    "en": "battery",
+                    "zh-TW": "電池；提供電力的小裝置"
+                },
+                "formula": "[設備] 需要電池",
+                "usage_note": "Common term for portable power sources in electronic devices.",
+                "learner_traps": "不要和「電瓶」混淆；電池通常指小型可攜式的，電瓶指汽車用的大型蓄電池。",
+                "register": [
+                    "standard"
+                ],
+                "connotation": "neutral",
+                "channel": "channel-balanced",
+                "semantic_mode": "literal-only",
+                "dimension": [],
+                "intensity": 1,
+                "domains": [
+                    "technology",
+                    "objects"
+                ],
+                "relations": [],
+                "collocations": [],
+                "examples": [
+                    {
+                        "chinese": "這個手電筒需要新電池。",
+                        "english": "This flashlight needs a new battery."
+                    },
+                    {
+                        "chinese": "請先看看電池有沒有電。",
+                        "english": "Please first check whether the battery has power."
+                    }
+                ]
+            }
+        ]
+    }
+]

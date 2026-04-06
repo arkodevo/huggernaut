@@ -70,10 +70,49 @@ class MyWordsController extends Controller
                 'usage_passed'      => (bool) $p->usage_passed,
             ]);
 
+        // ── 需功夫: words wrong 2+ times in tests ─────────────────────
+        $kungfuWordIds = DB::table('collection_test_answers as a')
+            ->join('collection_tests as t', 'a.collection_test_id', '=', 't.id')
+            ->join('word_senses as ws', 'a.word_sense_id', '=', 'ws.id')
+            ->where('t.user_id', $user->id)
+            ->where('a.score_tier', 'learning')
+            ->groupBy('ws.word_object_id')
+            ->havingRaw('COUNT(*) >= 2')
+            ->select('ws.word_object_id', DB::raw('COUNT(*) as wrong_count'))
+            ->orderByDesc('wrong_count')
+            ->limit(20)
+            ->pluck('wrong_count', 'word_object_id')
+            ->toArray();
+
+        $kungfuWords = [];
+        if ($kungfuWordIds) {
+            $kungfuWords = WordObject::whereIn('id', array_keys($kungfuWordIds))
+                ->with([
+                    'senses' => fn ($q) => $q->orderBy('id')->with([
+                        'pronunciation',
+                        'definitions' => fn ($q) => $q->where('language_id', 1)
+                            ->orderBy('sort_order')
+                            ->with('posLabel'),
+                        'domains' => fn ($q) => $q->with([
+                            'labels' => fn ($q) => $q->whereIn('language_id', [1, 2]),
+                        ]),
+                        'tocflLevel',
+                    ]),
+                ])
+                ->get()
+                ->map(fn ($wo) => array_merge($this->shapeWord($wo) ?? [], [
+                    'wrongCount' => $kungfuWordIds[$wo->id] ?? 0,
+                ]))
+                ->filter()
+                ->sortByDesc('wrongCount')
+                ->values();
+        }
+
         return view('my-words', [
             'savedWords'    => $savedWords,
             'collections'   => $collections,
             'wordProgress'  => $wordProgress,
+            'kungfuWords'   => $kungfuWords,
             'authUser'      => (new ExploreController())->authUserPayload(),
         ]);
     }
@@ -100,13 +139,13 @@ class MyWordsController extends Controller
 
         $primary = $senses->first();
         $def = $primary->definitions->first();
-        $primaryDomain = $primary->domains->firstWhere('pivot.is_primary', true);
+        $firstDomain = $primary->domains->first();
 
         $domainLabel = null;
         $domainLabelZh = null;
-        if ($primaryDomain) {
-            $domainLabel = $primaryDomain->labels->firstWhere('language_id', 1)?->label;
-            $domainLabelZh = $primaryDomain->labels->firstWhere('language_id', 2)?->label;
+        if ($firstDomain) {
+            $domainLabel = $firstDomain->labels->firstWhere('language_id', 1)?->label;
+            $domainLabelZh = $firstDomain->labels->firstWhere('language_id', 2)?->label;
         }
 
         return [

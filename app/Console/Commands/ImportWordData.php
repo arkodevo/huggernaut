@@ -287,15 +287,17 @@ class ImportWordData extends Command
             'tocfl_level_id'   => $tocflId,
             'hsk_level_id'     => $hskId,
             'status'           => $status,
+            'enriched_by'      => 'huiming',
+            'enriched_at'      => now(),
         ]);
 
-        // Domains (first = primary, rest = secondary)
-        $domains = $s['domains'] ?? [];
+        // Domains (ordered by relevance, max 4)
+        $domains = array_slice($s['domains'] ?? [], 0, 4);
         $domainSync = [];
         foreach ($domains as $idx => $slug) {
             $id = $this->designations[$slug] ?? null;
             if ($id) {
-                $domainSync[$id] = ['is_primary' => $idx === 0, 'sort_order' => $idx];
+                $domainSync[$id] = ['sort_order' => $idx];
             }
         }
         if ($domainSync) {

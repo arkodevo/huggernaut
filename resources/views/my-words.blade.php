@@ -257,6 +257,7 @@ body.vertical-mode .mw-hanzi {
   var MW_SAVED = @json($savedWords);
   var MW_COLLECTIONS = @json($collections);
   var MW_PROGRESS = @json($wordProgress);
+  var MW_KUNGFU = @json($kungfuWords);
 </script>
 
 @include('partials.lexicon._site-header', ['backUrl' => route('lexicon.index'), 'backLabel' => 'Lexicon'])
@@ -320,6 +321,25 @@ function mwRender() {
     html += '</div>';
   }
   html += '</div></div></div>';
+
+  // ── 1b. 需功夫 Needs Kung Fu (accordion, collapsed by default) ──
+  if (MW_KUNGFU.length > 0) {
+    var kfKey = 'kungfu';
+    var kfOpen = _accordionState[kfKey] !== undefined ? _accordionState[kfKey] : (localStorage.getItem('mw_accordion_' + kfKey) === 'true');
+    html += '<div class="mw-section">';
+    html += '<div class="mw-accordion-header' + (kfOpen ? '' : ' collapsed') + '" onclick="mwToggleAccordion(\'' + kfKey + '\', this)">';
+    html += '<div class="mw-section-title" style="color:var(--rose)">需功夫 Needs Kung Fu (' + MW_KUNGFU.length + ')</div>';
+    html += '<span class="mw-accordion-arrow">' + (kfOpen ? '▼' : '▲') + '</span>';
+    html += '</div>';
+    html += '<div class="mw-accordion-body' + (kfOpen ? '' : ' collapsed') + '" id="mwAccordion-' + kfKey + '">';
+    html += '<div class="mw-section-body">';
+    html += '<div class="mw-list">';
+    MW_KUNGFU.forEach(function(s) {
+      html += mwEntryHTML(s);
+    });
+    html += '</div>';
+    html += '</div></div></div>';
+  }
 
   // ── 2. Collections (accordions, collapsed by default) ──
   MW_COLLECTIONS.forEach(function(c) {

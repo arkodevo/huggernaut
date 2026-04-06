@@ -187,7 +187,6 @@ class TocflVerifySenses extends Command
                 DB::table('word_sense_collocations')->whereIn('word_sense_id', $chunk)->delete();
                 DB::table('word_sense_relations')
                     ->whereIn('word_sense_id', $chunk)
-                    ->orWhereIn('related_sense_id', $chunk)
                     ->delete();
                 DB::table('word_senses')->whereIn('id', $chunk)->delete();
                 $deleted += count($chunk);

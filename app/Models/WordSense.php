@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 // tocfl_level, hsk_level) are direct FKs to designations for query efficiency.
 //
 // Multi-select attributes (register, dimension) live in word_sense_designations pivot.
-// Domains live in word_sense_domains pivot (many-to-many with is_primary flag).
+// Domains live in word_sense_domains pivot (many-to-many, ordered by sort_order, max 4).
 class WordSense extends Model
 {
     protected $fillable = [
@@ -33,6 +33,10 @@ class WordSense extends Model
         'status',
         'source',
         'alignment',
+        'enriched_by',
+        'enriched_at',
+        'audited_by',
+        'audited_at',
     ];
 
     // ── Parent ────────────────────────────────────────────────────────────────
@@ -78,25 +82,9 @@ class WordSense extends Model
     {
         return $this->belongsToMany(Designation::class, 'word_sense_domains')
             ->using(WordSenseDomain::class)
-            ->withPivot('is_primary', 'sort_order')
+            ->withPivot('sort_order')
             ->orderByPivot('sort_order')
             ->withTimestamps();
-    }
-
-    /**
-     * Convenience: the single primary domain designation.
-     */
-    public function primaryDomain(): BelongsToMany
-    {
-        return $this->domains()->wherePivot('is_primary', true);
-    }
-
-    /**
-     * Convenience: all secondary (non-primary) domain designations.
-     */
-    public function secondaryDomains(): BelongsToMany
-    {
-        return $this->domains()->wherePivot('is_primary', false);
     }
 
     public function tocflLevel(): BelongsTo
@@ -140,16 +128,11 @@ class WordSense extends Model
             ->withTimestamps();
     }
 
-    // ── Collocations ──────────────────────────────────────────────────────────
+    // ── Collocations (text-based) ────────────────────────────────────────────
 
-    public function collocations(): BelongsToMany
+    public function collocations(): HasMany
     {
-        return $this->belongsToMany(
-            WordObject::class,
-            'word_sense_collocations',
-            'word_sense_id',
-            'collocation_word_object_id'
-        )->using(WordSenseCollocation::class)->withTimestamps();
+        return $this->hasMany(WordSenseCollocation::class);
     }
 
     // ── Relations (synonyms, antonyms, family tree, etc.) ────────────────────
@@ -157,11 +140,6 @@ class WordSense extends Model
     public function senseRelations(): HasMany
     {
         return $this->hasMany(WordSenseRelation::class, 'word_sense_id');
-    }
-
-    public function inverseSenseRelations(): HasMany
-    {
-        return $this->hasMany(WordSenseRelation::class, 'related_sense_id');
     }
 
     // ── User data ─────────────────────────────────────────────────────────────

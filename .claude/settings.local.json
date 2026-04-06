@@ -181,7 +181,22 @@
       "Bash(head -1 \"/Users/chuluoyi/Downloads/meta_ads_insights_20260401 \\(1\\).csv\")",
       "Read(//private/tmp/**)",
       "Bash(pandoc \"/Users/chuluoyi/Documents/華語/planning/流動_POS_Reference_Guide_v2.0.docx\" -o /tmp/pos_guide_v2.md)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(find /Users/chuluoyi/Sites/huggernaut/resources -type f -name *.vue -o -name *.jsx -o -name *.tsx)",
+      "Bash(find /Users/chuluoyi/Sites/huggernaut/resources/views -type f -name *.vue)",
+      "Bash(find /Users/chuluoyi/Sites/huggernaut/app -type f -name *Word* -o -name *Sense* -o -name *Attribute*)",
+      "Bash(pandoc \"/Users/chuluoyi/Documents/華語/planning/流動_POS_Reference_Guide_v2.1.docx\" -o /tmp/pos_guide.md)",
+      "Read(//Applications/MAMP/Library/bin/**)",
+      "Read(//Applications/MAMP/**)",
+      "Bash(find /Applications/MAMP -name pg_dump*)",
+      "Bash(find /Library -name pg_dump*)",
+      "Read(//opt/**)",
+      "Bash(mdfind -name pg_dump)",
+      "Bash(find /usr/local/bin /opt/homebrew/bin -name node*)",
+      "Bash(export PATH=\"/opt/homebrew/bin:$PATH\")",
+      "Bash(node /tmp/build_enrichment_guide.js)",
+      "Bash(cat:*)",
+      "Bash(ls /Users/chuluoyi/Sites/huggernaut/database/migrations/2026_04_05_*)"
     ]
   }
 }

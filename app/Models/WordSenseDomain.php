@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 // Pivot: word_sense ↔ domain designation (many-to-many).
-// is_primary distinguishes the canonical domain from secondary contexts.
+// Ordered by sort_order (most relevant first). Max 4 domains per sense.
 class WordSenseDomain extends Pivot
 {
     protected $table = 'word_sense_domains';
@@ -15,11 +15,6 @@ class WordSenseDomain extends Pivot
     protected $fillable = [
         'word_sense_id',
         'designation_id',
-        'is_primary',
         'sort_order',
-    ];
-
-    protected $casts = [
-        'is_primary' => 'boolean',
     ];
 }

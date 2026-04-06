@@ -1155,13 +1155,17 @@ main {
         id="searchInput"
         type="text"
         placeholder="Search 流動…"
+        autocomplete="off"
         style="font-family:'DM Mono',monospace;font-size:0.78rem;padding:0.4rem 2rem 0.4rem 0.8rem;border:1px solid rgba(0,0,0,0.15);border-radius:2px;width:100%;background:var(--surface);color:var(--text);outline:none;box-sizing:border-box;"
         onblur="logSearchFinal();"
+        onfocus="lexShowHistory()"
+        oninput="lexShowHistory()"
         onkeydown="if(event.key==='Enter'){triggerSearch();}"
       />
-      <button id="searchClear" onclick="var i=document.getElementById('searchInput');i.value='';searchQuery='';render();i.focus();"
+      <button id="searchClear" onclick="var i=document.getElementById('searchInput');i.value='';searchQuery='';render();i.focus();document.getElementById('lexSearchHistory').style.display='none';"
         style="display:none;position:absolute;right:0.4rem;top:50%;transform:translateY(-50%);border:none;background:transparent;color:var(--dim);font-size:0.85rem;cursor:pointer;padding:0 0.2rem;line-height:1;"
         title="Clear search">&times;</button>
+      <div id="lexSearchHistory" style="display:none;position:absolute;left:0;top:100%;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:3px;box-shadow:0 4px 12px rgba(0,0,0,0.08);z-index:300;margin-top:0.2rem;max-height:12rem;overflow-y:auto;"></div>
     </div>
     <button id="searchBtn" onclick="triggerSearch();"
       style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.06em;padding:0.4rem 0.9rem;border:1px solid rgba(0,0,0,0.2);border-radius:2px;background:var(--accent);color:white;cursor:pointer;white-space:nowrap;transition:opacity 0.15s;flex-shrink:0;"
@@ -2058,9 +2062,70 @@ function setVerbPresentation(mode) {
 function triggerSearch() {
   const input = document.getElementById('searchInput');
   searchQuery = input ? input.value : '';
+  lexSaveHistory(searchQuery);
+  document.getElementById('lexSearchHistory').style.display = 'none';
   logSearchFinal();
   render();
 }
+
+// ── Search History ────────────────────────────────────────────────
+(function() {
+  var LEX_HISTORY_KEY = 'lexicon_search_history';
+  var LEX_MAX = 20;
+
+  function getH() { try { return JSON.parse(localStorage.getItem(LEX_HISTORY_KEY) || '[]'); } catch(e) { return []; } }
+
+  window.lexSaveHistory = function(term) {
+    if (!term || !term.trim()) return;
+    var h = getH().filter(function(x) { return x !== term.trim(); });
+    h.unshift(term.trim());
+    if (h.length > LEX_MAX) h = h.slice(0, LEX_MAX);
+    localStorage.setItem(LEX_HISTORY_KEY, JSON.stringify(h));
+  };
+
+  window.lexShowHistory = function() {
+    var input = document.getElementById('searchInput');
+    var dropdown = document.getElementById('lexSearchHistory');
+    var history = getH();
+    var q = (input.value || '').trim().toLowerCase();
+    var filtered = q ? history.filter(function(h) { return h.toLowerCase().indexOf(q) !== -1; }) : history;
+
+    if (filtered.length === 0) { dropdown.style.display = 'none'; return; }
+
+    dropdown.innerHTML = filtered.map(function(h) {
+      return '<div style="padding:0.35rem 0.6rem;font-family:\'DM Mono\',monospace;font-size:0.75rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;color:var(--dim);transition:all 0.1s;" onmouseover="this.style.background=\'rgba(98,64,200,0.04)\';this.style.color=\'var(--ink)\'" onmouseout="this.style.background=\'transparent\';this.style.color=\'var(--dim)\'" onclick="lexSelectHistory(\'' + h.replace(/'/g, "\\'") + '\')">'
+        + '<span>' + h + '</span>'
+        + '<span onclick="event.stopPropagation();lexRemoveHistory(\'' + h.replace(/'/g, "\\'") + '\')" style="color:var(--border);font-size:0.65rem;padding:0 0.2rem;" onmouseover="this.style.color=\'var(--rose)\'" onmouseout="this.style.color=\'var(--border)\'">&times;</span>'
+        + '</div>';
+    }).join('') + '<div style="padding:0.25rem 0.6rem;font-family:\'DM Mono\',monospace;font-size:0.6rem;color:var(--dim);border-top:1px solid var(--border);cursor:pointer;opacity:0.7" onmouseover="this.style.opacity=\'1\'" onmouseout="this.style.opacity=\'0.7\'" onclick="lexClearHistory()">Clear history</div>';
+    dropdown.style.display = 'block';
+  };
+
+  window.lexSelectHistory = function(term) {
+    var input = document.getElementById('searchInput');
+    input.value = term;
+    document.getElementById('lexSearchHistory').style.display = 'none';
+    triggerSearch();
+  };
+
+  window.lexRemoveHistory = function(term) {
+    var h = getH().filter(function(x) { return x !== term; });
+    localStorage.setItem(LEX_HISTORY_KEY, JSON.stringify(h));
+    lexShowHistory();
+  };
+
+  window.lexClearHistory = function() {
+    localStorage.removeItem(LEX_HISTORY_KEY);
+    document.getElementById('lexSearchHistory').style.display = 'none';
+  };
+
+  // Close on click outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#searchInput') && !e.target.closest('#lexSearchHistory')) {
+      document.getElementById('lexSearchHistory').style.display = 'none';
+    }
+  });
+})();
 
 let currentLevel = localStorage.getItem('currentLevel') || 'developing';
 let fontScale = 100;

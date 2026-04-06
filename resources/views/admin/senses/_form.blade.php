@@ -120,20 +120,30 @@
         </div>
     </div>
 
-    {{-- ── Domains (multi-select, first checked = primary) ─────────── --}}
-    @php $domainAttr = $attributes['domain'] ?? null; @endphp
+    {{-- ── Domains (4 positions, ordered by relevance) ──────────────── --}}
+    @php
+        $domainAttr = $attributes['domain'] ?? null;
+        $oldDomains = old('domains', $selectedDomains);
+    @endphp
     @if ($domainAttr)
     <div class="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 class="text-sm font-semibold text-gray-900 mb-4">Domains <span class="text-xs font-normal text-gray-500">(first checked = primary)</span></h3>
-        <div class="grid grid-cols-3 gap-1.5 max-h-64 overflow-y-auto">
-            @foreach ($domainAttr->designations as $des)
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" name="domains[]" value="{{ $des->id }}"
-                           class="h-4 w-4 rounded border-gray-300 text-indigo-600"
-                           {{ in_array($des->id, old('domains', $selectedDomains)) ? 'checked' : '' }}>
-                    <span class="text-sm text-gray-700">{{ $des->labels->first()?->label ?? $des->slug }}</span>
-                </label>
-            @endforeach
+        <h3 class="text-sm font-semibold text-gray-900 mb-4">Domains <span class="text-xs font-normal text-gray-500">(most relevant first)</span></h3>
+        <div class="grid grid-cols-2 gap-3">
+            @for ($di = 0; $di < 4; $di++)
+                @php $currentId = $oldDomains[$di] ?? ''; @endphp
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Position {{ $di + 1 }}{{ $di === 0 ? ' — most relevant' : '' }}</label>
+                    <select name="domains[]"
+                            class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <option value="">— none —</option>
+                        @foreach ($domainAttr->designations as $des)
+                            <option value="{{ $des->id }}" {{ $currentId == $des->id ? 'selected' : '' }}>
+                                {{ $des->labels->first()?->label ?? $des->slug }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endfor
         </div>
     </div>
     @endif

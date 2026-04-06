@@ -4,12 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin') — 流動 Living Lexicon</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @stack('styles')
 </head>
 <body class="h-full">
 
@@ -76,7 +78,7 @@
     </aside>
 
     {{-- ── Main ─────────────────────────────────────────────────────────── --}}
-    <div class="flex-1 flex flex-col min-w-0 bg-gray-50">
+    <div class="flex-1 flex flex-col min-w-0 overflow-x-hidden bg-gray-50">
 
         {{-- Flash messages --}}
         @if (session('success'))

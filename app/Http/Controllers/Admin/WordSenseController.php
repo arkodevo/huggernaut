@@ -38,11 +38,11 @@ class WordSenseController extends Controller
             $sense->designations()->sync($data['designations']);
         }
 
-        // Domains (many-to-many): first = primary, rest = secondary
+        // Domains (many-to-many, ordered, max 4)
         if (! empty($data['domains'])) {
             $domainSync = [];
-            foreach ($data['domains'] as $i => $domainId) {
-                $domainSync[$domainId] = ['is_primary' => $i === 0, 'sort_order' => $i];
+            foreach (array_slice($data['domains'], 0, 4) as $i => $domainId) {
+                $domainSync[$domainId] = ['sort_order' => $i];
             }
             $sense->domains()->sync($domainSync);
         }
@@ -77,10 +77,10 @@ class WordSenseController extends Controller
 
         $sense->designations()->sync($data['designations'] ?? []);
 
-        // Domains (many-to-many): first = primary, rest = secondary
+        // Domains (many-to-many, ordered, max 4)
         $domainSync = [];
-        foreach (($data['domains'] ?? []) as $i => $domainId) {
-            $domainSync[$domainId] = ['is_primary' => $i === 0, 'sort_order' => $i];
+        foreach (array_slice($data['domains'] ?? [], 0, 4) as $i => $domainId) {
+            $domainSync[$domainId] = ['sort_order' => $i];
         }
         $sense->domains()->sync($domainSync);
 
@@ -124,7 +124,6 @@ class WordSenseController extends Controller
             DB::table('word_sense_collocations')->where('word_sense_id', $sense->id)->delete();
             DB::table('word_sense_relations')
                 ->where('word_sense_id', $sense->id)
-                ->orWhere('related_sense_id', $sense->id)
                 ->delete();
             $sense->delete();
         });
@@ -187,7 +186,7 @@ class WordSenseController extends Controller
         return [
             'sense'        => $sense,
             'designations' => $validated['designations'] ?? [],
-            'domains'      => $validated['domains']      ?? [],
+            'domains'      => array_values(array_filter($validated['domains'] ?? [])),
             'definitions'  => $validated['definitions']  ?? [],
         ];
     }
