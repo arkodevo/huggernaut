@@ -196,7 +196,31 @@
       "Bash(export PATH=\"/opt/homebrew/bin:$PATH\")",
       "Bash(node /tmp/build_enrichment_guide.js)",
       "Bash(cat:*)",
-      "Bash(ls /Users/chuluoyi/Sites/huggernaut/database/migrations/2026_04_05_*)"
+      "Bash(ls /Users/chuluoyi/Sites/huggernaut/database/migrations/2026_04_05_*)",
+      "Bash(pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut)",
+      "Bash(ls /Library/PostgreSQL/*/bin/pg_dump)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut)",
+      "Bash(php -r ':*)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut -c \"\\\\d word_senses\")",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut -c \":*)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut -c \"\\\\d word_sense_pos\")",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut -c \"\\\\d pos_labels\")",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut -c \"\\\\d word_sense_definitions\")",
+      "Bash(php /tmp/sanrenxing-import.php)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut -c \"\\\\d word_sense_examples\")",
+      "Bash(sed -i '' 's/INSERT INTO word_sense_examples \\(word_sense_id, chinese_text, english_text, source, sort_order, created_at, updated_at\\)/INSERT INTO word_sense_examples \\(word_sense_id, chinese_text, english_text, source, created_at, updated_at\\)/' /tmp/sanrenxing-import.php)",
+      "Bash(sed -i '' \"s/->execute\\(\\\\[$senseId, $ex\\\\[''chinese''\\\\], $ex\\\\[''english''\\\\], ''shifu'', $eidx, $now, $now\\\\]\\);/->execute\\([$senseId, $ex[''chinese''], $ex[''english''], ''shifu'', $now, $now]\\);/\" /tmp/sanrenxing-import.php)",
+      "Bash(grep -n \"class.*Controller\" /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/*.php)",
+      "Bash(php -l /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/Admin/CsvImportController.php)",
+      "Bash(php -l /Users/chuluoyi/Sites/huggernaut/app/Services/ShifuWordEnricher.php)",
+      "Bash(grep -n \"@include.*_pos-data\\\\|@include.*_segmentation\\\\|@include.*_popover\" /Users/chuluoyi/Sites/huggernaut/resources/views/*.blade.php)",
+      "Bash(sed -i '' 's|level3_batch7_2_27words_huiming_rev1|level3_batch7_3_27words_huiming_rev1|g' /tmp/batch7-3-import.php)",
+      "Bash(sed -i '' 's|Batch 7.2|Batch 7.3|g' /tmp/batch7-3-import.php)",
+      "Bash(PGPASSWORD='' pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -d huggernaut --no-owner --no-acl -F p -f /Users/chuluoyi/Downloads/huggernaut_backup_2026-04-06_pre-batch7-4.sql)",
+      "Bash(/Applications/MAMP/Library/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -d huggernaut --no-owner --no-acl -F p -f /Users/chuluoyi/Downloads/huggernaut_backup_2026-04-06_pre-batch7-4.sql)",
+      "Bash(/opt/homebrew/Cellar/libpq/18.1/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -d huggernaut --no-owner --no-acl -F p -f /Users/chuluoyi/Downloads/huggernaut_backup_2026-04-06_pre-batch7-4.sql)",
+      "Bash(ls /Users/chuluoyi/Downloads/level3_batch8*)",
+      "Bash(/opt/homebrew/Cellar/libpq/18.1/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut)"
     ]
   }
 }

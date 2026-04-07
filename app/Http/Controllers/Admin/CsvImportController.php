@@ -7,6 +7,7 @@ use App\Models\AiUsageLog;
 use App\Models\Designation;
 use App\Models\Language;
 use App\Models\PosLabel;
+use App\Models\ShifuEngagement;
 use App\Models\WordObject;
 use App\Models\WordPronunciation;
 use App\Models\WordSense;
@@ -144,6 +145,20 @@ class CsvImportController extends Controller
             'credits_used' => 1,
         ]);
 
+        // Log enrichment engagement
+        $engagement = ShifuEngagement::create([
+            'user_id'      => Auth::id(),
+            'word_object_id' => $existingWord?->id,
+            'context'      => 'enrichment',
+            'word_label'   => $traditional,
+            'started_at'   => now(),
+        ]);
+
+        $engagement->addInteraction(
+            learnerInput: $traditional,
+            shifuResponse: json_encode($enriched, JSON_UNESCAPED_UNICODE),
+        );
+
         // Build list of existing sense keys (pinyin|POS) for frontend matching
         $existingKeys = [];
         if ($existingWord) {
@@ -156,10 +171,11 @@ class CsvImportController extends Controller
         }
 
         return response()->json([
-            'data'         => $enriched,
-            'gaps'         => $gaps,
-            'existing'     => (bool) $existingWord,
-            'existingKeys' => $existingKeys,
+            'data'           => $enriched,
+            'gaps'           => $gaps,
+            'existing'       => (bool) $existingWord,
+            'existingKeys'   => $existingKeys,
+            'engagement_id'  => $engagement->id,
         ]);
     }
 
@@ -175,10 +191,14 @@ class CsvImportController extends Controller
         $entry = $request->data;
         $senseDecisions = $request->sense_decisions;
         $existingKeys = $request->existing_keys ?? [];
+        $engagementId = $request->engagement_id;
 
-        // Guard: if all senses rejected, do nothing
+        // Guard: if all senses rejected, do nothing — but close the engagement
         $allRejected = collect($senseDecisions)->every(fn ($d) => $d === 'reject');
         if ($allRejected) {
+            if ($engagementId) {
+                ShifuEngagement::find($engagementId)?->complete('rejected');
+            }
             return response()->json(['ok' => true, 'created' => 0, 'enriched' => 0, 'rejected' => count($senseDecisions)]);
         }
 
@@ -275,6 +295,17 @@ class CsvImportController extends Controller
             }
 
             DB::commit();
+
+            // Complete the enrichment engagement
+            if ($engagementId) {
+                $eng = ShifuEngagement::find($engagementId);
+                if ($eng) {
+                    // Link to word_object now that it exists
+                    $eng->update(['word_object_id' => $word->id]);
+                    $outcome = $rejected > 0 && ($created + $enriched) > 0 ? 'partial' : 'saved';
+                    $eng->complete($outcome);
+                }
+            }
 
             // Bust all lexicon caches
             cache()->forget('lexicon_words');

@@ -58,6 +58,24 @@
   display: flex; flex-direction: column; gap: 0.4rem; min-width: 0;
 }
 
+/* Per-sense domain + POS pairs */
+.card-sense-pairs { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+.card-sense-pair { display: flex; flex-direction: column; gap: 0.2rem; width: 100%; }
+
+/* Flat domain display: all domains in centered sequence */
+.card-domain-flat {
+  display: block; width: 100%; text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.81rem; letter-spacing: 0.04em;
+  color: var(--gold); background: rgba(160,114,10,0.08);
+  border: 1px solid rgba(160,114,10,0.18);
+  border-radius: 2px; padding: 0.3rem 0.6rem;
+  cursor: pointer; user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.card-domain-flat:hover { background: rgba(160,114,10,0.15); border-color: rgba(160,114,10,0.5); }
+.card-domain-item { white-space: nowrap; }
+
 /* Domain chip */
 .card-domain-row { margin-bottom: 0.3rem; }
 .card-domain {

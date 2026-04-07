@@ -304,9 +304,10 @@ function csvRenderWord(idx, result) {
   actions.innerHTML =
     '<span class="csv-save-status"></span> <button onclick="csvSaveWord(' + idx + ',this)" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-xs font-semibold text-white hover:bg-indigo-500">Save</button>';
 
-  // Store data and existing sense keys for saving
+  // Store data, existing sense keys, and engagement_id for saving
   card.dataset.enriched = JSON.stringify(data);
   card.dataset.senseCount = data.senses.length;
+  card.dataset.engagementId = result.engagement_id || '';
 }
 
 // ── Save a single word ────────────────────────────────────────────
@@ -315,6 +316,7 @@ function csvSaveWord(idx, btn) {
   var data = JSON.parse(card.dataset.enriched || '{}');
   var senseCount = parseInt(card.dataset.senseCount || '0');
   var existingKeys = JSON.parse(card.dataset.existingKeys || '[]');
+  var engagementId = card.dataset.engagementId || null;
   var status = btn.parentElement.querySelector('.csv-save-status');
 
   // Collect per-sense decisions
@@ -328,8 +330,17 @@ function csvSaveWord(idx, btn) {
   }
 
   if (allRejected) {
+    // Still send to server so engagement gets closed as 'rejected'
+    if (engagementId) {
+      fetch('{{ route("admin.words.csv-import.save-word") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSV_CSRF, 'Accept': 'application/json' },
+        body: JSON.stringify({ data: data, sense_decisions: senseDecisions, existing_keys: existingKeys, engagement_id: engagementId }),
+      });
+    }
     status.innerHTML = '<span style="font-size:0.72rem;color:#9ca3af">All senses rejected</span>';
     card.style.opacity = '0.5';
+    card.querySelectorAll('button[onclick^="csvSaveWord"]').forEach(function(b) { b.style.display = 'none'; });
     return;
   }
 
@@ -344,6 +355,7 @@ function csvSaveWord(idx, btn) {
       data: data,
       sense_decisions: senseDecisions,
       existing_keys: existingKeys,
+      engagement_id: engagementId,
     }),
   })
   .then(function(r) { return r.json(); })

@@ -37,6 +37,9 @@
         <option value="writing_conservatory" {{ request('context') === 'writing_conservatory' ? 'selected' : '' }}>Writing Conservatory</option>
         <option value="test" {{ request('context') === 'test' ? 'selected' : '' }}>Test</option>
         <option value="generation" {{ request('context') === 'generation' ? 'selected' : '' }}>Generation</option>
+        <option value="analysis" {{ request('context') === 'analysis' ? 'selected' : '' }}>Analysis</option>
+        <option value="chinese_names" {{ request('context') === 'chinese_names' ? 'selected' : '' }}>Chinese Names</option>
+        <option value="enrichment" {{ request('context') === 'enrichment' ? 'selected' : '' }}>Enrichment</option>
     </select>
     <select name="outcome" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
         <option value="">All Outcomes</option>
@@ -88,17 +91,25 @@
                         'writing_conservatory' => 'bg-indigo-100 text-indigo-800',
                         'test'                 => 'bg-purple-100 text-purple-800',
                         'generation'           => 'bg-blue-100 text-blue-800',
+                        'analysis'             => 'bg-teal-100 text-teal-800',
+                        'chinese_names'        => 'bg-rose-100 text-rose-800',
+                        'enrichment'           => 'bg-amber-100 text-amber-800',
                     ];
                     $outColors = [
                         'saved'     => 'text-green-700',
                         'correct'   => 'text-emerald-700',
                         'incorrect' => 'text-red-600',
                         'abandoned' => 'text-gray-500',
+                        'rejected'  => 'text-red-500',
+                        'partial'   => 'text-amber-600',
                     ];
                     $ctxLabel = match($e->context) {
                         'writing_conservatory' => 'WC',
                         'test' => 'Test',
                         'generation' => 'Gen',
+                        'analysis' => 'Analysis',
+                        'chinese_names' => 'Names',
+                        'enrichment' => 'Enrich',
                         default => $e->context,
                     };
                 @endphp

@@ -56,7 +56,8 @@ function showSegPop(el) {
   const pop = document.getElementById('segPopover');
   const rect = el.getBoundingClientRect();
   document.getElementById('segPopChar').textContent = el.dataset.trad || el.textContent;
-  document.getElementById('segPopPinyin').textContent = el.dataset.pinyin || '';
+  const rawPy = el.dataset.pinyin || '';
+  document.getElementById('segPopPinyin').innerHTML = (typeof formatPinyin === 'function') ? formatPinyin(rawPy) : rawPy;
   document.getElementById('segPopPos').textContent = el.dataset.pos ? (POS_ABBR[el.dataset.pos] || el.dataset.pos) : '';
   const def = el.dataset.def || '';
   document.getElementById('segPopDef').textContent = def.length > 50 ? def.substring(0, 50) + '...' : def;
@@ -69,6 +70,7 @@ function showSegPop(el) {
   pop.style.top = top + 'px';
   pop.style.left = left + 'px';
   pop.classList.add('open');
+  segPopScrollY = window.scrollY;
 }
 
 function hideSegPop() {
@@ -76,6 +78,12 @@ function hideSegPop() {
   segPopTarget = null;
   segPopTapCount = 0;
 }
+
+let segPopScrollY = 0;
+window.addEventListener('scroll', function() {
+  if (!segPopTarget) return;
+  if (Math.abs(window.scrollY - segPopScrollY) > 40) hideSegPop();
+}, { passive: true });
 
 document.addEventListener('click', function(e) {
   const seg = e.target.closest('.seg-known');

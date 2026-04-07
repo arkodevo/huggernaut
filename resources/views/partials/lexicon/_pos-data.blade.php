@@ -362,6 +362,15 @@ function toggleLangChip(e, chip) {
   const current = chip.dataset.state || preferred;
   const next = current === preferred ? alt : preferred;
   chip.dataset.state = next;
+  // Flat domain display: toggle all domain-item children together
+  if (chip.classList.contains('card-domain-flat')) {
+    const items = chip.querySelectorAll('.card-domain-item');
+    const sep = items.length > 1 ? ', ' : '';
+    items.forEach((item, i) => {
+      item.textContent = (next === 'zh' ? item.dataset.zh : item.dataset.en) || item.dataset.en;
+    });
+    return;
+  }
   // Two-tier domain stack: update primary + secondary child spans
   if (chip.classList.contains('card-domain-stack')) {
     const pSpan = chip.querySelector('.card-domain-primary');

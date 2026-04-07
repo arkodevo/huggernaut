@@ -440,17 +440,17 @@
   font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
   color: var(--dim); width: 100%; margin-bottom: 0.1rem;
 }
-.wd-colloc-chip {
-  display: inline-block;
+.wd-colloc-item {
   font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
-  font-size: 1.1rem; color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 2px; padding: 0.2rem 0.6rem;
-  cursor: pointer; text-decoration: none;
-  transition: border-color 0.15s, background 0.15s;
+  font-size: 1.15rem; color: var(--text);
+  letter-spacing: 0.05em;
 }
-.wd-colloc-chip:hover { border-color: var(--accent); background: rgba(98,64,200,0.04); color: var(--accent); }
+.wd-colloc-sep {
+  display: inline-block;
+  margin: 0 0.5rem;
+  color: var(--dim); opacity: 0.4;
+  font-size: 0.9rem;
+}
 
 /* ── RELATED WORDS ── */
 .wd-relations {
@@ -1492,42 +1492,35 @@ function renderHeader() {
     ? (WORD.traditional !== WORD.simplified ? WORD.traditional : '')
     : (WORD.simplified && WORD.simplified !== WORD.traditional ? WORD.simplified : '');
 
-  // Collect domain chips for header: group by primary, union secondaries
+  // Build per-sense domain + POS pairs for the hero (flat domain display)
   const senses = WORD.senses || [];
-  const domainGroups = {};
-  senses.forEach(s => {
-    if (!s.domain) return;
-    const pSlug = s.domain.slug;
-    if (!domainGroups[pSlug]) domainGroups[pSlug] = { primary: s.domain, secMap: {} };
-    (s.secondaryDomains || []).forEach(sd => {
-      if (!domainGroups[pSlug].secMap[sd.slug]) domainGroups[pSlug].secMap[sd.slug] = sd;
-    });
-  });
-  const domainHTML = Object.values(domainGroups).map(g =>
-    buildDomainChipHTML(g.primary, Object.values(g.secMap))
-  ).join('');
-
-  // Collect unique POS across all definitions
-  // Collect POS with per-sense alignment
-  const allPOS = [];
-  const seenPOS = {};
-  senses.forEach(s => {
-    (s.definitions || []).forEach(d => {
-      if (d.pos && !seenPOS[d.pos]) {
-        seenPOS[d.pos] = { alignment: s.alignment || WORD.alignment };
-        allPOS.push(d.pos);
-      }
-    });
-  });
-  const posHTML = allPOS.length ? `<div class="card-pos-summary">${allPOS.map(p => {
-    const enText = posDisplayLabel(p) + ' \u00b7 ' + posLabel(p);
-    const zhText = POS_ZH[p] || posDisplay(p);
+  const sensePairsHTML = senses.map((s, idx) => {
+    // Flat domain list for this sense: primary + all secondaries in sequence
+    const allDomains = [];
+    if (s.domain) allDomains.push(s.domain);
+    (s.secondaryDomains || []).forEach(sd => allDomains.push(sd));
     const preferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
-    const display = preferred === 'zh' ? zhText : (uiMode === 'all' || uiMode === 'en-zh') ? enText + ' ' + zhText : enText;
-    const alignIcon = posAlignIcon(seenPOS[p]?.alignment);
-    const iconHTML = alignIcon ? `<span class="pos-align-icon">${alignIcon}</span>` : '';
-    return `<span class="card-pos-hdr" data-en="${enText}" data-zh="${zhText}" data-state="${preferred}" onclick="toggleLangChip(event,this)">${display}${iconHTML}</span>`;
-  }).join('')}</div>` : '';
+    const domChip = allDomains.length ? `<div class="card-domain-flat" data-state="${preferred}" onclick="toggleLangChip(event,this)">${allDomains.map((d, di) => {
+      const en = d.en || d.slug;
+      const zh = d.zh || d.slug;
+      const display = preferred === 'zh' ? zh : (uiMode === 'all' || uiMode === 'en-zh') ? `${en} ${zh}` : en;
+      return `${di ? ', ' : ''}<span class="card-domain-item" data-en="${en}" data-zh="${zh}">${display}</span>`;
+    }).join('')}</div>` : '';
+
+    // POS badge for this sense (first definition's POS)
+    const pos = (s.definitions || []).find(d => d.pos)?.pos;
+    let posChip = '';
+    if (pos) {
+      const enText = posDisplayLabel(pos) + ' \u00b7 ' + posLabel(pos);
+      const zhText = POS_ZH[pos] || posDisplay(pos);
+      const display = preferred === 'zh' ? zhText : (uiMode === 'all' || uiMode === 'en-zh') ? enText + ' ' + zhText : enText;
+      const alignIcon = posAlignIcon(s.alignment || WORD.alignment);
+      const iconHTML = alignIcon ? `<span class="pos-align-icon">${alignIcon}</span>` : '';
+      posChip = `<span class="card-pos-hdr" data-en="${enText}" data-zh="${zhText}" data-state="${preferred}" onclick="toggleLangChip(event,this)">${display}${iconHTML}</span>`;
+    }
+
+    return `<div class="card-sense-pair">${domChip}<div class="card-pos-summary">${posChip}</div></div>`;
+  }).join('');
 
   const pinyin = primaryPinyin();
 
@@ -1546,8 +1539,7 @@ function renderHeader() {
       </div>
     </div>
     <div class="card-hdr-mid">
-      ${domainHTML ? `<div class="card-domain-row">${domainHTML}</div>` : ''}
-      ${posHTML}
+      ${sensePairsHTML ? `<div class="card-sense-pairs">${sensePairsHTML}</div>` : ''}
       ${pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${pinyin}</span></div>` : ''}
       ${(() => {
         const bits = [];
@@ -1617,7 +1609,17 @@ function renderSense(sense, idx, totalOverride) {
 
   parts.push(`<div class="wd-sense-stripe">${idx + 1} of ${totalSenses}</div>`);
 
-  const domainHTML = sense.domain ? `<div class="card-domain-row">${buildDomainChipHTML(sense.domain, sense.secondaryDomains)}</div>` : '';
+  // Flat domain display at sense level
+  const senseDomains = [];
+  if (sense.domain) senseDomains.push(sense.domain);
+  (sense.secondaryDomains || []).forEach(sd => senseDomains.push(sd));
+  const sdPreferred = (uiMode === 'zh-icon' || uiMode === 'zh-only') ? 'zh' : 'en';
+  const domainHTML = senseDomains.length ? `<div class="card-domain-row"><div class="card-domain-flat" data-state="${sdPreferred}" onclick="toggleLangChip(event,this)">${senseDomains.map((d, di) => {
+    const en = d.en || d.slug;
+    const zh = d.zh || d.slug;
+    const display = sdPreferred === 'zh' ? zh : (uiMode === 'all' || uiMode === 'en-zh') ? `${en} ${zh}` : en;
+    return `${di ? ', ' : ''}<span class="card-domain-item" data-en="${en}" data-zh="${zh}">${display}</span>`;
+  }).join('')}</div></div>` : '';
   const pinyinHTML = sense.pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${formatPinyin(sense.pinyin)}</span></div>` : '';
   if (domainHTML || pinyinHTML) {
     parts.push(`<div style="padding:0.3rem 0">${domainHTML}${pinyinHTML}</div>`);
@@ -1632,8 +1634,8 @@ function renderSense(sense, idx, totalOverride) {
         ${d.pos ? `<span class="card-pos" data-abbr="${posLabel(d.pos)}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}${posAlignIcon(sense.alignment || WORD.alignment) ? '<span class="pos-align-icon">' + posAlignIcon(sense.alignment || WORD.alignment) + '</span>' : ''}</span>` : ''}
         <span class="card-definition">${d.def}</span>
       </div>
-      ${fmlDisplay ? `<div class="card-formula">${fmlDisplay}</div>` : ''}
-      ${d.usageNote ? `<div class="card-usage-note">${d.usageNote}</div>` : ''}`;
+      ${fmlDisplay ? `<div class="card-formula">${segmentedHTML(fmlDisplay, WORD)}</div>` : ''}
+      ${d.usageNote ? `<div class="card-usage-note">${segmentedHTML(d.usageNote, WORD)}</div>` : ''}`;
     }).join('');
     parts.push(`<div class="wd-defs">${defs}</div>`);
   }
@@ -1659,15 +1661,15 @@ function renderSense(sense, idx, totalOverride) {
   if (isSectionVisible('learnerTraps') && sense.learnerTraps) {
     parts.push(`<div class="wd-traps">
       <div class="wd-traps-title">${langText('Learner Traps', '學習陷阱')}</div>
-      <div class="wd-traps-text">${sense.learnerTraps}</div>
+      <div class="wd-traps-text">${segmentedHTML(sense.learnerTraps, WORD)}</div>
     </div>`);
   }
 
   // Collocations
   if (isSectionVisible('collocations') && sense.collocations && sense.collocations.length) {
     const chips = sense.collocations.map(c => {
-      return `<a class="wd-colloc-chip" href="/lexicon/${c.smartId}" onclick="pushTrail('${c.smartId}','${c.traditional}')">${c.traditional}</a>`;
-    }).join('');
+      return `<span class="wd-colloc-item">${segmentedHTML(c.text, WORD)}</span>`;
+    }).join('<span class="wd-colloc-sep">·</span>');
     parts.push(`<div class="wd-collocations">
       <div class="wd-collocations-title">${langText('Collocations', '搭配')}</div>
       ${chips}

@@ -518,9 +518,17 @@ class ExploreController extends Controller
                 ->values()->all();
 
             // Collocations
-            $collocations = $sense->collocations->map(fn ($wo) => [
-                'traditional' => $wo->traditional,
-                'smartId'     => $wo->smart_id,
+            // Collocations: text-based, with render-time linking
+            $collTexts = $sense->collocations->pluck('collocation_text')->filter()->values()->all();
+            $collWordMap = [];
+            if (!empty($collTexts)) {
+                $collWordMap = WordObject::whereIn('traditional', $collTexts)
+                    ->pluck('smart_id', 'traditional')->all();
+            }
+            $collocations = collect($collTexts)->map(fn ($text) => [
+                'text'     => $text,
+                'smartId'  => $collWordMap[$text] ?? null,
+                'exists'   => isset($collWordMap[$text]),
             ])->values()->all();
 
             // Relations: merge forward + inverse, group by type

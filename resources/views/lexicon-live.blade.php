@@ -785,8 +785,9 @@ main {
 }
 .sentence-card-def {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.35rem;
+  gap: 0.25rem 0.35rem;
   font-size: 0.95rem;
   line-height: 1.4;
 }
@@ -798,6 +799,8 @@ main {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.05rem;
   color: var(--ink);
+  flex: 1 1 60%;
+  min-width: 0;
 }
 .sentence-card-def--dim {
   color: var(--dim);
@@ -3400,7 +3403,7 @@ document.getElementById('scenarioNameInput').addEventListener('keydown', functio
 // ── OPEN WORD PAGE ───────────────────────────────────────────────────────────
 function openCard(event, wordKey) {
   // Don't navigate if user clicked a button inside the card (save, AI, etc.)
-  if (event.target.closest('button, .ws-ai-workspace, .ws-panel, .seg-popover, .card-pos, .card-def-row, .card-hanzi, .card-hero-actions, .card-actions')) return;
+  if (event.target.closest('button, .ws-ai-workspace, .ws-panel, .seg-popover, .card-pos, .card-def-row, .card-hanzi, .card-hero-actions, .card-actions, .srp-cp')) return;
   const word = WORDS.find(w => w.traditional === wordKey || w.smart_id === wordKey);
   // Clear exploration trail — clicking a search result starts a fresh path
   sessionStorage.removeItem('lexiconTrail');
