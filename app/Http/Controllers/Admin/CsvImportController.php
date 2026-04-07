@@ -266,6 +266,11 @@ class CsvImportController extends Controller
                     });
 
                     if ($matchedSense) {
+                        // Canonical on word_senses: prefer Chinese, fall back to English
+                        $canonicalFormula = $s['formula_zh'] ?? $s['formula_en'] ?? $matchedSense->formula;
+                        $canonicalUsage   = $s['usage_note_zh'] ?? $s['usage_note_en'] ?? $matchedSense->usage_note;
+                        $canonicalTraps   = $s['learner_traps_zh'] ?? $s['learner_traps_en'] ?? $matchedSense->learner_traps;
+
                         $matchedSense->update([
                             'channel_id'       => isset($s['channel']) && $s['channel'] ? ($designations[$s['channel']] ?? $matchedSense->channel_id) : $matchedSense->channel_id,
                             'connotation_id'   => isset($s['connotation']) && $s['connotation'] ? ($designations[$s['connotation']] ?? $matchedSense->connotation_id) : $matchedSense->connotation_id,
@@ -273,13 +278,34 @@ class CsvImportController extends Controller
                             'sensitivity_id'   => isset($s['sensitivity']) && $s['sensitivity'] ? ($designations[$s['sensitivity']] ?? $matchedSense->sensitivity_id) : $matchedSense->sensitivity_id,
                             'intensity'        => $s['intensity'] ?? $matchedSense->intensity,
                             'valency'          => $s['valency'] ?? $matchedSense->valency,
-                            'formula'          => $s['formula'] ?? $matchedSense->formula,
-                            'usage_note'       => $s['usage_note'] ?? $matchedSense->usage_note,
-                            'learner_traps'    => $s['learner_traps'] ?? $matchedSense->learner_traps,
+                            'formula'          => $canonicalFormula,
+                            'usage_note'       => $canonicalUsage,
+                            'learner_traps'    => $canonicalTraps,
                             'enriched_by'      => 'shifu',
                             'enriched_at'      => now(),
                             // source, tocfl_level_id, hsk_level_id — NOT touched
                         ]);
+
+                        // Update word_sense_notes (bilingual)
+                        DB::table('word_sense_notes')->updateOrInsert(
+                            ['word_sense_id' => $matchedSense->id, 'language_id' => $langEn],
+                            [
+                                'formula'       => $s['formula_en'] ?? null,
+                                'usage_note'    => $s['usage_note_en'] ?? null,
+                                'learner_traps' => $s['learner_traps_en'] ?? null,
+                                'updated_at'    => now(),
+                            ]
+                        );
+                        DB::table('word_sense_notes')->updateOrInsert(
+                            ['word_sense_id' => $matchedSense->id, 'language_id' => $langZh],
+                            [
+                                'formula'       => $s['formula_zh'] ?? null,
+                                'usage_note'    => $s['usage_note_zh'] ?? null,
+                                'learner_traps' => $s['learner_traps_zh'] ?? null,
+                                'updated_at'    => now(),
+                            ]
+                        );
+
                         $enriched++;
                     }
                 } else {
@@ -384,12 +410,19 @@ class CsvImportController extends Controller
             $label = $sense->pronunciation?->pronunciation_text ?? $existing->traditional;
 
             if (! $zhDef?->definition_text) $gaps[] = "{$label}: missing ZH-TW definition.";
-            if (! $sense->formula) $gaps[] = "{$label}: missing formula.";
-            if (! $sense->usage_note) $gaps[] = "{$label}: missing usage note.";
-            if (! $sense->learner_traps) $gaps[] = "{$label}: missing learner traps.";
             if ($sense->examples->count() < 2) $gaps[] = "{$label}: only {$sense->examples->count()} example(s).";
             if (! $sense->channel_id) $gaps[] = "{$label}: missing channel.";
             if (! $sense->connotation_id) $gaps[] = "{$label}: missing connotation.";
+
+            // Check word_sense_notes for bilingual coverage
+            $enNote = DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 1)->first();
+            $zhNote = DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 2)->first();
+
+            if (! $enNote?->formula && ! $zhNote?->formula) $gaps[] = "{$label}: missing formula.";
+            if (! $enNote?->usage_note) $gaps[] = "{$label}: missing EN usage note.";
+            if (! $zhNote?->usage_note) $gaps[] = "{$label}: missing ZH usage note.";
+            if (! $enNote?->learner_traps) $gaps[] = "{$label}: missing EN learner traps.";
+            if (! $zhNote?->learner_traps) $gaps[] = "{$label}: missing ZH learner traps.";
         }
 
         return $gaps;
@@ -418,6 +451,11 @@ class CsvImportController extends Controller
         $tocflId        = isset($s['tocfl'])          && $s['tocfl']         ? ($designations[$s['tocfl']]         ?? null) : null;
         $hskId          = isset($s['hsk'])            && $s['hsk']           ? ($designations[$s['hsk']]           ?? null) : null;
 
+        // Canonical on word_senses: prefer Chinese version, fall back to English
+        $canonicalFormula = $s['formula_zh'] ?? $s['formula_en'] ?? $s['formula'] ?? null;
+        $canonicalUsage   = $s['usage_note_zh'] ?? $s['usage_note_en'] ?? $s['usage_note'] ?? null;
+        $canonicalTraps   = $s['learner_traps_zh'] ?? $s['learner_traps_en'] ?? $s['learner_traps'] ?? null;
+
         $sense = WordSense::create([
             'word_object_id'   => $word->id,
             'pronunciation_id' => $pronunciation->id,
@@ -427,9 +465,9 @@ class CsvImportController extends Controller
             'sensitivity_id'   => $sensitivityId,
             'intensity'        => $s['intensity'] ?? null,
             'valency'          => $s['valency'] ?? null,
-            'formula'          => $s['formula'] ?? null,
-            'usage_note'       => $s['usage_note'] ?? null,
-            'learner_traps'    => $s['learner_traps'] ?? null,
+            'formula'          => $canonicalFormula,
+            'usage_note'       => $canonicalUsage,
+            'learner_traps'    => $canonicalTraps,
             'tocfl_level_id'   => $tocflId,
             'hsk_level_id'     => $hskId,
             'status'           => $status,
@@ -462,14 +500,12 @@ class CsvImportController extends Controller
         // POS
         $posId = $posLabels[$s['pos']] ?? null;
 
-        // Definitions
+        // Definitions (clean — no formula/usage_note on definitions)
         $defEn = WordSenseDefinition::create([
             'word_sense_id'   => $sense->id,
             'language_id'     => $langEn,
             'pos_id'          => $posId,
             'definition_text' => $s['definitions']['en'] ?? '',
-            'formula'         => $s['formula'] ?? null,
-            'usage_note'      => $s['usage_note'] ?? null,
             'sort_order'      => 0,
         ]);
 
@@ -481,6 +517,34 @@ class CsvImportController extends Controller
                 'definition_text' => $s['definitions']['zh-TW'],
                 'sort_order'      => 0,
             ]);
+        }
+
+        // Word sense notes (bilingual: EN + ZH)
+        $hasAnyNotes = ($s['formula_en'] ?? null) || ($s['formula_zh'] ?? null)
+            || ($s['usage_note_en'] ?? null) || ($s['usage_note_zh'] ?? null)
+            || ($s['learner_traps_en'] ?? null) || ($s['learner_traps_zh'] ?? null);
+
+        if ($hasAnyNotes) {
+            DB::table('word_sense_notes')->updateOrInsert(
+                ['word_sense_id' => $sense->id, 'language_id' => $langEn],
+                [
+                    'formula'      => $s['formula_en'] ?? null,
+                    'usage_note'   => $s['usage_note_en'] ?? null,
+                    'learner_traps' => $s['learner_traps_en'] ?? null,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]
+            );
+            DB::table('word_sense_notes')->updateOrInsert(
+                ['word_sense_id' => $sense->id, 'language_id' => $langZh],
+                [
+                    'formula'      => $s['formula_zh'] ?? null,
+                    'usage_note'   => $s['usage_note_zh'] ?? null,
+                    'learner_traps' => $s['learner_traps_zh'] ?? null,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]
+            );
         }
 
         if ($posId) {

@@ -484,7 +484,11 @@ class ExploreController extends Controller
             $tocflShort  = $tocflSlug ? (self::TOCFL_SLUG_MAP[$tocflSlug] ?? null) : null;
             $hskSlug     = $sense->hskLevel?->slug;
 
-            // Definitions
+            // Bilingual notes from word_sense_notes
+            $enNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 1)->first();
+            $zhNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 2)->first();
+
+            // Definitions (formula/usageNote now come from word_sense_notes, with fallback to definitions table for legacy data)
             $definitions = $sense->definitions->map(fn ($d) => [
                 'pos'       => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
                 'posAbbr'   => $d->posLabel?->slug ?? '',
@@ -607,6 +611,18 @@ class ExploreController extends Controller
                 'domain'           => $domainShaped,
                 'secondaryDomains' => $secondaryDomainsShaped,
                 'learnerTraps'    => $sense->learner_traps,
+                'notes'           => [
+                    'en' => [
+                        'formula'      => $enNote?->formula ?? '',
+                        'usageNote'    => $enNote?->usage_note ?? '',
+                        'learnerTraps' => $enNote?->learner_traps ?? '',
+                    ],
+                    'zh' => [
+                        'formula'      => $zhNote?->formula ?? '',
+                        'usageNote'    => $zhNote?->usage_note ?? '',
+                        'learnerTraps' => $zhNote?->learner_traps ?? '',
+                    ],
+                ],
                 'collocations'    => $collocations,
                 'relations'       => $relations,
                 'family'          => $family,

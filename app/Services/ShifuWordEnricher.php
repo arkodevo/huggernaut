@@ -129,6 +129,47 @@ class ShifuWordEnricher
             $sense['domains'] = array_slice($sense['domains'] ?? [], 0, 4);
             $sense['dimension'] = $sense['dimension'] ?? [];
 
+            // Ensure bilingual note fields exist
+            // Handle legacy single-field format → promote to bilingual
+            if (isset($sense['formula']) && ! isset($sense['formula_en'])) {
+                $sense['formula_en'] = $sense['formula'];
+                $sense['formula_zh'] = $sense['formula'];
+                unset($sense['formula']);
+            }
+            if (isset($sense['usage_note']) && ! isset($sense['usage_note_en'])) {
+                $raw = $sense['usage_note'];
+                $cjk = preg_match_all('/[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}]/u', $raw);
+                $ratio = mb_strlen($raw) > 0 ? $cjk / mb_strlen($raw) : 0;
+                if ($ratio > 0.3) {
+                    $sense['usage_note_en'] = null;
+                    $sense['usage_note_zh'] = $raw;
+                } else {
+                    $sense['usage_note_en'] = $raw;
+                    $sense['usage_note_zh'] = null;
+                }
+                unset($sense['usage_note']);
+            }
+            if (isset($sense['learner_traps']) && ! isset($sense['learner_traps_en'])) {
+                $raw = $sense['learner_traps'];
+                $cjk = preg_match_all('/[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}]/u', $raw);
+                $ratio = mb_strlen($raw) > 0 ? $cjk / mb_strlen($raw) : 0;
+                if ($ratio > 0.3) {
+                    $sense['learner_traps_en'] = null;
+                    $sense['learner_traps_zh'] = $raw;
+                } else {
+                    $sense['learner_traps_en'] = $raw;
+                    $sense['learner_traps_zh'] = null;
+                }
+                unset($sense['learner_traps']);
+            }
+
+            $sense['formula_en'] = $sense['formula_en'] ?? null;
+            $sense['formula_zh'] = $sense['formula_zh'] ?? null;
+            $sense['usage_note_en'] = $sense['usage_note_en'] ?? null;
+            $sense['usage_note_zh'] = $sense['usage_note_zh'] ?? null;
+            $sense['learner_traps_en'] = $sense['learner_traps_en'] ?? null;
+            $sense['learner_traps_zh'] = $sense['learner_traps_zh'] ?? null;
+
             // Generate sense_id
             $pos = $sense['pos'] ?? 'UNK';
             $sense['sense_id'] = $data['word']['smart_id'] . '_' . $pos . '_' . str_pad($i + 1, 2, '0', STR_PAD_LEFT);
@@ -173,9 +214,12 @@ Respond with ONLY valid JSON matching this exact structure (no markdown, no comm
       "valency": null,
       "tocfl": null,
       "hsk": null,
-      "formula": "寫字 / 認字",
-      "usage_note": "Basic noun for written character or word.",
-      "learner_traps": "和「詞」不同；「字」指單一字，「詞」指詞語。",
+      "formula_en": "[Number] + 個 + 字 / 寫字 / 認字",
+      "formula_zh": "[數量] + 個 + 字 / 寫字 / 認字",
+      "usage_note_en": "Basic noun for a written character or word. Not the same as 詞 (compound word).",
+      "usage_note_zh": "書面文字的基本單位。和「詞」不同，「字」指單一文字。",
+      "learner_traps_en": "Don't confuse 字 (single character) with 詞 (compound word). 字 is the building block, 詞 is the combination.",
+      "learner_traps_zh": "和「詞」不同；「字」指單一字，「詞」指詞語。",
       "relations": {
         "synonym_close": [],
         "synonym_related": ["詞"],
@@ -246,10 +290,28 @@ DOMAINS:
 - Not every word needs 4 domains. 1-2 well-chosen domains are better than 4 vague ones.
 - Example: 流 → ["movement", "nature", "philosophy"] (3 is enough)
 
-FORMULAS:
+FORMULAS (bilingual):
+- Provide formula_en AND formula_zh for every sense
+- The Chinese word itself stays in Chinese in BOTH versions
+- formula_en: slot labels in [] use English — 把 [Noun] 當作 [Noun]
+- formula_zh: slot labels in [] use Chinese — 把 [名詞] 當作 [名詞]
+- Grammar and word order are identical — only the [] labels change
 - Target word MUST appear in its own formula
-- Use Chinese with [Slot Labels]: 把 [Noun] 當作 [Noun]
 - Vsep: show both joined and split forms
+
+USAGE NOTES (bilingual):
+- Provide usage_note_en AND usage_note_zh for every sense
+- EN version: natural English for English-speaking learners
+- ZH version: natural Chinese for immersion-mode learners
+- Write each independently — do NOT translate word-for-word
+- Each should feel natural and complete in its own language
+
+LEARNER TRAPS (bilingual):
+- Provide learner_traps_en AND learner_traps_zh for every sense
+- A trap hidden in the language the learner is LEARNING is useless
+- EN version warns English-speaking beginners in English
+- ZH version warns immersion-mode learners in Chinese
+- Write each independently — natural, not translated
 
 VALID SLUGS — use ONLY these values:
 

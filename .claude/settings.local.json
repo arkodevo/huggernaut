@@ -220,7 +220,24 @@
       "Bash(/Applications/MAMP/Library/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -d huggernaut --no-owner --no-acl -F p -f /Users/chuluoyi/Downloads/huggernaut_backup_2026-04-06_pre-batch7-4.sql)",
       "Bash(/opt/homebrew/Cellar/libpq/18.1/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -d huggernaut --no-owner --no-acl -F p -f /Users/chuluoyi/Downloads/huggernaut_backup_2026-04-06_pre-batch7-4.sql)",
       "Bash(ls /Users/chuluoyi/Downloads/level3_batch8*)",
-      "Bash(/opt/homebrew/Cellar/libpq/18.1/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut)"
+      "Bash(/opt/homebrew/Cellar/libpq/18.1/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi huggernaut)",
+      "Bash(/opt/homebrew/Cellar/libpq/18.1/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -d huggernaut -F c -f /Users/chuluoyi/Downloads/huggernaut_backup_2026-04-07_pre-batch9-1.sql)",
+      "Bash(find /Users/chuluoyi/Documents/華語/planning/ -type f \\\\\\(-name *.json -o -name *.jsonl -o -name *.txt \\\\\\))",
+      "Bash(find /Users/chuluoyi/Documents/華語/planning -type f \\\\\\(-name *.md -o -name *.txt \\\\\\))",
+      "Bash(grep -i \"template\\\\|schema\" /Users/chuluoyi/Documents/華語/planning/*.md)",
+      "Bash(find /Users/chuluoyi/.claude/projects -name *.md)",
+      "Bash(pg_dump -U chuluoyi -h 127.0.0.1 -p 5432 huggernaut)",
+      "Bash(\"/Users/chuluoyi/Downloads/huggernaut_backup_2026-04-07_post-notes-migration.sql\")",
+      "Bash(ls /Applications/MAMP/Library/bin/pg*)",
+      "Bash(brew --prefix postgresql)",
+      "Bash(/opt/homebrew/opt/postgresql/bin/pg_dump -U chuluoyi -h 127.0.0.1 -p 5432 -Fc huggernaut)",
+      "Bash(find /Users/chuluoyi/Documents/華語/planning/ -type f -name *template* -o -name *skeleton*)",
+      "Bash(grep -r \"enrichment\\\\|bilingual\" /Users/chuluoyi/Documents/華語/planning/ --include=*.py --include=*.js)",
+      "Bash(find /Users/chuluoyi/Documents/華語/planning -type f -name *build* -o -name *batch* -o -name *enrichment*)",
+      "Bash(ls -la /Users/chuluoyi/Documents/華語/planning/*.py)",
+      "Bash(grep -r \"Huiming\\\\|batch\\\\|enrichment\" /Users/chuluoyi/.claude/projects -type f -name *.jsonl)",
+      "Bash(ls -lt /Users/chuluoyi/.claude/projects/*/subagents/)",
+      "Bash(wc -l /Users/chuluoyi/Documents/華語/planning/data_json/huiming_tocfl*.json)"
     ]
   }
 }

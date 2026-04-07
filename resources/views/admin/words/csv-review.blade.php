@@ -222,9 +222,14 @@ function csvRenderWord(idx, result) {
       html += '<p style="font-size:0.85rem;color:#6b7280"><span style="font-size:0.65rem;font-family:monospace;color:#4f46e5">ZH</span> <span class="cn">' + escHtml(sense.definitions['zh-TW']) + '</span></p>';
     }
 
-    // Formula
-    if (sense.formula) {
-      html += '<p style="font-size:0.82rem;font-family:monospace;background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:0.3rem 0.5rem;margin:0.4rem 0">' + escHtml(sense.formula) + '</p>';
+    // Formula (bilingual)
+    var formulaEn = sense.formula_en || sense.formula || '';
+    var formulaZh = sense.formula_zh || '';
+    if (formulaEn || formulaZh) {
+      html += '<div style="font-size:0.82rem;font-family:monospace;background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:0.3rem 0.5rem;margin:0.4rem 0">';
+      if (formulaEn) html += '<p><span style="font-size:0.6rem;color:#4f46e5;font-family:sans-serif">EN</span> ' + escHtml(formulaEn) + '</p>';
+      if (formulaZh) html += '<p><span style="font-size:0.6rem;color:#4f46e5;font-family:sans-serif">ZH</span> ' + escHtml(formulaZh) + '</p>';
+      html += '</div>';
     }
 
     // Attribute cards
@@ -282,12 +287,24 @@ function csvRenderWord(idx, result) {
       html += '</div>';
     }
 
-    // Usage note / Learner traps
-    if (sense.usage_note) {
-      html += '<div style="font-size:0.82rem;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:0.5rem 0.6rem;margin:0.4rem 0"><span style="font-size:0.65rem;font-weight:600;color:#d97706;text-transform:uppercase;letter-spacing:0.1em">Usage Note</span><p style="color:#92400e;margin-top:0.2rem">' + escHtml(sense.usage_note) + '</p></div>';
+    // Usage note (bilingual)
+    var usageEn = sense.usage_note_en || sense.usage_note || '';
+    var usageZh = sense.usage_note_zh || '';
+    if (usageEn || usageZh) {
+      html += '<div style="font-size:0.82rem;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;padding:0.5rem 0.6rem;margin:0.4rem 0"><span style="font-size:0.65rem;font-weight:600;color:#d97706;text-transform:uppercase;letter-spacing:0.1em">Usage Note</span>';
+      if (usageEn) html += '<p style="color:#92400e;margin-top:0.2rem"><span style="font-size:0.6rem;font-weight:600;color:#4f46e5">EN</span> ' + escHtml(usageEn) + '</p>';
+      if (usageZh) html += '<p class="cn" style="color:#92400e;margin-top:0.2rem"><span style="font-size:0.6rem;font-weight:600;color:#4f46e5">ZH</span> ' + escHtml(usageZh) + '</p>';
+      html += '</div>';
     }
-    if (sense.learner_traps) {
-      html += '<div style="font-size:0.82rem;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:0.5rem 0.6rem;margin:0.4rem 0"><span style="font-size:0.65rem;font-weight:600;color:#dc2626;text-transform:uppercase;letter-spacing:0.1em">Learner Traps</span><p class="cn" style="color:#991b1b;margin-top:0.2rem">' + escHtml(sense.learner_traps) + '</p></div>';
+
+    // Learner traps (bilingual)
+    var trapsEn = sense.learner_traps_en || sense.learner_traps || '';
+    var trapsZh = sense.learner_traps_zh || '';
+    if (trapsEn || trapsZh) {
+      html += '<div style="font-size:0.82rem;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:0.5rem 0.6rem;margin:0.4rem 0"><span style="font-size:0.65rem;font-weight:600;color:#dc2626;text-transform:uppercase;letter-spacing:0.1em">Learner Traps</span>';
+      if (trapsEn) html += '<p style="color:#991b1b;margin-top:0.2rem"><span style="font-size:0.6rem;font-weight:600;color:#4f46e5">EN</span> ' + escHtml(trapsEn) + '</p>';
+      if (trapsZh) html += '<p class="cn" style="color:#991b1b;margin-top:0.2rem"><span style="font-size:0.6rem;font-weight:600;color:#4f46e5">ZH</span> ' + escHtml(trapsZh) + '</p>';
+      html += '</div>';
     }
   });
 

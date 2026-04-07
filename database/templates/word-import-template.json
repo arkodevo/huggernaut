@@ -1,6 +1,6 @@
 {
-  "_template_version": "2.0",
-  "_last_updated": "2026-04-03",
+  "_template_version": "2.1",
+  "_last_updated": "2026-04-07",
   "_instructions": "One file per word. Each sense must have exactly ONE POS. If a word has multiple POS roles (e.g., Vi and N), create SEPARATE senses. Fields prefixed with _ are documentation -- strip them before import. TOCFL is the authoritative source for POS classification. Editorial corrections are tracked via alignment + source fields.",
 
   "word": {
@@ -168,15 +168,16 @@
       "hsk": null,
       "_hsk_options": ["hsk-1", "hsk-2", "hsk-3", "hsk-4", "hsk-5", "hsk-6", null],
 
-      "formula": "[Entity/Quantity] + 膨脹",
-      "_formula_note": "Structural pattern showing how the word fits in a sentence. Must be pedagogically useful. Use Chinese where possible.",
+      "formula_en": "[Entity/Quantity] + 膨脹",
+      "formula_zh": "[實體/數量] + 膨脹",
+      "_formula_note": "Bilingual formulas. The word itself stays in Chinese in both versions. Slot labels in [] are translated to the target language. formula_en uses English slot labels, formula_zh uses Chinese slot labels. Both versions stored in word_sense_notes per language.",
       "_formula_notation": {
         "brackets": "[Verb], [Person], [Clause] -- variable slots the learner fills in. Labels should be grammatically or semantically specific.",
         "plus": "+ connects elements in sequence. Spaces around + for readability.",
         "slash": "/ separates alternative patterns. Each side is a complete pattern.",
         "no_brackets": "Words without brackets are fixed constants in the pattern."
       },
-      "_formula_by_pos": {
+      "_formula_by_pos_en": {
         "N":     "[Possessor] + 姊姊 / [Number] + 封 + 信",
         "Prn":   "我 + [Verb/Phrase] / [Verb] + 我",
         "V":     "穿 + [Clothing/Shoes] / 告訴 + [Person] + [Thing/Clause]",
@@ -196,19 +197,44 @@
         "Vcomp": "V + 住 (記住, 抓住, 擋住)",
         "fixed": "再見 / 對不起 / 不客氣 -- fixed expressions ARE the formula, no brackets needed"
       },
+      "_formula_by_pos_zh": {
+        "N":     "[所有者] + 姊姊 / [數字] + 封 + 信",
+        "Prn":   "我 + [動詞/詞組] / [動詞] + 我",
+        "V":     "穿 + [衣物/鞋子] / 告訴 + [人] + [事物/子句]",
+        "Vi":    "跑 / 跑得 + [補語]",
+        "Vsep":  "聊天 / 跟 + [人] + 聊天 -- 必須展示合併與分離兩種形式",
+        "Vs":    "[事物/人] + 很 + 貴",
+        "Vst":   "喜歡 + [名詞/動詞詞組]",
+        "Vp":    "壞了 / [事物] + 壞了",
+        "Vpt":   "發現 + [事物/問題/子句]",
+        "Vaux":  "能 + [動詞]",
+        "Adv":   "很 + [狀態詞] / 已經 + [動詞/詞組]",
+        "Conj":  "[A] + 和 + [B] / [子句]，可是 [子句]",
+        "Prep":  "從 + [地點/時間] + [動詞詞組]",
+        "Det":   "這 + [量詞] + [名詞]",
+        "M":     "[數字] + 個 + [名詞]",
+        "Ptc":   "[動詞] + 了 / [子句] + 嗎？",
+        "Vcomp": "V + 住 (記住, 抓住, 擋住)",
+        "fixed": "再見 / 對不起 / 不客氣 -- 固定表達本身就是公式，不需要括號"
+      },
       "_formula_rules": [
-        "The word MUST appear in its own formula.",
-        "Use Chinese in formulas, not English. Slot labels in [] are the only English.",
+        "The word MUST appear in its own formula — in Chinese, in BOTH versions.",
+        "formula_en: slot labels in [] use English. formula_zh: slot labels in [] use Chinese.",
+        "The Chinese grammar and word order are identical in both versions — only the [] labels change.",
         "Keep it short -- one or two patterns maximum.",
-        "Be specific about object types: [Food] is better than [Object] for 烤.",
+        "Be specific about object types: [Food]/[食物] is better than [Object]/[物件] for 烤.",
         "Do NOT include separable notes like (V-O: 走+路). The POS chip says Vsep.",
         "Do NOT write definitions as formulas. 'to walk' is not a formula.",
         "Formulas are for learners -- prioritize patterns needed to produce correct sentences."
       ],
 
-      "usage_note": "Broader and more systemic than 漲. Common with prices, egos, ambitions, and physical objects.",
+      "usage_note_en": "Broader and more systemic than 漲. Common with prices, egos, ambitions, and physical objects.",
+      "usage_note_zh": "比「漲」更廣泛、更系統性。常見於物價、自我膨脹、野心及物理膨脹。",
+      "_usage_note_note": "Bilingual usage notes. EN version for English-speaking learners, ZH version for Chinese-immersion learners. Both stored in word_sense_notes per language. Write each independently — do NOT translate word-for-word. Each should feel natural in its language.",
 
-      "learner_traps": "Often confused with 擴大. 膨脹 implies internal pressure or uncontrolled growth; 擴大 implies deliberate expansion.",
+      "learner_traps_en": "Often confused with 擴大. 膨脹 implies internal pressure or uncontrolled growth; 擴大 implies deliberate expansion.",
+      "learner_traps_zh": "容易和「擴大」搞混。膨脹強調內部壓力或不受控制的增長；擴大強調刻意的擴展。",
+      "_learner_traps_note": "Bilingual learner traps. These warn learners about common mistakes. A trap hidden in the language the learner is still learning is useless — it MUST be available in the learner's preferred language (LPL). Write each version naturally, not as a translation.",
 
       "relations": {
         "synonym_close": ["擴張"],
