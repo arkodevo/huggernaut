@@ -206,7 +206,11 @@ function populatePosRefine() {
 
   const posOrder = Object.keys(POS_ABBR);
   const seen = new Set();
-  WORDS.forEach(w => (w.definitions || []).forEach(d => { if (d.pos) seen.add(d.pos); }));
+  WORDS.forEach(w => {
+    const defs = w.definitions;
+    const flat = Array.isArray(defs) ? defs : [...(defs?.en || []), ...(defs?.zh || [])];
+    flat.forEach(d => { if (d.pos) seen.add(d.pos); });
+  });
 
   if (typeof verbPresentation !== 'undefined' && verbPresentation === 'intricate') {
     // Intricate: show every individual POS present in WORDS
@@ -227,7 +231,11 @@ function populatePosRefine() {
     ];
     verbBuckets.forEach(bucket => {
       const members = POS_CONSOLIDATED_GROUPS[bucket.val];
-      const hasAny = WORDS.some(w => (w.definitions || []).some(d => members.includes(d.pos)));
+      const hasAny = WORDS.some(w => {
+        const defs = w.definitions;
+        const flat = Array.isArray(defs) ? defs : [...(defs?.en || []), ...(defs?.zh || [])];
+        return flat.some(d => members.includes(d.pos));
+      });
       if (!hasAny) return;
       const opt = document.createElement('option');
       opt.value = bucket.val;

@@ -136,6 +136,34 @@
     </div>
 </section>
 
+{{-- ── Notes Coverage Languages ──────────────────────────────────────────────── --}}
+<section class="max-w-3xl bg-white rounded-xl border border-gray-200 p-6 mb-6">
+    <h2 class="text-sm font-semibold text-gray-900 mb-1">Notes Coverage Languages</h2>
+    <p class="text-xs text-gray-500 mb-5">
+        Select which languages have editorial coverage for formula, usage notes, and learner traps.
+        Enabled languages will appear as editable fields in the sense editor.
+    </p>
+
+    <form method="POST" action="{{ route('admin.preferences.update') }}">
+        @csrf
+        <div class="space-y-2 mb-4">
+            @foreach ($languages as $lang)
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="notes_coverage[]" value="{{ $lang->id }}"
+                           class="h-4 w-4 rounded border-gray-300 text-indigo-600"
+                           {{ $lang->has_notes_coverage ? 'checked' : '' }}>
+                    <span class="text-sm text-gray-700 font-medium">{{ $lang->name }}</span>
+                    <span class="text-xs text-gray-400">({{ $lang->code }})</span>
+                </label>
+            @endforeach
+        </div>
+        <button type="submit"
+                class="px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors">
+            Save Coverage
+        </button>
+    </form>
+</section>
+
 {{-- Future preferences sections go here --}}
 
 @endsection

@@ -41,4 +41,21 @@
   font-family: 'DM Mono', monospace;
   display: inline-block; margin-top: 0.5rem;
 }
+.card-formula-zh {
+  margin-top: 0.2rem;
+  opacity: 0.7;
+  font-size: 0.92em;
+}
+.card-usage-note-zh {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed rgba(0,0,0,0.08);
+  opacity: 0.75;
+}
+.wd-traps-zh {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed rgba(184,48,80,0.12);
+  opacity: 0.75;
+}
 </style>

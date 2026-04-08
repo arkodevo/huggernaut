@@ -1580,6 +1580,33 @@ let langMode  = localStorage.getItem('langMode') || 'en';
 let iconsMode = localStorage.getItem('iconsMode') || 'on';
 let uiMode   = 'en-icon'; // derived — do not set directly
 
+/**
+ * Resolve definitions array from bilingual {en:[], zh:[]} structure.
+ * Returns a flat array based on current langMode. Falls back gracefully
+ * if data is still in legacy flat-array format.
+ */
+function getDefs(w) {
+  const d = w.definitions;
+  if (!d) return [];
+  // Legacy flat array — return as-is
+  if (Array.isArray(d)) return d;
+  // Bilingual object: { en: [...], zh: [...] }
+  if (langMode === 'zh') return d.zh && d.zh.length ? d.zh : (d.en || []);
+  if (langMode === 'en') return d.en && d.en.length ? d.en : (d.zh || []);
+  // 'both': merge EN then ZH (EN first for primary display)
+  return [...(d.en || []), ...(d.zh || [])];
+}
+
+/** Resolve the single-string definition preview. */
+function getDefPreview(w) {
+  const d = w.definition;
+  if (!d) return getDefs(w)[0]?.def || '';
+  if (typeof d === 'string') return d;
+  // Bilingual object: { en: '...', zh: '...' }
+  if (langMode === 'zh') return d.zh || d.en || '';
+  return d.en || d.zh || '';
+}
+
 function deriveUiMode() {
   if (iconsMode === 'on') {
     if (langMode === 'en')   return 'en-icon';
@@ -2363,8 +2390,8 @@ WORDS.forEach(w => {
       trad:    w.traditional,
       simp:    w.simplified || w.traditional,
       pinyin:  w.pinyin || '',
-      pos:     (w.definitions && w.definitions[0]) ? w.definitions[0].pos : '',
-      def:     (w.definitions && w.definitions[0]) ? w.definitions[0].def : (w.definition || ''),
+      pos:     getDefs(w)[0]?.pos || '',
+      def:     getDefs(w)[0]?.def || getDefPreview(w),
     };
   }
   if (w.simplified && w.simplified !== w.traditional && !WORD_INDEX[w.simplified]) {
@@ -2589,7 +2616,7 @@ function wordMatchesSearch(w) {
   const q = searchQuery.trim().toLowerCase();
   const surfaces = [
     w.traditional, w.simplified, w.pinyin, w.pinyinToneless,
-    ...(w.definitions || []).flatMap(d => [d.def, d.pos]),
+    ...[...(w.definitions?.en || []), ...(w.definitions?.zh || []), ...(Array.isArray(w.definitions) ? w.definitions : [])].flatMap(d => [d.def, d.pos]),
   ];
   return surfaces.some(s => s && s.toLowerCase().includes(q));
 }
@@ -2621,7 +2648,7 @@ function matchWord(w) {
   // TOCFL: multi-select exact match
   if (state.tocfl.length && !state.tocfl.includes(w.tocfl)) return false;
   // POS refine: match any definition with the selected POS (group-aware)
-  if (posFilter && !(w.definitions || []).some(d => posMatchesFilter(d.pos, posFilter))) return false;
+  if (posFilter && ![...(w.definitions?.en || []), ...(w.definitions?.zh || []), ...(Array.isArray(w.definitions) ? w.definitions : [])].some(d => posMatchesFilter(d.pos, posFilter))) return false;
   // Relative proximity refine: match if word has the selected proximity bucket
   if (relFilter && !(w.relProximity || []).includes(relFilter)) return false;
   // Domain refine: matches any domain across all senses
@@ -2947,7 +2974,7 @@ function srpCreateCollection(wordObjectId, wordKey) {
 function handleShare(e, wordKey) {
   e.stopPropagation();
   const word = WORDS.find(w => w.traditional === wordKey || w.smart_id === wordKey);
-  const text = word ? `${word.traditional} — ${(word.definitions||[])[0]?.def || ''}` : wordKey;
+  const text = word ? `${word.traditional} — ${getDefs(word)[0]?.def || ''}` : wordKey;
   if (navigator.share) {
     navigator.share({ title: '流動 Living Lexicon', text, url: window.location.href });
   } else {
@@ -3067,7 +3094,7 @@ function renderSlimCard(w, opts = {}) {
     : `window.location.href='/lexicon/${encodeURIComponent(smartId)}'`;
 
   // POS + definition lines with 3-way cycling chips
-  const defs = w.definitions || [];
+  const defs = getDefs(w);
   const defsHTML = defs.map(d => {
     if (!d.pos) return `<div class="sentence-card-def"><span class="sentence-card-def-text">${d.def}</span></div>`;
     const abbr = posLabel(d.pos);

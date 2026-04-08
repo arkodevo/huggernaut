@@ -37,7 +37,7 @@ class MyWritingsController extends Controller
                 'smartId'      => $wo?->smart_id ?? '',
                 'pinyin'       => $ws?->pronunciation?->pronunciation_text ?? '',
                 'pos'          => ExploreController::POS_FULL_NAMES[$def?->posLabel?->slug ?? ''] ?? '',
-                'posAbbr'      => $def?->posLabel?->slug ?? '',
+                'posAbbr'      => ExploreController::POS_DISPLAY_ABBR[$def?->posLabel?->slug ?? ''] ?? ($def?->posLabel?->slug ?? ''),
                 'chinese_text' => $ex->chinese_text,
                 'english_text' => $ex->english_text,
                 'ai_verified'  => $ex->ai_verified,

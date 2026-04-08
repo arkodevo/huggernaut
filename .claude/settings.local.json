@@ -237,7 +237,15 @@
       "Bash(ls -la /Users/chuluoyi/Documents/華語/planning/*.py)",
       "Bash(grep -r \"Huiming\\\\|batch\\\\|enrichment\" /Users/chuluoyi/.claude/projects -type f -name *.jsonl)",
       "Bash(ls -lt /Users/chuluoyi/.claude/projects/*/subagents/)",
-      "Bash(wc -l /Users/chuluoyi/Documents/華語/planning/data_json/huiming_tocfl*.json)"
+      "Bash(wc -l /Users/chuluoyi/Documents/華語/planning/data_json/huiming_tocfl*.json)",
+      "Bash(grep -r \"formula\\\\|usage_note\\\\|learner_traps\" /Users/chuluoyi/Sites/huggernaut/routes --include=*.php)",
+      "Bash(grep -E '\\\\.\\(php\\)$')",
+      "Bash(/opt/homebrew/opt/postgresql/bin/pg_dump -U chuluoyi huggernaut)",
+      "Bash(grep -n \"word_sense_notes\\\\|learner_traps\" /Users/chuluoyi/Sites/huggernaut/database/migrations/*.php)",
+      "Bash(grep -n \"class WordSense\\\\|class WordSenseExample\" /Users/chuluoyi/Sites/huggernaut/app/Models/*.php)",
+      "Bash(grep -r \"Va-t\\\\|Vp-t\\\\|Va\\\\s\" /Users/chuluoyi/Sites/huggernaut --include=*.php --include=*.json --include=*.csv)",
+      "Bash(grep -E \"\\(app|resources|public\\)$\")",
+      "Bash(grep -r \"word_sense_definitions.*formula\\\\|word_sense_definitions.*usage_note\" /Users/chuluoyi/Sites/huggernaut/app --include=*.php)"
     ]
   }
 }

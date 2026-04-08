@@ -346,25 +346,62 @@
                             </div>
                         @endif
 
-                        {{-- ── Formula / Usage / Traps ───────────────────── --}}
-                        @if ($sense->formula || $sense->usage_note || $sense->learner_traps || (isset($sense->valency) && $sense->valency !== null))
+                        {{-- ── Formula / Usage / Traps (bilingual from word_sense_notes) ── --}}
+                        @php
+                            $enNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 1)->first();
+                            $zhNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 2)->first();
+                            $hasNotes = $enNote || $zhNote || $sense->formula || $sense->usage_note || $sense->learner_traps;
+                        @endphp
+                        @if ($hasNotes || (isset($sense->valency) && $sense->valency !== null))
                             <div class="space-y-1.5">
                                 @if (isset($sense->valency) && $sense->valency !== null)
                                     <p class="text-sm text-gray-600"><span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Valency:</span> {{ $valencyMap[$sense->valency] ?? $sense->valency }}</p>
                                 @endif
-                                @if ($sense->formula)
-                                    <p class="text-sm text-gray-700 font-mono bg-gray-50 rounded px-2.5 py-1.5 border border-gray-200">{{ $sense->formula }}</p>
-                                @endif
-                                @if ($sense->usage_note)
-                                    <div class="text-sm bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
-                                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Usage Note</span>
-                                        <p class="text-amber-900 mt-0.5">{{ $sense->usage_note }}</p>
+
+                                {{-- Formula --}}
+                                @if ($enNote?->formula || $zhNote?->formula || $sense->formula)
+                                    <div class="text-sm font-mono bg-gray-50 rounded px-2.5 py-1.5 border border-gray-200 space-y-0.5">
+                                        @if ($enNote?->formula)
+                                            <p class="text-gray-700"><span class="text-xs font-sans font-semibold text-indigo-500">EN</span> {{ $enNote->formula }}</p>
+                                        @endif
+                                        @if ($zhNote?->formula && $zhNote->formula !== ($enNote?->formula ?? ''))
+                                            <p class="text-gray-500"><span class="text-xs font-sans font-semibold text-indigo-500">ZH</span> {{ $zhNote->formula }}</p>
+                                        @endif
+                                        @if (!$enNote?->formula && !$zhNote?->formula && $sense->formula)
+                                            <p class="text-gray-700">{{ $sense->formula }}</p>
+                                        @endif
                                     </div>
                                 @endif
-                                @if ($sense->learner_traps)
+
+                                {{-- Usage Note --}}
+                                @if ($enNote?->usage_note || $zhNote?->usage_note || $sense->usage_note)
+                                    <div class="text-sm bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
+                                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Usage Note</span>
+                                        @if ($enNote?->usage_note)
+                                            <p class="text-amber-900 mt-0.5"><span class="text-xs font-semibold text-indigo-500">EN</span> {{ $enNote->usage_note }}</p>
+                                        @endif
+                                        @if ($zhNote?->usage_note)
+                                            <p class="text-amber-800 mt-0.5 {{ $enNote?->usage_note ? 'opacity-75 border-t border-dashed border-amber-200 pt-1' : '' }}"><span class="text-xs font-semibold text-indigo-500">ZH</span> {{ $zhNote->usage_note }}</p>
+                                        @endif
+                                        @if (!$enNote?->usage_note && !$zhNote?->usage_note && $sense->usage_note)
+                                            <p class="text-amber-900 mt-0.5">{{ $sense->usage_note }}</p>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                {{-- Learner Traps --}}
+                                @if ($enNote?->learner_traps || $zhNote?->learner_traps || $sense->learner_traps)
                                     <div class="text-sm bg-red-50 border border-red-200 rounded px-2.5 py-1.5">
                                         <span class="text-xs font-semibold text-red-600 uppercase tracking-wide">Learner Traps</span>
-                                        <p class="text-red-900 mt-0.5">{{ $sense->learner_traps }}</p>
+                                        @if ($enNote?->learner_traps)
+                                            <p class="text-red-900 mt-0.5"><span class="text-xs font-semibold text-indigo-500">EN</span> {{ $enNote->learner_traps }}</p>
+                                        @endif
+                                        @if ($zhNote?->learner_traps)
+                                            <p class="text-red-800 mt-0.5 {{ $enNote?->learner_traps ? 'opacity-75 border-t border-dashed border-red-200 pt-1' : '' }}"><span class="text-xs font-semibold text-indigo-500">ZH</span> {{ $zhNote->learner_traps }}</p>
+                                        @endif
+                                        @if (!$enNote?->learner_traps && !$zhNote?->learner_traps && $sense->learner_traps)
+                                            <p class="text-red-900 mt-0.5">{{ $sense->learner_traps }}</p>
+                                        @endif
                                     </div>
                                 @endif
                             </div>

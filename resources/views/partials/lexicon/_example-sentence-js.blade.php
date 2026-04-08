@@ -3,7 +3,7 @@
 <script>
 /**
  * Render a single example sentence card.
- * @param {Object} ex         - { cn, en, source?, theme? }
+ * @param {Object} ex         - { cn, en, translations?, source?, theme? }
  * @param {Object} opts
  * @param {string} opts.pos   - POS abbreviation slug (e.g. 'Vi')
  * @param {boolean} opts.vertical - true → vertical layout
@@ -29,11 +29,22 @@ function renderExSentence(ex, opts = {}) {
     ? `<div class="ex-sent-source">${ex.source}</div>`
     : '';
 
+  // Resolve translation based on langMode (language IDs: 1=EN, 2=ZH-TW)
+  const lm = (typeof langMode !== 'undefined') ? langMode : 'en';
+  const trans = ex.translations || {};
+  const enText = trans['1'] || ex.en || '';
+
+  // For examples, translation is always non-Chinese (source is Chinese).
+  // 'en' mode: show EN; 'zh' mode: hide translation; 'both' mode: show EN.
+  const translationHTML = (lm === 'zh')
+    ? ''
+    : (enText ? `<div class="ex-sent-en">${enText}</div>` : '');
+
   return `<div class="ex-sent${vertical ? ' vertical' : ''}">
     ${posChip}
     <div class="ex-sent-body">
       <div class="ex-sent-cn">${cnHTML}</div>
-      <div class="ex-sent-en">${ex.en}</div>
+      ${translationHTML}
       ${themeTag}${sourceTag}
     </div>
     ${saveBtn}

@@ -804,6 +804,35 @@ const LABELS = {
 let scriptMode      = localStorage.getItem('scriptMode')      || 'traditional';
 let langMode        = localStorage.getItem('langMode')        || 'both';
 let iconsMode       = localStorage.getItem('iconsMode')       || 'on';
+
+/**
+ * Resolve definitions from bilingual {en:[], zh:[]} structure based on langMode.
+ * Falls back gracefully for legacy flat-array format.
+ */
+function getSenseDefs(defs) {
+  if (!defs) return [];
+  if (Array.isArray(defs)) return defs; // legacy flat array
+  if (langMode === 'zh') return defs.zh?.length ? defs.zh : (defs.en || []);
+  if (langMode === 'en') return defs.en?.length ? defs.en : (defs.zh || []);
+  // 'both': EN then ZH
+  return [...(defs.en || []), ...(defs.zh || [])];
+}
+
+/** Get all definitions across both languages (for search/POS matching). */
+function getAllDefs(defs) {
+  if (!defs) return [];
+  if (Array.isArray(defs)) return defs;
+  return [...(defs.en || []), ...(defs.zh || [])];
+}
+
+/** Resolve formula from bilingual notes based on langMode. */
+function getFormula(sense) {
+  const n = sense.notes || {};
+  const fmlEn = n.en?.formula || '';
+  const fmlZh = n.zh?.formula || '';
+  if (langMode === 'zh') return fmlZh || fmlEn || sense.formula || '';
+  return fmlEn || fmlZh || sense.formula || '';
+}
 let pinyinMode      = localStorage.getItem('pinyinMode')      || 'on';
 let currentLevel    = localStorage.getItem('currentLevel')    || 'developing';
 let fontScale       = parseInt(localStorage.getItem('fontScale')) || 100;
@@ -930,7 +959,7 @@ window.wsGetWordData = function(wordKey) {
     // Single-sense or generic lookup — return first sense data
     const s = (WORD.senses || [])[0];
     if (!s) return WORD;
-    return Object.assign({}, WORD, { senseId: s.id, senseIds: [s.id], wordObjectId: WORD.wordObjectId, definitions: s.definitions || [] });
+    return Object.assign({}, WORD, { senseId: s.id, senseIds: [s.id], wordObjectId: WORD.wordObjectId, definitions: getSenseDefs(s.definitions) });
   }
   // Match sense-specific key pattern: traditional + '_s' + senseId
   const senseMatch = wordKey.match(new RegExp('^' + WORD.traditional.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '_s(\\d+)$'));
@@ -942,16 +971,16 @@ window.wsGetWordData = function(wordKey) {
         traditional: WORD.traditional,
         simplified: WORD.simplified || '',
         pinyin: sense.pinyin || WORD.pinyin || '',
-        definition: (sense.definitions || [])[0]?.def || '',
+        definition: getSenseDefs(sense.definitions)[0]?.def || '',
         register: sense.register || '',
         connotation: sense.connotation || '',
         channel: sense.channel || '',
         level: sense.tocfl || '',
-        formula: sense.formula || '',
+        formula: getFormula(sense),
         senseId: sense.id,
         senseIds: [sense.id],
         wordObjectId: WORD.wordObjectId,
-        definitions: sense.definitions || [],
+        definitions: getSenseDefs(sense.definitions),
       };
     }
   }
@@ -1508,7 +1537,7 @@ function renderHeader() {
     }).join('')}</div>` : '';
 
     // POS badge for this sense (first definition's POS)
-    const pos = (s.definitions || []).find(d => d.pos)?.pos;
+    const pos = getAllDefs(s.definitions).find(d => d.pos)?.pos;
     let posChip = '';
     if (pos) {
       const enText = posDisplayLabel(pos) + ' \u00b7 ' + posLabel(pos);
@@ -1626,25 +1655,24 @@ function renderSense(sense, idx, totalOverride) {
   }
 
   // Definitions + bilingual notes (formula, usage note)
-  if (isSectionVisible('definitions') && sense.definitions && sense.definitions.length) {
+  const resolvedDefs = getSenseDefs(sense.definitions);
+  if (isSectionVisible('definitions') && resolvedDefs.length) {
     const notes = sense.notes || { en: {}, zh: {} };
-
-    // Formula: pick by langMode, with fallback chain
     const fmlEn = notes.en?.formula || '';
     const fmlZh = notes.zh?.formula || '';
-    let fml = langMode === 'zh' ? (fmlZh || fmlEn) : langMode === 'en' ? (fmlEn || fmlZh) : (fmlEn || fmlZh);
-    // Legacy fallback: if notes empty, try first definition's formula
-    if (!fml && sense.definitions[0]) fml = sense.definitions[0].formula || '';
-    const fmlDisplay = fml && scriptMode === 'simplified' && WORD.traditional !== WORD.simplified ? fml.replace(new RegExp(WORD.traditional.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), WORD.simplified) : fml;
-
-    // Usage note: pick by langMode
     const usageEn = notes.en?.usageNote || '';
     const usageZh = notes.zh?.usageNote || '';
-    let usageNote = langMode === 'zh' ? (usageZh || usageEn) : langMode === 'en' ? (usageEn || usageZh) : (usageEn || usageZh);
-    // Legacy fallback
-    if (!usageNote && sense.definitions[0]) usageNote = sense.definitions[0].usageNote || '';
 
-    const defs = sense.definitions.map(d => {
+    // Legacy fallback (from old flat definitions array)
+    const allD = getAllDefs(sense.definitions);
+    const legacyFml = allD[0]?.formula || '';
+    const legacyUsage = allD[0]?.usageNote || '';
+
+    // Helper: apply simplified script swap to formula
+    const fmlSwap = (f) => f && scriptMode === 'simplified' && WORD.traditional !== WORD.simplified
+      ? f.replace(new RegExp(WORD.traditional.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), WORD.simplified) : f;
+
+    const defs = resolvedDefs.map(d => {
       return `<div class="card-def-row">
         ${d.pos ? `<span class="card-pos" data-abbr="${posLabel(d.pos)}" data-full="${posDisplay(d.pos)}" data-zh="${POS_ZH[d.pos] || posDisplay(d.pos)}" data-state="abbr" onclick="cyclePosChip(event, this)">${posLabel(d.pos)}${posAlignIcon(sense.alignment || WORD.alignment) ? '<span class="pos-align-icon">' + posAlignIcon(sense.alignment || WORD.alignment) + '</span>' : ''}</span>` : ''}
         <span class="card-definition">${d.def}</span>
@@ -1652,8 +1680,25 @@ function renderSense(sense, idx, totalOverride) {
     }).join('');
 
     let defBlock = `<div class="wd-defs">${defs}`;
+
+    // Formula: always one version — LPL slot labels on Chinese structure. Never stacks.
+    const fml = langMode === 'zh' ? (fmlZh || fmlEn || legacyFml) : (fmlEn || fmlZh || legacyFml);
+    const fmlDisplay = fmlSwap(fml);
     if (fmlDisplay) defBlock += `<div class="card-formula">${segmentedHTML(fmlDisplay, WORD)}</div>`;
-    if (usageNote) defBlock += `<div class="card-usage-note">${segmentedHTML(usageNote, WORD)}</div>`;
+
+    // Usage note: in 'both' mode, show EN + ZH stacked for bilingual engagement
+    if (langMode === 'both') {
+      if (usageEn || usageZh || legacyUsage) {
+        defBlock += `<div class="card-usage-note">`;
+        if (usageEn || legacyUsage) defBlock += `<div>${segmentedHTML(usageEn || legacyUsage, WORD)}</div>`;
+        if (usageZh) defBlock += `<div class="card-usage-note-zh">${segmentedHTML(usageZh, WORD)}</div>`;
+        defBlock += `</div>`;
+      }
+    } else {
+      const usageNote = langMode === 'zh' ? (usageZh || usageEn || legacyUsage) : (usageEn || usageZh || legacyUsage);
+      if (usageNote) defBlock += `<div class="card-usage-note">${segmentedHTML(usageNote, WORD)}</div>`;
+    }
+
     defBlock += `</div>`;
     parts.push(defBlock);
   }
@@ -1680,14 +1725,30 @@ function renderSense(sense, idx, totalOverride) {
     const notes = sense.notes || { en: {}, zh: {} };
     const trapsEn = notes.en?.learnerTraps || '';
     const trapsZh = notes.zh?.learnerTraps || '';
-    let traps = langMode === 'zh' ? (trapsZh || trapsEn) : langMode === 'en' ? (trapsEn || trapsZh) : (trapsEn || trapsZh);
     // Legacy fallback
-    if (!traps) traps = sense.learnerTraps || '';
-    if (traps) {
-      parts.push(`<div class="wd-traps">
-        <div class="wd-traps-title">${langText('Learner Traps', '學習陷阱')}</div>
-        <div class="wd-traps-text">${segmentedHTML(traps, WORD)}</div>
-      </div>`);
+    const legacyTraps = sense.learnerTraps || '';
+
+    if (langMode === 'both') {
+      // Both mode: EN + ZH stacked
+      const te = trapsEn || legacyTraps;
+      const tz = trapsZh;
+      if (te || tz) {
+        let trapsHtml = `<div class="wd-traps">
+          <div class="wd-traps-title">${langText('Learner Traps', '學習陷阱')}</div>`;
+        if (te) trapsHtml += `<div class="wd-traps-text">${segmentedHTML(te, WORD)}</div>`;
+        if (tz) trapsHtml += `<div class="wd-traps-text wd-traps-zh">${segmentedHTML(tz, WORD)}</div>`;
+        trapsHtml += `</div>`;
+        parts.push(trapsHtml);
+      }
+    } else {
+      // Single language mode
+      let traps = langMode === 'zh' ? (trapsZh || trapsEn || legacyTraps) : (trapsEn || trapsZh || legacyTraps);
+      if (traps) {
+        parts.push(`<div class="wd-traps">
+          <div class="wd-traps-title">${langText('Learner Traps', '學習陷阱')}</div>
+          <div class="wd-traps-text">${segmentedHTML(traps, WORD)}</div>
+        </div>`);
+      }
     }
   }
 
@@ -1727,9 +1788,9 @@ function renderRelCard(r) {
 // ── RENDER: WORKSHOP ──
 function renderWorkshop(sense, idx) {
   const wordKey = WORD.traditional;
-  const sensePOS = (sense.definitions || [])[0]?.pos || '';
+  const sensePOS = getAllDefs(sense.definitions)[0]?.pos || '';
   const sensePosAbbr = sensePOS ? (POS_ABBR[sensePOS] || sensePOS) : '';
-  const allPOS = [...new Set((sense.definitions || []).map(d => d.pos).filter(Boolean))];
+  const allPOS = [...new Set(getAllDefs(sense.definitions).map(d => d.pos).filter(Boolean))];
 
   // Build default examples HTML
   const defaultExHTML = (sense.examples || []).filter(ex => !ex.isSuppressed).map((ex, i) => {
@@ -1745,16 +1806,16 @@ function renderWorkshop(sense, idx) {
     traditional: WORD.traditional,
     simplified: WORD.simplified || '',
     pinyin: sense.pinyin || WORD.pinyin || '',
-    definition: (sense.definitions || [])[0]?.def || '',
+    definition: getSenseDefs(sense.definitions)[0]?.def || '',
     register: sense.register || WORD.register || '',
     connotation: sense.connotation || WORD.connotation || '',
     channel: sense.channel || WORD.channel || '',
     level: sense.tocfl || WORD.tocfl || '',
-    formula: sense.formula || WORD.formula || '',
+    formula: getFormula(sense),
     senseId: sense.id,
     senseIds: [sense.id],
     wordObjectId: WORD.wordObjectId,
-    definitions: sense.definitions || [],
+    definitions: getSenseDefs(sense.definitions),
   };
 
   // Use sense-specific key for IWP to avoid ID collisions with multi-sense words

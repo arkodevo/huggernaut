@@ -33,6 +33,9 @@ class WordSenseController extends Controller
             'word_object_id' => $word->id,
         ]));
 
+        // Write per-language notes and derive canonical
+        $this->syncNotes($sense, $data['notes']);
+
         // Multi-select designations (register, dimension)
         if (! empty($data['designations'])) {
             $sense->designations()->sync($data['designations']);
@@ -74,6 +77,9 @@ class WordSenseController extends Controller
         $data = $this->validateSense($request);
 
         $sense->update($data['sense']);
+
+        // Write per-language notes and derive canonical
+        $this->syncNotes($sense, $data['notes']);
 
         $sense->designations()->sync($data['designations'] ?? []);
 
@@ -125,6 +131,9 @@ class WordSenseController extends Controller
             DB::table('word_sense_relations')
                 ->where('word_sense_id', $sense->id)
                 ->delete();
+            DB::table('word_sense_notes')
+                ->where('word_sense_id', $sense->id)
+                ->delete();
             $sense->delete();
         });
 
@@ -155,14 +164,11 @@ class WordSenseController extends Controller
             'semantic_mode_id'  => ['nullable', 'exists:designations,id'],
             'sensitivity_id'    => ['nullable', 'exists:designations,id'],
             'domains'           => ['nullable', 'array'],
-            'domains.*'         => ['exists:designations,id'],
+            'domains.*'         => ['nullable', 'exists:designations,id'],
             'tocfl_level_id'    => ['nullable', 'exists:designations,id'],
             'hsk_level_id'      => ['nullable', 'exists:designations,id'],
             'intensity'         => ['nullable', 'integer', 'min:1', 'max:5'],
             'valency'           => ['nullable', 'integer', 'min:0', 'max:2'],
-            'formula'           => ['nullable', 'string', 'max:255'],
-            'usage_note'        => ['nullable', 'string'],
-            'learner_traps'     => ['nullable', 'string'],
             'status'            => ['required', 'in:draft,review,published'],
             'alignment'         => ['nullable', 'in:full,partial,disputed'],
             'source'            => ['nullable', 'in:tocfl,editorial'],
@@ -174,12 +180,18 @@ class WordSenseController extends Controller
             'definitions.*.pos_id'          => ['required', 'exists:pos_labels,id'],
             'definitions.*.definition_text' => ['required', 'string'],
             'definitions.*.sort_order'      => ['nullable', 'integer'],
+            // Per-language notes (formula, usage_note, learner_traps)
+            'notes'                         => ['nullable', 'array'],
+            'notes.*'                       => ['array'],
+            'notes.*.formula'               => ['nullable', 'string', 'max:255'],
+            'notes.*.usage_note'            => ['nullable', 'string'],
+            'notes.*.learner_traps'         => ['nullable', 'string'],
         ]);
 
         $sense = array_intersect_key($validated, array_flip([
             'pronunciation_id', 'channel_id', 'connotation_id', 'semantic_mode_id',
             'sensitivity_id', 'tocfl_level_id', 'hsk_level_id',
-            'intensity', 'valency', 'formula', 'usage_note', 'learner_traps', 'status',
+            'intensity', 'valency', 'status',
             'alignment', 'source',
         ]));
 
@@ -188,7 +200,69 @@ class WordSenseController extends Controller
             'designations' => $validated['designations'] ?? [],
             'domains'      => array_values(array_filter($validated['domains'] ?? [])),
             'definitions'  => $validated['definitions']  ?? [],
+            'notes'        => $validated['notes'] ?? [],
         ];
+    }
+
+    /**
+     * Write per-language notes to word_sense_notes and derive canonical on word_senses.
+     * Canonical prefers ZH-TW; falls back to EN.
+     *
+     * @param  array<int, array{formula?: string, usage_note?: string, learner_traps?: string}>  $notes  Keyed by language_id
+     */
+    private function syncNotes(WordSense $sense, array $notes): void
+    {
+        if (empty($notes)) {
+            return;
+        }
+
+        $now = now();
+
+        foreach ($notes as $langId => $fields) {
+            $formula      = trim($fields['formula'] ?? '') ?: null;
+            $usageNote    = trim($fields['usage_note'] ?? '') ?: null;
+            $learnerTraps = trim($fields['learner_traps'] ?? '') ?: null;
+
+            $hasContent = $formula || $usageNote || $learnerTraps;
+
+            if ($hasContent) {
+                DB::table('word_sense_notes')->updateOrInsert(
+                    ['word_sense_id' => $sense->id, 'language_id' => $langId],
+                    [
+                        'formula'       => $formula,
+                        'usage_note'    => $usageNote,
+                        'learner_traps' => $learnerTraps,
+                        'updated_at'    => $now,
+                        'created_at'    => $now,
+                    ]
+                );
+            } else {
+                // All fields blank — remove the row if it exists
+                DB::table('word_sense_notes')
+                    ->where('word_sense_id', $sense->id)
+                    ->where('language_id', $langId)
+                    ->delete();
+            }
+        }
+
+        // Derive canonical on word_senses: prefer ZH-TW, fall back to EN
+        $zhId = Language::where('code', 'zh-TW')->value('id');
+        $enId = Language::where('code', 'en')->value('id');
+
+        $allNotes = DB::table('word_sense_notes')
+            ->where('word_sense_id', $sense->id)
+            ->whereIn('language_id', array_filter([$zhId, $enId]))
+            ->get()
+            ->keyBy('language_id');
+
+        $zh = $allNotes->get($zhId);
+        $en = $allNotes->get($enId);
+
+        $sense->updateQuietly([
+            'formula'       => $zh->formula ?? $en->formula ?? null,
+            'usage_note'    => $zh->usage_note ?? $en->usage_note ?? null,
+            'learner_traps' => $zh->learner_traps ?? $en->learner_traps ?? null,
+        ]);
     }
 
     private function formDependencies(): array

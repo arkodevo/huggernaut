@@ -220,9 +220,18 @@ function wsGetCritiquePrompt(word, intendedPOS, fluencyLevel) {
     : '- Intended POS: not specified';
   const levelInfo = WS_LEVELS.find(l => l.slug === fluencyLevel);
   const levelLabel = levelInfo ? `${levelInfo.en} (${levelInfo.zh})` : fluencyLevel;
+  // Resolve bilingual notes for context
+  const notes = word.notes || (word.senses && word.senses[0]?.notes) || { en: {}, zh: {} };
+  const usageNote = notes.en?.usageNote || notes.zh?.usageNote || '';
+  const learnerTraps = notes.en?.learnerTraps || '';
+  const formula = word.formula || notes.en?.formula || notes.zh?.formula || '';
+  const definition = (typeof word.definition === 'object')
+    ? (word.definition.en || word.definition.zh || '')
+    : (word.definition || '');
+
   return `You are 師父 (Shifu), the expert Chinese language tutor for the Living Lexicon 流動, a precision Chinese vocabulary app focused on fluency, nuance, and expressive accuracy.
 
-The user has written a sentence using the word "${word.traditional}" (${word.simplified || ''}, ${word.pinyin || ''}) — meaning: ${word.definition || ''}.
+The user has written a sentence using the word "${word.traditional}" (${word.simplified || ''}, ${word.pinyin || ''}) — meaning: ${definition}.
 
 Learner's self-assessed fluency level: ${levelLabel}. Calibrate your feedback to this level — a Beginner needs more foundational guidance, while an Advanced learner needs nuance-level critique.
 
@@ -231,10 +240,14 @@ Word metadata:
 - Connotation: ${word.connotation || 'n/a'}
 - Channel: ${word.channel || 'n/a'}
 - HSK Level: ${word.level || 'n/a'}
-- Syntactic formula: ${word.formula || 'n/a'}
+- Syntactic formula: ${formula || 'n/a'}
 ${posLine}
+${usageNote ? `- Usage note: ${usageNote}` : ''}
+${learnerTraps ? `- Common learner traps: ${learnerTraps}` : ''}
 
 Your task: Evaluate the user's sentence with warmth and precision.${intendedPOS ? ` Pay special attention to whether "${word.traditional}" is used correctly as a ${posDisplay(intendedPOS)}.` : ''} IMPORTANT: The corrected sentence MUST use the EXACT word "${word.traditional}" — do NOT substitute compounds, derivatives, or synonyms.
+
+FEEDBACK TONE: Be warm but proportional. Praise what genuinely deserves it — do NOT flatter. A developing-level writer should feel encouraged, not told they are "remarkable." Be a caring mentor, not a cheerleader. Honest warmth > effusive praise.
 
 MASTERY ASSESSMENT: Also assess the writing on two axes:
 1. Level: beginner | learner | developing | advanced | fluent — the actual demonstrated level of the writing (may differ from the learner's self-assessed level)
@@ -251,11 +264,11 @@ Respond ONLY in this exact JSON format (no markdown, no extra text):
   "corrected_cn": "The corrected Traditional Chinese sentence (use Traditional characters, must contain the exact word ${word.traditional}), or the original if already correct",
   "corrected_en": "English translation of the corrected sentence",
   "highlight_word": "${word.traditional}",
-  "feedback": "2-3 sentences of warm, precise feedback in English. Note what was done well. If correcting, explain WHY — grammar, register mismatch, valency error, colocation issue, etc.${intendedPOS ? ` Comment on whether the word is correctly used as a ${posDisplay(intendedPOS)}.` : ''} Be encouraging but intellectually honest.",
+  "feedback": "Structured feedback in English. Format: (1) One sentence on what was done well. (2) If corrections were made, list each change with a brief WHY (grammar rule, valency, collocation, register). Do not lump corrections together — name each one.${intendedPOS ? ` (3) Comment on whether the word is correctly used as a ${posDisplay(intendedPOS)}.` : ''} Keep total length to 3-5 sentences. Be honest and specific.",
   "register_note": "One sentence: does this sentence match the word's register (${word.register || 'n/a'})? If not, explain gently.",
   "assessed_level": "beginner | learner | developing | advanced | fluent",
   "assessed_mastery": "seed | sprout | bud | flower | fruit",
-  "mastery_guidance": "1-2 sentences: what specifically the learner could do to move to the next mastery phase within their assessed level. Be concrete — suggest a grammar pattern, a modifier type, a structural technique."
+  "mastery_guidance": "1-2 sentences: what specifically the learner should practice to reach the next mastery phase. Give one concrete example — a pattern to try, a structure to add, a technique to experiment with."
 }` + wsGetPersonaOverlay();
 }
 
@@ -301,7 +314,8 @@ Respond ONLY in this exact JSON format (no markdown, no extra text):
 function wsRenderSavedDeck(wordKey, wordData) {
   const items = wsGetSaved(wordKey);
   if (!items.length) return '';
-  const primaryPOS = wordData ? ((wordData.definitions || [])[0]?.posAbbr || (wordData.definitions || [])[0]?.pos || '') : '';
+  const wsDefs = wordData ? (Array.isArray(wordData.definitions) ? wordData.definitions : getAllDefs(wordData.definitions)) : [];
+  const primaryPOS = wsDefs[0]?.pos || '';
   const posChip = primaryPOS ? `<span class="ex-sent-pos">${POS_ABBR[primaryPOS] || primaryPOS}</span>` : '';
   const vertical = textDir === 'vertical';
 
@@ -400,12 +414,26 @@ function wsSwitchAITab(wordKey, tab, btn) {
   const tabs = btn.closest('.ws-ai-tabs').querySelectorAll('.ws-ai-tab');
   tabs.forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
+
+  let targetEl;
   if (tab === 'critique') {
     if (critiqueEl) critiqueEl.style.display = 'flex';
     if (themeEl) themeEl.style.display = 'none';
+    targetEl = critiqueEl;
   } else {
     if (critiqueEl) critiqueEl.style.display = 'none';
     if (themeEl) themeEl.style.display = 'flex';
+    targetEl = themeEl;
+  }
+
+  // Scroll the input area into view so the learner sees it
+  if (targetEl) {
+    setTimeout(() => {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Focus the textarea so the learner can start typing immediately
+      const textarea = targetEl.querySelector('textarea');
+      if (textarea) textarea.focus({ preventScroll: true });
+    }, 50);
   }
 }
 

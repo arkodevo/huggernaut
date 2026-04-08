@@ -263,6 +263,13 @@ Key verb rules:
 - Object omission is NOT intransitive. 吃 is V even in 我吃了.
 - Vst = stative + takes object (喜歡, 知道). Vst is NOT determined by the 很-test; use the 在-test.
 
+Adv RULES — CRITICAL:
+- Do NOT create Adv senses for Vs words used adverbially with 地.
+- 寂然地、超然地、幽微地 = Vs used as adverb. This is GRAMMAR, not a separate SENSE.
+- Only tag Adv if the word is a RECOGNIZED Chinese adverb that cannot function as Vs.
+- Test: can it appear after 很 as a predicate? YES → it is Vs, not Adv. Do not create an Adv sense.
+- Legitimate Adv: 已經, 非常, 忽然, 未嘗不是, 再三. These CANNOT be predicates.
+
 DEFINITIONS:
 - EN + ZH-TW required for every sense
 - ZH must be pure Chinese — NO English words (no "piano", "bus", "church", "tiger")

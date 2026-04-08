@@ -92,6 +92,37 @@ class ExploreController extends Controller
 
     // DB POS slugs → full English names matching the demo's POS_ABBR keys
     // (the card toggle system maps full name ↔ abbreviation; slugs alone break it)
+    // DB slug → display abbreviation (Va-t / Vp-i / Vs-sep scheme)
+    public const POS_DISPLAY_ABBR = [
+        'V'       => 'Va-t',
+        'Vi'      => 'Va-i',
+        'Vsep'    => 'Va-sep',
+        'Vpt'     => 'Vp-t',
+        'Vp'      => 'Vp-i',
+        'Vpsep'   => 'Vp-sep',
+        'Vst'     => 'Vs-t',
+        'Vs'      => 'Vs-i',
+        'Vssep'   => 'Vs-sep',
+        'Vsattr'  => 'Vs-attr',
+        'Vspred'  => 'Vs-pred',
+        'Vaux'    => 'Vaux',
+        'Vcomp'   => 'Vcomp',
+        'N'       => 'N',
+        'M'       => 'M',
+        'Adv'     => 'Adv',
+        'Prep'    => 'Prep',
+        'Conj'    => 'Conj',
+        'Ptc'     => 'Ptc',
+        'Aux'     => 'Aux',
+        'Intj'    => 'Intj',
+        'Det'     => 'Det',
+        'Prn'     => 'Prn',
+        'Num'     => 'Num',
+        'IE'      => 'IE',
+        'Ph'      => 'Ph',
+        'CE'      => 'CE',
+    ];
+
     public const POS_FULL_NAMES = [
         'V'       => 'Verb',
         'Vi'      => 'Intransitive Verb',
@@ -215,31 +246,61 @@ class ExploreController extends Controller
         $tocflNum   = $tocflSlug ? (self::TOCFL_NUM_MAP[$tocflSlug]  ?? null) : null;
 
         // ── Definitions: all senses in order ─────────────────────────────────
-        // Each entry carries its own formula + usageNote for per-def display.
+        // Notes (formula, usageNote) come from word_sense_notes with fallback to definitions table.
 
-        $definitions = $senses->flatMap(fn ($s) => $s->definitions->map(fn ($d) => [
-            'pos'       => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
-            'def'       => $d->definition_text,
-            'formula'   => $d->formula ?? '',
-            'usageNote' => $d->usage_note ?? '',
-        ]))->values()->all();
+        // Pre-load all notes for these senses in one query
+        $senseIds = $senses->pluck('id')->all();
+        $allNotes = \DB::table('word_sense_notes')
+            ->whereIn('word_sense_id', $senseIds)
+            ->get()
+            ->groupBy('word_sense_id');
+
+        $shapeDef = fn ($d) => [
+            'pos' => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
+            'def' => $d->definition_text,
+        ];
+
+        // Flat definitions grouped by language for search card rendering
+        $allDefs = $senses->flatMap(fn ($s) => $s->definitions);
+        $definitions = [
+            'en' => $allDefs->where('language_id', 1)->map($shapeDef)->values()->all(),
+            'zh' => $allDefs->where('language_id', 2)->map($shapeDef)->values()->all(),
+        ];
 
         // ── Sense groups: definitions grouped by sense with per-sense attributes ──
         // Used by the SRP card to render attribute chips under each sense block.
 
-        $senseGroups = $senses->map(function ($s) {
+        $senseGroups = $senses->map(function ($s) use ($allNotes) {
             $registerDes = $s->designations
                 ->first(fn ($d) => in_array($d->slug, self::REGISTER_SLUGS));
             $dimensionDes = $s->designations
                 ->filter(fn ($d) => in_array($d->slug, self::DIMENSION_SLUGS));
 
+            $sNotes = $allNotes->get($s->id, collect());
+            $enNote = $sNotes->firstWhere('language_id', 1);
+            $zhNote = $sNotes->firstWhere('language_id', 2);
+
+            $defsByLang = $s->definitions->groupBy('language_id');
+            $shapeD = fn ($d) => [
+                'pos' => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
+                'def' => $d->definition_text,
+            ];
+
             return [
-                'definitions' => $s->definitions->map(fn ($d) => [
-                    'pos'       => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
-                    'def'       => $d->definition_text,
-                    'formula'   => $d->formula ?? '',
-                    'usageNote' => $d->usage_note ?? '',
-                ])->values()->all(),
+                'definitions' => [
+                    'en' => ($defsByLang->get(1) ?? collect())->map($shapeD)->values()->all(),
+                    'zh' => ($defsByLang->get(2) ?? collect())->map($shapeD)->values()->all(),
+                ],
+                'notes' => [
+                    'en' => [
+                        'formula'   => $enNote?->formula ?? '',
+                        'usageNote' => $enNote?->usage_note ?? '',
+                    ],
+                    'zh' => [
+                        'formula'   => $zhNote?->formula ?? '',
+                        'usageNote' => $zhNote?->usage_note ?? '',
+                    ],
+                ],
                 'register'    => self::REGISTER_MAP[$registerDes?->slug ?? 'standard'] ?? 'neutral',
                 'connotation' => $s->connotation?->slug ?? 'neutral',
                 'channel'     => self::CHANNEL_MAP[$s->channel?->slug ?? 'channel-balanced'] ?? ($s->channel?->slug ?? 'channel-balanced'),
@@ -251,10 +312,26 @@ class ExploreController extends Controller
 
         // ── Examples: one per sense, first becomes w.example, rest are extras ─
 
+        // Pre-load example translations in one batch query
+        $exampleIds = $senses->flatMap(fn ($s) => $s->examples->pluck('id'))->all();
+        $exTranslations = ! empty($exampleIds)
+            ? \DB::table('word_sense_example_translations')
+                ->whereIn('word_sense_example_id', $exampleIds)
+                ->get()
+                ->groupBy('word_sense_example_id')
+            : collect();
+
         $allExamples = $senses
             ->map(fn ($s) => $s->examples->first())
             ->filter()
-            ->map(fn ($e) => ['cn' => $e->chinese_text, 'en' => $e->english_text])
+            ->map(function ($e) use ($exTranslations) {
+                $trans = $exTranslations->get($e->id, collect())->pluck('translation_text', 'language_id');
+                return [
+                    'cn'           => $e->chinese_text,
+                    'en'           => $trans->get(1) ?? $e->english_text,
+                    'translations' => $trans->all(),
+                ];
+            })
             ->values()->all();
 
         // ── Relation proximity: union across all senses ───────────────────────
@@ -274,7 +351,10 @@ class ExploreController extends Controller
             'senseGroups'     => $senseGroups,
             'relProximity'    => $relProximity,
             'family'          => new \stdClass(), // word family tree — Phase 1
-            'definition'      => $definitions[0]['def'] ?? '',
+            'definition'      => [
+                'en' => $definitions['en'][0]['def'] ?? '',
+                'zh' => $definitions['zh'][0]['def'] ?? '',
+            ],
             'register'        => $register,
             'connotation'     => $primary->connotation?->slug ?? 'neutral',
             'channel'         => $channel,
@@ -299,9 +379,16 @@ class ExploreController extends Controller
                                   ->values()->all(),
             'example'         => $allExamples[0] ?? ['cn' => '', 'en' => ''],
             'extraExamples'   => array_slice($allExamples, 1),
-            // Fallbacks for search surface matching
-            'usageNote'       => $definitions[0]['usageNote'] ?? '',
-            'formula'         => $definitions[0]['formula'] ?? '',
+            // Bilingual notes for search surface matching
+            'notes'           => $senses->mapWithKeys(function ($s) use ($allNotes) {
+                $sNotes = $allNotes->get($s->id, collect());
+                $en = $sNotes->firstWhere('language_id', 1);
+                $zh = $sNotes->firstWhere('language_id', 2);
+                return [$s->id => [
+                    'en' => ['formula' => $en?->formula ?? '', 'usageNote' => $en?->usage_note ?? ''],
+                    'zh' => ['formula' => $zh?->formula ?? '', 'usageNote' => $zh?->usage_note ?? ''],
+                ]];
+            })->first() ?? ['en' => ['formula' => '', 'usageNote' => ''], 'zh' => ['formula' => '', 'usageNote' => '']],
             'senseIds'        => $senses->pluck('id')->values()->all(),
             'alignment'       => $word->alignment,
         ];
@@ -340,12 +427,17 @@ class ExploreController extends Controller
         $tocflShort = $tocflSlug ? (self::TOCFL_SLUG_MAP[$tocflSlug] ?? null) : null;
         $tocflNum   = $tocflSlug ? (self::TOCFL_NUM_MAP[$tocflSlug]  ?? null) : null;
 
-        // ── Definitions: pos full name + def only (no formula/usageNote) ──
+        // ── Definitions: grouped by language ─────────────────────────────
 
-        $definitions = $senses->flatMap(fn ($s) => $s->definitions->map(fn ($d) => [
+        $allDefs = $senses->flatMap(fn ($s) => $s->definitions);
+        $shapeDef = fn ($d) => [
             'pos' => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
             'def' => $d->definition_text,
-        ]))->values()->all();
+        ];
+        $definitions = [
+            'en' => $allDefs->where('language_id', 1)->map($shapeDef)->values()->all(),
+            'zh' => $allDefs->where('language_id', 2)->map($shapeDef)->values()->all(),
+        ];
 
         // ── Pinyin: also build toneless version for search ──────────────────
 
@@ -488,23 +580,35 @@ class ExploreController extends Controller
             $enNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 1)->first();
             $zhNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 2)->first();
 
-            // Definitions (formula/usageNote now come from word_sense_notes, with fallback to definitions table for legacy data)
-            $definitions = $sense->definitions->map(fn ($d) => [
-                'pos'       => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
-                'posAbbr'   => $d->posLabel?->slug ?? '',
-                'def'       => $d->definition_text,
-                'formula'   => $d->formula ?? '',
-                'usageNote' => $d->usage_note ?? '',
-            ])->values()->all();
+            // Definitions grouped by language (1=EN, 2=ZH-TW)
+            $defsByLang = $sense->definitions->groupBy('language_id');
+            $shapeDef = fn ($d) => [
+                'pos'     => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
+                'posAbbr' => $d->posLabel?->slug ?? '',
+                'def'     => $d->definition_text,
+            ];
 
-            // Examples
-            $examples = $sense->examples->map(fn ($e) => [
-                'id'     => $e->id,
-                'cn'     => $e->chinese_text,
-                'en'     => $e->english_text,
-                'source' => $e->source,
-                'theme'  => $e->theme,
-            ])->values()->all();
+            $definitions = [
+                'en' => ($defsByLang->get(1) ?? collect())->map($shapeDef)->values()->all(),
+                'zh' => ($defsByLang->get(2) ?? collect())->map($shapeDef)->values()->all(),
+            ];
+
+            // Examples — with per-language translations from word_sense_example_translations
+            $examples = $sense->examples->map(function ($e) {
+                $translations = \DB::table('word_sense_example_translations')
+                    ->where('word_sense_example_id', $e->id)
+                    ->pluck('translation_text', 'language_id');
+
+                return [
+                    'id'           => $e->id,
+                    'cn'           => $e->chinese_text,
+                    'en'           => $translations->get(1) ?? $e->english_text,  // legacy fallback
+                    'translations' => $translations->all(),
+                    'source'       => $e->source,
+                    'theme'        => $e->theme,
+                    'isSuppressed' => $e->is_suppressed,
+                ];
+            })->values()->all();
 
             // Domain labels (EN + ZH) — from many-to-many pivot
             $shapeDomainDesig = fn ($d) => [
@@ -610,7 +714,6 @@ class ExploreController extends Controller
                 'hsk'             => $hskSlug,
                 'domain'           => $domainShaped,
                 'secondaryDomains' => $secondaryDomainsShaped,
-                'learnerTraps'    => $sense->learner_traps,
                 'notes'           => [
                     'en' => [
                         'formula'      => $enNote?->formula ?? '',

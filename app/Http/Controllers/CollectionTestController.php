@@ -407,10 +407,22 @@ class CollectionTestController extends Controller
         ];
 
         if ($includeExamples) {
-            $shaped['examples'] = $sense->examples->map(fn ($ex) => [
-                'cn' => $ex->chinese_text,
-                'en' => $ex->english_text,
-            ])->values()->all();
+            $exIds = $sense->examples->pluck('id')->all();
+            $exTrans = ! empty($exIds)
+                ? \DB::table('word_sense_example_translations')
+                    ->whereIn('word_sense_example_id', $exIds)
+                    ->get()
+                    ->groupBy('word_sense_example_id')
+                : collect();
+
+            $shaped['examples'] = $sense->examples->map(function ($ex) use ($exTrans) {
+                $trans = $exTrans->get($ex->id, collect())->pluck('translation_text', 'language_id');
+                return [
+                    'cn'           => $ex->chinese_text,
+                    'en'           => $trans->get(1) ?? $ex->english_text,
+                    'translations' => $trans->all(),
+                ];
+            })->values()->all();
         }
 
         return $shaped;

@@ -176,7 +176,9 @@
   margin-bottom: 0.4rem;
   margin-left: auto;
   max-height: 320px;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   padding-bottom: 0.3rem;
 }
 .ws-ai-response-text .resp-cn .highlight { color: var(--accent); font-weight: 600; }

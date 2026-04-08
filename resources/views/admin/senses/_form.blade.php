@@ -176,7 +176,7 @@
     {{-- ── Scalar attributes ─────────────────────────────────────────── --}}
     <div class="bg-white rounded-xl border border-gray-200 p-5">
         <h3 class="text-sm font-semibold text-gray-900 mb-4">Scalar Attributes</h3>
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Intensity 🌸 (1–5)</label>
                 <input name="intensity" type="number" min="1" max="5" value="{{ $v('intensity') }}"
@@ -193,26 +193,74 @@
                     <option value="2" {{ $v('valency') == 2 ? 'selected' : '' }}>2 — Ditransitive</option>
                 </select>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Formula</label>
-                <input name="formula" value="{{ $v('formula') }}"
-                       class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                       placeholder="[S] + 行 + [O]">
-            </div>
         </div>
+    </div>
 
-        <div class="grid grid-cols-2 gap-4 mt-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Usage Note</label>
-                <textarea name="usage_note" rows="3"
-                          class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ $v('usage_note') }}</textarea>
+    {{-- ── Bilingual Notes (per coverage language) ────────────────────── --}}
+    @php
+        $coverageLangs = \App\Models\Language::where('has_notes_coverage', true)->orderBy('id')->get();
+        $existingNotes = $sense
+            ? \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->get()->keyBy('language_id')
+            : collect();
+    @endphp
+
+    {{-- Formula --}}
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <details open>
+            <summary class="px-5 py-3 bg-gray-50 border-b border-gray-200 cursor-pointer">
+                <span class="text-sm font-semibold text-gray-900">Formula</span>
+                <span class="text-xs text-gray-400 ml-2">{{ $coverageLangs->pluck('code')->implode(' + ') }}</span>
+            </summary>
+            <div class="p-5 space-y-3">
+                @foreach ($coverageLangs as $cl)
+                    <div>
+                        <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($cl->code) }} · {{ $cl->name }}</label>
+                        <input name="notes[{{ $cl->id }}][formula]"
+                               value="{{ old("notes.{$cl->id}.formula", $existingNotes->get($cl->id)?->formula ?? '') }}"
+                               class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                               placeholder="[S] + 行 + [O]">
+                    </div>
+                @endforeach
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Learner Traps</label>
-                <textarea name="learner_traps" rows="3"
-                          class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ $v('learner_traps') }}</textarea>
+        </details>
+    </div>
+
+    {{-- Usage Note --}}
+    <div class="bg-white rounded-xl border border-amber-200 overflow-hidden">
+        <details open>
+            <summary class="px-5 py-3 bg-amber-50 border-b border-amber-200 cursor-pointer">
+                <span class="text-sm font-semibold text-amber-800">Usage Note</span>
+                <span class="text-xs text-amber-500 ml-2">{{ $coverageLangs->pluck('code')->implode(' + ') }}</span>
+            </summary>
+            <div class="p-5 space-y-3">
+                @foreach ($coverageLangs as $cl)
+                    <div>
+                        <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($cl->code) }} · {{ $cl->name }}</label>
+                        <textarea name="notes[{{ $cl->id }}][usage_note]" rows="2"
+                                  class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old("notes.{$cl->id}.usage_note", $existingNotes->get($cl->id)?->usage_note ?? '') }}</textarea>
+                    </div>
+                @endforeach
             </div>
-        </div>
+        </details>
+    </div>
+
+    {{-- Learner Traps --}}
+    <div class="bg-white rounded-xl border border-red-200 overflow-hidden">
+        <details open>
+            <summary class="px-5 py-3 bg-red-50 border-b border-red-200 cursor-pointer">
+                <span class="text-sm font-semibold text-red-800">Learner Traps</span>
+                <span class="text-xs text-red-400 ml-2">{{ $coverageLangs->pluck('code')->implode(' + ') }}</span>
+            </summary>
+            <div class="p-5 space-y-3">
+                @foreach ($coverageLangs as $cl)
+                    <div>
+                        <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($cl->code) }} · {{ $cl->name }}</label>
+                        <textarea name="notes[{{ $cl->id }}][learner_traps]" rows="2"
+                                  class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old("notes.{$cl->id}.learner_traps", $existingNotes->get($cl->id)?->learner_traps ?? '') }}</textarea>
+                    </div>
+                @endforeach
+            </div>
+        </details>
     </div>
 
     {{-- ── Definitions (Alpine.js dynamic rows) ────────────────────── --}}
