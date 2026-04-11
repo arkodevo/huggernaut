@@ -75,6 +75,38 @@
   font-family: 'Cormorant Garamond', serif; font-size: 0.95rem;
   max-width: 360px; margin: 0 auto; line-height: 1.6;
 }
+
+/* ── AFFIRMATION LIST ── */
+.mact-aff-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.mact-aff-row {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border); border-radius: 4px;
+  text-decoration: none; color: inherit;
+  transition: background 0.12s, border-color 0.12s;
+}
+.mact-aff-row:hover { background: rgba(0,0,0,0.015); border-color: var(--accent); }
+.mact-aff-char {
+  font-family: 'Noto Serif TC', serif; font-size: 1.35rem;
+  color: var(--ink); min-width: 2.2rem;
+}
+.mact-aff-body { flex: 1; min-width: 0; }
+.mact-aff-top {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: var(--dim); letter-spacing: 0.03em;
+  margin-bottom: 0.15rem;
+}
+.mact-aff-pos { color: var(--accent); }
+.mact-aff-def {
+  font-family: 'Cormorant Garamond', serif; font-size: 0.95rem;
+  color: var(--ink); line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.mact-aff-date {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  color: var(--dim); letter-spacing: 0.04em;
+  white-space: nowrap;
+}
 </style>
 </head>
 <body>
@@ -120,12 +152,27 @@
         </div>
       </div>
     @else
-      <div class="mact-coming-soon">
-        <div class="cs-label">COMING SOON</div>
-        <div class="cs-body">
-          Every sense you affirm will appear here. You'll be able to un-affirm with a single click and see which of your affirmations have boosted a word's community confidence score.
+      @if (empty($affirmations))
+        <div class="mact-empty">
+          No affirmations yet. Tap 👍 on any sense in the lexicon to affirm it — you're vouching that the definition, examples, and nuance ring true.
         </div>
-      </div>
+      @else
+        <div class="mact-aff-list">
+          @foreach ($affirmations as $a)
+            <a class="mact-aff-row" href="{{ route('lexicon.show', $a['smartId']) }}">
+              <div class="mact-aff-char">{{ $a['traditional'] }}</div>
+              <div class="mact-aff-body">
+                <div class="mact-aff-top">
+                  @if ($a['pinyin']) <span>{{ $a['pinyin'] }}</span> @endif
+                  @if ($a['pos']) <span class="mact-aff-pos">· {{ $a['pos'] }}</span> @endif
+                </div>
+                <div class="mact-aff-def">{{ $a['definition'] }}</div>
+              </div>
+              <div class="mact-aff-date">{{ $a['affirmedAt']->diffForHumans() }}</div>
+            </a>
+          @endforeach
+        </div>
+      @endif
     @endif
   </div>
 </div>

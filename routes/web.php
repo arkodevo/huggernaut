@@ -21,6 +21,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\PreferenceController;
+use App\Http\Controllers\Api\AffirmationController;
 use App\Http\Controllers\Api\SavedSenseController;
 use App\Http\Controllers\Api\SavedWordController;
 use App\Http\Controllers\Api\WorkshopController;
@@ -99,6 +100,9 @@ Route::middleware('auth')->prefix('api')->group(function () {
     // Workshop (造句) — save & delete require auth
     Route::post('/workshop/save-example', [WorkshopController::class, 'saveExample']);
     Route::delete('/workshop/saved-example/{id}', [WorkshopController::class, 'deleteExample']);
+
+    // Affirmations (Community Phase B Step 1)
+    Route::post('/affirmations/{senseId}', [AffirmationController::class, 'toggle']);
 
     // Fluency level (profile setting for 師父)
     Route::put('/user/fluency-level', [WorkshopController::class, 'updateFluencyLevel']);

@@ -734,6 +734,27 @@ class ExploreController extends Controller
             ];
         })->values()->all();
 
+        // ── Affirmations (Community Phase B Step 1) ─────────────────────────
+        // Inject per-sense affirmation count + whether the current user affirms.
+        $senseIds = array_column($shapedSenses, 'id');
+        $affirmCounts = \DB::table('affirmations')
+            ->whereIn('word_sense_id', $senseIds)
+            ->select('word_sense_id', \DB::raw('COUNT(*) as c'))
+            ->groupBy('word_sense_id')
+            ->pluck('c', 'word_sense_id');
+        $affirmedByMe = \Illuminate\Support\Facades\Auth::check()
+            ? \DB::table('affirmations')
+                ->where('user_id', \Illuminate\Support\Facades\Auth::id())
+                ->whereIn('word_sense_id', $senseIds)
+                ->pluck('word_sense_id')
+                ->flip()
+            : collect();
+        foreach ($shapedSenses as &$s) {
+            $s['affirmCount']   = (int) ($affirmCounts[$s['id']] ?? 0);
+            $s['affirmedByMe']  = $affirmedByMe->has($s['id']);
+        }
+        unset($s);
+
         // Aggregate family tree across all senses, deduplicated by smartId
         $allFamily = ['derivatives' => [], 'familyMembers' => [], 'compounds' => []];
         foreach ($shapedSenses as $s) {

@@ -254,6 +254,16 @@
 .wd-sense-header {
   display: flex; flex-direction: column; gap: 0.4rem;
 }
+.wd-sense-stripe-row {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  margin: -0.5rem -0.6rem 0.25rem -0.6rem;
+}
+.wd-sense-stripe-row .wd-sense-stripe {
+  margin: 0;
+  flex: 1;
+}
 .wd-sense-stripe {
   background: var(--accent);
   color: #fff;
@@ -263,6 +273,38 @@
   padding: 0.25rem 0.75rem;
   margin: -0.5rem -0.6rem 0.25rem -0.6rem;
 }
+/* ── AFFIRM BUTTON (sense-level community signal) ── */
+.wd-affirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.6rem;
+  background: #fff;
+  border: 1px solid var(--accent);
+  border-left: none;
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.08s;
+}
+.wd-affirm-btn:hover {
+  background: var(--accent-soft, rgba(0,0,0,0.04));
+}
+.wd-affirm-btn:active { transform: scale(0.96); }
+.wd-affirm-btn.affirmed {
+  background: var(--accent);
+  color: #fff;
+}
+.wd-affirm-btn.guest {
+  opacity: 0.5;
+  cursor: pointer;
+}
+.wd-affirm-btn:disabled { opacity: 0.5; cursor: wait; }
+.wd-affirm-icon { font-size: 0.85rem; line-height: 1; }
+.wd-affirm-count { min-width: 0.8em; text-align: left; }
 /* ── HERO ACTIONS (star + share beneath pinyin) ── */
 .wd-word-meta {
   display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem 0.3rem;
@@ -1197,6 +1239,37 @@ function _csrfHeader() {
   return document.querySelector('meta[name="csrf-token"]').content;
 }
 
+async function wdToggleAffirm(senseId, btn) {
+  if (!window.__AUTH) { window.location.href = '/login'; return; }
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/affirmations/${senseId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrfHeader() },
+    });
+    if (!res.ok) throw new Error('request failed');
+    const data = await res.json();
+
+    // Mutate in-memory WORD so re-renders reflect the new state
+    const sense = (WORD.senses || []).find(s => s.id === senseId);
+    if (sense) {
+      sense.affirmCount = data.count;
+      sense.affirmedByMe = data.affirmed;
+    }
+    // Update all buttons on the page pointing to this sense (in case of re-rendering)
+    document.querySelectorAll(`.wd-affirm-btn[data-sense-id="${senseId}"]`).forEach(b => {
+      b.classList.toggle('affirmed', !!data.affirmed);
+      const countEl = b.querySelector('.wd-affirm-count');
+      if (countEl) countEl.textContent = data.count;
+    });
+  } catch (e) {
+    console.error('affirm toggle failed', e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function wdToggleSave() {
   if (!window.__AUTH || !WORD.wordObjectId) return;
   var wordObjectId = WORD.wordObjectId;
@@ -1636,7 +1709,27 @@ function renderSense(sense, idx, totalOverride) {
   // Sense header: stripe + domain + pinyin (no character repetition — hero shows it)
   const totalSenses = totalOverride || (WORD.senses || []).length;
 
-  parts.push(`<div class="wd-sense-stripe">${idx + 1} of ${totalSenses}</div>`);
+  // Affirmation button — sense-level community signal
+  const affirmCount = sense.affirmCount || 0;
+  const affirmedByMe = !!sense.affirmedByMe;
+  const isAuthed = !!window.__AUTH;
+  const affirmTitle = isAuthed
+    ? (affirmedByMe
+        ? langText('You affirm this sense', '您已肯定此義項')
+        : langText('Affirm this sense', '肯定此義項'))
+    : langText('Sign in to affirm', '登入後可肯定');
+  const affirmBtn = `<button type="button"
+    class="wd-affirm-btn${affirmedByMe ? ' affirmed' : ''}${isAuthed ? '' : ' guest'}"
+    data-sense-id="${sense.id}"
+    ${isAuthed ? `onclick="wdToggleAffirm(${sense.id}, this)"` : 'onclick="window.location.href=\'/login\'"'}
+    title="${affirmTitle}">
+    <span class="wd-affirm-icon">👍</span><span class="wd-affirm-count">${affirmCount}</span>
+  </button>`;
+
+  parts.push(`<div class="wd-sense-stripe-row">
+    <div class="wd-sense-stripe">${idx + 1} of ${totalSenses}</div>
+    ${affirmBtn}
+  </div>`);
 
   // Flat domain display at sense level
   const senseDomains = [];

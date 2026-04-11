@@ -149,6 +149,13 @@ class User extends Authenticatable
         return $this->hasMany(AiUsageLog::class);
     }
 
+    // ── Community ─────────────────────────────────────────────────────────────
+
+    public function affirmations(): HasMany
+    {
+        return $this->hasMany(Affirmation::class);
+    }
+
     // ── Cashier (Phase 3) ─────────────────────────────────────────────────────
     // Subscription and SubscriptionItem models are provided by laravel/cashier.
     // The Billable trait (commented above) adds subscriptions(), subscription(),
