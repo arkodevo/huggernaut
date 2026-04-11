@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\UserSavedExample;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -46,6 +47,7 @@ class MyWritingsController extends Controller
                 'assessed_level'   => $ex->assessed_level,
                 'assessed_mastery' => $ex->assessed_mastery,
                 'mastery_guidance'  => $ex->mastery_guidance,
+                'is_public'         => (bool) $ex->is_public,
                 'created_at'       => $ex->created_at->format('M j, Y'),
             ];
         });
@@ -63,5 +65,25 @@ class MyWritingsController extends Controller
             ->delete();
 
         return response()->json(['deleted' => (bool) $deleted]);
+    }
+
+    /**
+     * Toggle a writing's visibility (public/private). Owner only.
+     */
+    public function toggleVisibility(Request $request, int $id): JsonResponse
+    {
+        $writing = UserSavedExample::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $request->validate(['is_public' => 'required|boolean']);
+
+        $writing->update(['is_public' => $request->boolean('is_public')]);
+
+        return response()->json([
+            'ok'        => true,
+            'id'        => $writing->id,
+            'is_public' => (bool) $writing->is_public,
+        ]);
     }
 }

@@ -98,10 +98,10 @@
                         @endif
                     </div>
                     <form method="POST"
-                          action="{{ route('admin.words.pronunciations.destroy', [$word, $pron]) }}"
-                          onsubmit="return confirm('Remove this pronunciation?')">
+                          action="{{ route('admin.words.pronunciations.destroy', [$word, $pron]) }}">
                         @csrf @method('DELETE')
-                        <button type="submit" class="text-xs text-red-400 hover:text-red-600">Remove</button>
+                        <button type="submit" data-confirm="Click again to remove pronunciation"
+                                class="text-xs text-red-400 hover:text-red-600 px-1.5 py-0.5 rounded">Remove</button>
                     </form>
                 </li>
             @endforeach
@@ -186,11 +186,11 @@
                             <a href="{{ route('admin.words.senses.edit', [$word, $sense]) }}"
                                class="text-xs font-medium text-indigo-600 hover:text-indigo-800">Edit →</a>
                             <form method="POST"
-                                  action="{{ route('admin.words.senses.destroy', [$word, $sense]) }}"
-                                  onsubmit="return confirm('Delete this sense ({{ $sense->pronunciation->pronunciation_text ?? '' }} · {{ $sense->definitions->first()?->posLabel?->slug ?? '?' }})?\n\nThis removes its definitions, examples, and all related data and cannot be undone.')">
+                                  action="{{ route('admin.words.senses.destroy', [$word, $sense]) }}">
                                 @csrf @method('DELETE')
                                 <button type="submit"
-                                        class="text-xs text-red-400 hover:text-red-600 transition-colors">
+                                        data-confirm="Click again — deletes definitions, examples, and all related data"
+                                        class="text-xs text-red-400 hover:text-red-600 px-1.5 py-0.5 rounded transition-colors">
                                     Delete
                                 </button>
                             </form>

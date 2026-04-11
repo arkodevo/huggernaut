@@ -333,6 +333,39 @@
     </div>
   </div>
 
+  {{-- Community & Privacy --}}
+  <div class="pf-section" id="community-privacy">
+    <div class="pf-section-title">Community & Privacy</div>
+    <div class="pf-card">
+      <div class="pf-field" style="margin-bottom:0.8rem">
+        <div class="pf-label" style="margin-bottom:0.5rem">Writing defaults</div>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:var(--dim);margin:0 0 0.6rem">
+          When you save a writing, should it be shared with the community by default? You can always flip it per-writing.
+        </p>
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--ink)">
+          <input type="checkbox" id="cpWritingsPublic" {{ $user->default_writings_public ? 'checked' : '' }}
+                 onchange="saveCommunityPrivacy()" style="accent-color:var(--accent)">
+          Make new writings public by default
+        </label>
+      </div>
+
+      <div class="pf-field" style="margin-bottom:0.8rem;border-top:1px solid rgba(0,0,0,0.06);padding-top:0.9rem">
+        <div class="pf-label" style="margin-bottom:0.5rem">Disputation & affirmation identity</div>
+        <p style="font-family:'Cormorant Garamond',serif;font-size:0.85rem;color:var(--dim);margin:0 0 0.6rem">
+          When you dispute or affirm a sense, should your pen name ({{ $user->pll_name ?? 'your PLL name' }}) appear publicly? You can override this per-dispute when submitting. Affirmations always follow this setting.
+        </p>
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--ink)">
+          <input type="checkbox" id="cpDisputesAnon" {{ $user->default_disputes_anonymous ? 'checked' : '' }}
+                 onchange="saveCommunityPrivacy()" style="accent-color:var(--accent)">
+          Contribute anonymously by default
+        </label>
+      </div>
+
+      <div id="cpMsg" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--jade);margin-top:0.4rem"></div>
+      <div id="cpError" style="display:none;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--rose);margin-top:0.4rem"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -367,6 +400,37 @@ async function saveLearningPrefs() {
       msg.textContent = 'Saved';
       msg.style.display = 'block';
       setTimeout(() => msg.style.display = 'none', 2000);
+    }
+  } catch (e) {
+    err.textContent = 'Error saving';
+    err.style.display = 'block';
+  }
+}
+
+async function saveCommunityPrivacy() {
+  const msg = document.getElementById('cpMsg');
+  const err = document.getElementById('cpError');
+  msg.style.display = 'none';
+  err.style.display = 'none';
+
+  const body = {
+    default_writings_public:    document.getElementById('cpWritingsPublic').checked,
+    default_disputes_anonymous: document.getElementById('cpDisputesAnon').checked,
+  };
+
+  try {
+    const res = await fetch('/profile/community-privacy', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': pfCsrf(), 'Accept': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      msg.textContent = 'Saved';
+      msg.style.display = 'block';
+      setTimeout(() => msg.style.display = 'none', 2000);
+    } else {
+      err.textContent = 'Error saving';
+      err.style.display = 'block';
     }
   } catch (e) {
     err.textContent = 'Error saving';

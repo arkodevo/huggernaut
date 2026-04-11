@@ -67,10 +67,31 @@
   flex-wrap: wrap; margin-bottom: 0.15rem;
 }
 .saved-writing-chips .ex-sent-pos,
-.saved-writing-chips .shifu-chip {
+.saved-writing-chips .shifu-chip,
+.saved-writing-chips .visibility-chip {
   display: inline-flex; align-items: center;
   height: 1.5rem; box-sizing: border-box;
 }
+.visibility-chip {
+  font-family: 'DM Mono', monospace; font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  border-radius: 2px; padding: 0.1rem 0.45rem;
+  white-space: nowrap; cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.visibility-chip.is-public {
+  color: var(--jade, #1a7f5a);
+  background: rgba(26,127,90,0.07);
+  border-color: rgba(26,127,90,0.22);
+}
+.visibility-chip.is-private {
+  color: var(--dim);
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.12);
+}
+.visibility-chip:hover { filter: brightness(0.95); }
 .shifu-chip {
   font-family: 'DM Mono', monospace; font-size: 0.68rem;
   letter-spacing: 0.04em;
@@ -238,6 +259,14 @@
                 @elseif($w['ai_verified'])
                   <span class="shifu-chip">👏 師父 verified</span>
                 @endif
+                <span class="visibility-chip {{ $w['is_public'] ? 'is-public' : 'is-private' }}"
+                      id="mwr-vis-{{ $w['id'] }}"
+                      data-id="{{ $w['id'] }}"
+                      data-public="{{ $w['is_public'] ? '1' : '0' }}"
+                      onclick="mwrToggleVisibility(this)"
+                      title="Click to toggle community visibility">
+                  {!! $w['is_public'] ? '🌐 Public' : '🔒 Private' !!}
+                </span>
               </div>
               @if(!empty($w['assessed_level']) || !empty($w['assessed_mastery']))
                 <div class="saved-writing-chips ws-assess-row">
@@ -350,6 +379,25 @@ function mwrConfirmDelete(btn, id) {
     '<button class="delete-confirm-yes" onclick="mwrDelete(' + id + ', this)">Delete</button>' +
     '<button class="delete-confirm-no" onclick="this.closest(\'.delete-confirm\').remove()">Cancel</button>';
   card.appendChild(bar);
+}
+
+function mwrToggleVisibility(chip) {
+  var id = chip.dataset.id;
+  var current = chip.dataset.public === '1';
+  var next = !current;
+  chip.style.opacity = '0.5';
+  fetch('/my-writings/' + id + '/visibility', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+    body: JSON.stringify({ is_public: next }),
+  }).then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {
+    chip.style.opacity = '1';
+    if (!data || !data.ok) return;
+    chip.dataset.public = data.is_public ? '1' : '0';
+    chip.classList.toggle('is-public', data.is_public);
+    chip.classList.toggle('is-private', !data.is_public);
+    chip.innerHTML = data.is_public ? '🌐 Public' : '🔒 Private';
+  }).catch(function() { chip.style.opacity = '1'; });
 }
 
 function mwrDelete(id, btn) {

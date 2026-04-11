@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AiUsageLog;
+use App\Models\GrammarPattern;
+use App\Models\GrammarPatternSuggestion;
 use App\Models\ShifuEngagement;
 use App\Models\UserSavedExample;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +21,7 @@ class WorkshopController extends Controller
     public function critique(Request $request): JsonResponse
     {
         $request->validate([
-            'system_prompt'  => ['required', 'string', 'max:8000'],
+            'system_prompt'  => ['required', 'string', 'max:20000'],
             'sentence'       => ['required', 'string', 'max:2000'],
             'engagement_id'  => ['nullable', 'string', 'max:36'],
             'word_label'     => ['nullable', 'string', 'max:32'],
@@ -70,10 +72,115 @@ class WorkshopController extends Controller
             $text,
         );
 
+        // ── Grammar pattern suggestion harvesting ──
+        // Parse JSON body (師父 may wrap in ```json fences) and extract any
+        // unknown patterns 師父 flagged, logging them to the suggestion queue
+        // for editor review.
+        $this->harvestGrammarSuggestions(
+            $text,
+            $request->input('sentence'),
+            $engagement
+        );
+
         return response()->json([
             'text'          => $text,
             'engagement_id' => $engagement->uuid,
         ]);
+    }
+
+    /**
+     * Parse 師父's critique JSON and log any grammar_patterns_suggested
+     * entries to the grammar_pattern_suggestions queue. Silently ignores
+     * parse failures — the learner should never see this break.
+     */
+    private function harvestGrammarSuggestions(
+        string $shifuText,
+        string $learnerSentence,
+        ?ShifuEngagement $engagement
+    ): void {
+        try {
+            $clean = preg_replace('/```json|```/', '', $shifuText);
+            $parsed = json_decode(trim($clean), true);
+
+            if (! is_array($parsed)) {
+                return;
+            }
+
+            $suggested = $parsed['grammar_patterns_suggested'] ?? [];
+            if (! is_array($suggested) || empty($suggested)) {
+                return;
+            }
+
+            // Build a set of "already-known" tokens so we can skip any
+            // suggestion that duplicates an existing pattern. 師父 never emits
+            // the auto-generated slug — it emits the Chinese label, a marker,
+            // or some variant like "的時候 (temporal clause)". So we match
+            // against the slug, the zh_label, AND every marker, all normalised.
+            $knownTokens = collect(GrammarPattern::shifuReferenceList())
+                ->flatMap(fn ($p) => array_merge(
+                    [$p['slug'] ?? null, $p['zh_label'] ?? null],
+                    $p['markers'] ?? []
+                ))
+                ->filter()
+                ->map(fn ($t) => mb_strtolower(trim((string) $t)))
+                ->unique()
+                ->all();
+
+            // Helper: does the suggestion text contain (or equal) any known token?
+            $isKnown = function (string $text) use ($knownTokens): bool {
+                $needle = mb_strtolower($text);
+                foreach ($knownTokens as $token) {
+                    if ($token === '') continue;
+                    if ($needle === $token) return true;
+                    // Substring match catches "的時候 (temporal clause)" → 的時候
+                    if (mb_strpos($needle, $token) !== false) return true;
+                }
+                return false;
+            };
+
+            foreach ($suggested as $item) {
+                if (! is_array($item)) {
+                    continue;
+                }
+                $patternText = trim((string) ($item['pattern_text'] ?? ''));
+                if ($patternText === '') {
+                    continue;
+                }
+                // Skip if 師父 accidentally suggested an already-known pattern.
+                if ($isKnown($patternText)) {
+                    continue;
+                }
+                // Deduplicate: skip if an identical pending suggestion already
+                // exists for this learner within the last 24 hours.
+                $exists = GrammarPatternSuggestion::where('pattern_text', $patternText)
+                    ->where('user_id', Auth::id())
+                    ->where('status', 'pending')
+                    ->where('created_at', '>=', now()->subDay())
+                    ->exists();
+                if ($exists) {
+                    continue;
+                }
+
+                GrammarPatternSuggestion::create([
+                    'pattern_text'    => mb_substr($patternText, 0, 128),
+                    'chinese_example' => mb_substr(
+                        (string) ($item['chinese_example'] ?? $learnerSentence),
+                        0,
+                        1000
+                    ),
+                    'shifu_notes'     => mb_substr(
+                        (string) ($item['note'] ?? ''),
+                        0,
+                        2000
+                    ),
+                    'user_id'         => Auth::id(),
+                    'status'          => 'pending',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Never let suggestion logging break the critique response.
+            report($e);
+        }
     }
 
     /**
@@ -82,7 +189,7 @@ class WorkshopController extends Controller
     public function generate(Request $request): JsonResponse
     {
         $request->validate([
-            'system_prompt' => ['required', 'string', 'max:8000'],
+            'system_prompt' => ['required', 'string', 'max:20000'],
             'theme'         => ['required', 'string', 'max:500'],
             'word_label'    => ['nullable', 'string', 'max:32'],
         ]);
@@ -148,7 +255,18 @@ class WorkshopController extends Controller
             'assessed_mastery' => ['nullable', 'string', 'in:seed,sprout,bud,flower,fruit'],
             'mastery_guidance' => ['nullable', 'string', 'max:5000'],
             'engagement_id'    => ['nullable', 'string', 'max:36'],
+            'grammar_patterns'             => ['nullable', 'array'],
+            'grammar_patterns.*.slug'      => ['required_with:grammar_patterns.*', 'string', 'max:128'],
+            'grammar_patterns.*.status'    => ['nullable', 'string', 'in:correct,almost,misused'],
+            'grammar_patterns.*.note'      => ['nullable', 'string', 'max:1000'],
+            'is_public'        => ['nullable', 'boolean'],
         ]);
+
+        // Default is_public from user profile if omitted
+        $user = Auth::user();
+        $isPublic = $request->has('is_public')
+            ? $request->boolean('is_public')
+            : (bool) ($user->default_writings_public ?? true);
 
         $example = UserSavedExample::create([
             'user_id'          => Auth::id(),
@@ -163,8 +281,32 @@ class WorkshopController extends Controller
             'assessed_level'   => $request->input('assessed_level'),
             'assessed_mastery' => $request->input('assessed_mastery'),
             'mastery_guidance' => $request->input('mastery_guidance'),
-            'is_public'        => false,
+            'is_public'        => $isPublic,
         ]);
+
+        // ── Attach identified grammar patterns ──
+        $patternPayload = $request->input('grammar_patterns', []);
+        if (is_array($patternPayload) && ! empty($patternPayload)) {
+            $slugs = collect($patternPayload)->pluck('slug')->filter()->unique()->values();
+            $idBySlug = GrammarPattern::whereIn('slug', $slugs)->pluck('id', 'slug');
+
+            $sync = [];
+            foreach ($patternPayload as $item) {
+                $slug = $item['slug'] ?? null;
+                if (! $slug || ! $idBySlug->has($slug)) {
+                    continue;
+                }
+                $sync[$idBySlug[$slug]] = [
+                    'status' => in_array(($item['status'] ?? 'correct'), ['correct', 'almost', 'misused'], true)
+                        ? $item['status']
+                        : 'correct',
+                    'note'   => isset($item['note']) ? mb_substr((string) $item['note'], 0, 1000) : null,
+                ];
+            }
+            if (! empty($sync)) {
+                $example->grammarPatterns()->sync($sync);
+            }
+        }
 
         // ── Close engagement on save ──
         $engagementUuid = $request->input('engagement_id');
@@ -174,6 +316,9 @@ class WorkshopController extends Controller
                 $engagement->complete('saved');
             }
         }
+
+        // Eager-load for response so frontend can immediately render chips
+        $example->load('grammarPatterns');
 
         return response()->json($example, 201);
     }

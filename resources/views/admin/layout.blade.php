@@ -102,6 +102,71 @@
 
 </div>
 
+{{-- ── Inline click-to-confirm helper ──────────────────────────────────────
+     Any button or submit input with data-confirm="Prompt text" becomes a two-
+     step action: first click arms (red background + prompt text), second click
+     within 4s commits. Click elsewhere or wait it out to disarm. Works for both
+     plain buttons (fires original click/submit) and form submit buttons.     --}}
+<script>
+(function () {
+    const ARM_MS = 4000;
+    let armed = null;
+    let armTimer = null;
+
+    function snapshot(btn) {
+        return {
+            text: btn.innerHTML,
+            cls:  btn.className,
+        };
+    }
+    function restore(btn) {
+        if (!btn._confirmSnap) return;
+        btn.innerHTML = btn._confirmSnap.text;
+        btn.className = btn._confirmSnap.cls;
+        delete btn._confirmSnap;
+    }
+    function disarm() {
+        if (armed) { restore(armed); armed = null; }
+        if (armTimer) { clearTimeout(armTimer); armTimer = null; }
+    }
+    function arm(btn) {
+        disarm();
+        btn._confirmSnap = snapshot(btn);
+        const prompt = btn.getAttribute('data-confirm') || 'Click again to confirm';
+        btn.innerHTML = `✓ ${prompt}`;
+        // Force red styling regardless of the button's original colour classes.
+        btn.className = btn.className
+            .replace(/\bbg-\w+-\d+\b/g, '')
+            .replace(/\bhover:bg-\w+-\d+\b/g, '')
+            .replace(/\btext-\w+-\d+\b/g, '')
+            .replace(/\bborder-\w+-\d+\b/g, '');
+        btn.classList.add('bg-red-600', 'hover:bg-red-500', 'text-white', 'border-red-700');
+        armed = btn;
+        armTimer = setTimeout(disarm, ARM_MS);
+    }
+
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-confirm]');
+        // Click outside an armed button disarms it.
+        if (!btn) { disarm(); return; }
+        // Already armed → commit: let the click proceed normally.
+        if (armed === btn) {
+            disarm();
+            return;
+        }
+        // Not yet armed → swallow this click, arm instead.
+        e.preventDefault();
+        e.stopPropagation();
+        arm(btn);
+    }, true);
+
+    // Escape also disarms.
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') disarm();
+    });
+})();
+</script>
+
 @stack('scripts')
 </body>
 </html>

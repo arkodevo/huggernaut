@@ -47,6 +47,23 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function updateCommunityPrivacy(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'default_writings_public'    => 'sometimes|boolean',
+            'default_disputes_anonymous' => 'sometimes|boolean',
+        ]);
+
+        $user = Auth::user();
+        $user->update($data);
+
+        return response()->json([
+            'ok'                         => true,
+            'default_writings_public'    => (bool) $user->default_writings_public,
+            'default_disputes_anonymous' => (bool) $user->default_disputes_anonymous,
+        ]);
+    }
+
     public function updateShifuPersona(Request $request): JsonResponse
     {
         $validSlugs = array_keys(config('shifu-personas'));

@@ -54,6 +54,10 @@ class User extends Authenticatable
         'pm_last_four',
         'trial_ends_at',
         'last_active_at',
+        // Community & Privacy (Phase A):
+        'default_writings_public',
+        'default_disputes_anonymous',
+        'last_seen_activity_at',
     ];
 
     protected $hidden = [
@@ -73,6 +77,9 @@ class User extends Authenticatable
             'points_total_earned'         => 'integer',
             'filter_attribute_overrides'  => 'array',
             'ui_preferences'              => 'array',
+            'default_writings_public'     => 'boolean',
+            'default_disputes_anonymous'  => 'boolean',
+            'last_seen_activity_at'       => 'datetime',
         ];
     }
 

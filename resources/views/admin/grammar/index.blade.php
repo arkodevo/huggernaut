@@ -19,6 +19,10 @@
 <div class="flex items-center justify-between mb-5">
     <h1 class="text-2xl font-bold text-gray-900">Grammar Patterns</h1>
     <div class="flex items-center gap-3">
+        <a href="{{ route('admin.grammar.queue') }}"
+           class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-indigo-300 bg-white text-sm font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors">
+            🙏 Enrichment Queue
+        </a>
         <a href="{{ route('admin.grammar.create') }}"
            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors">
             + New Pattern
@@ -129,17 +133,29 @@
                 <tbody>
                     @foreach ($patterns as $p)
                         @php
-                            $statusIcon = match($p->status) {
-                                'published' => '🟢',
-                                'review'    => '🟡',
-                                default     => '⚫',
-                            };
                             $tocflSlug = $p->tocflLevel?->slug ?? '';
                             $levelIcon = $tocflIcons[$tocflSlug] ?? '';
                             $levelLabel = $p->tocflLevel?->labels->first()?->label ?? '';
+                            $statusClass = match($p->status) {
+                                'published' => 'bg-green-50 text-green-700 border-green-300',
+                                'review'    => 'bg-amber-50 text-amber-700 border-amber-300',
+                                default     => 'bg-gray-50 text-gray-600 border-gray-300',
+                            };
                         @endphp
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-4 py-2 text-center">{{ $statusIcon }}</td>
+                        <tr class="border-b hover:bg-gray-50" data-pattern-row="{{ $p->id }}">
+                            <td class="px-4 py-2">
+                                <select
+                                    class="gp-status-select text-xs rounded border px-2 py-1 font-medium cursor-pointer {{ $statusClass }}"
+                                    data-url="{{ route('admin.grammar.status', $p) }}"
+                                    data-original="{{ $p->status }}"
+                                    title="Change status — saves instantly">
+                                    @foreach (['draft', 'review', 'published'] as $s)
+                                        <option value="{{ $s }}" {{ $p->status === $s ? 'selected' : '' }}>
+                                            {{ ['draft' => '⚫ draft', 'review' => '🟡 review', 'published' => '🟢 published'][$s] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
                             <td class="px-4 py-2">
                                 <a href="{{ route('admin.grammar.show', $p) }}" class="text-indigo-600 hover:underline font-medium">
                                     {{ $p->chinese_label }}
@@ -243,10 +259,19 @@
 
                         @if ($sug->status === 'pending')
                             <div class="flex items-center gap-2 shrink-0">
-                                {{-- Accept → create draft --}}
+                                {{-- Enrich & Draft — create draft + redirect to edit with auto-enrich --}}
+                                <form method="POST" action="{{ route('admin.grammar.suggestions.enrich', $sug) }}">
+                                    @csrf
+                                    <button type="submit" title="Create draft and auto-enrich with 師父"
+                                            class="px-3 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border border-indigo-300 hover:from-indigo-100 hover:to-purple-100 transition-colors">
+                                        🙏 Enrich & Draft
+                                    </button>
+                                </form>
+
+                                {{-- Accept → create draft (no enrichment) --}}
                                 <form method="POST" action="{{ route('admin.grammar.suggestions.accept', $sug) }}">
                                     @csrf
-                                    <button type="submit" title="Accept — create draft pattern"
+                                    <button type="submit" title="Accept — create empty draft pattern"
                                             class="px-3 py-1.5 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-300 hover:bg-green-100 transition-colors">
                                         ✓ Accept
                                     </button>
@@ -300,5 +325,56 @@
     @endif
 
 @endif
+
+{{-- ── Inline status dropdown (AJAX) ────────────────────────────────────── --}}
+<script>
+(function() {
+    const csrfToken = @json(csrf_token());
+    const classMap = {
+        draft:     'bg-gray-50 text-gray-600 border-gray-300',
+        review:    'bg-amber-50 text-amber-700 border-amber-300',
+        published: 'bg-green-50 text-green-700 border-green-300',
+    };
+    const allClasses = Object.values(classMap).join(' ').split(' ');
+
+    document.querySelectorAll('.gp-status-select').forEach(sel => {
+        sel.addEventListener('change', async (e) => {
+            const newStatus = sel.value;
+            const original  = sel.dataset.original;
+            sel.disabled = true;
+
+            try {
+                const resp = await fetch(sel.dataset.url, {
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.ok) {
+                    throw new Error(data.error || resp.statusText);
+                }
+                // Recolor the select to match the new status
+                sel.classList.remove(...allClasses);
+                sel.classList.add(...classMap[newStatus].split(' '));
+                sel.dataset.original = newStatus;
+
+                // Brief visual pulse to confirm save
+                sel.classList.add('ring-2', 'ring-green-400');
+                setTimeout(() => sel.classList.remove('ring-2', 'ring-green-400'), 700);
+            } catch (err) {
+                alert('Failed to update status: ' + err.message);
+                sel.value = original;
+            } finally {
+                sel.disabled = false;
+            }
+        });
+    });
+})();
+</script>
 
 @endsection

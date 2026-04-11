@@ -21,6 +21,22 @@ class GrammarPattern extends Model
         'sort_order',
     ];
 
+    // Cache key shared between `shifuReferenceList()` and its invalidators.
+    // Bumped to v2 when the booted() invalidator was added — this effectively
+    // forces a one-time refresh so previously-stale v1 entries are bypassed.
+    public const SHIFU_REFERENCE_CACHE_KEY = 'grammar_patterns:shifu_reference_v2';
+
+    // Invalidate the 師父 reference-list cache whenever a pattern is saved or
+    // deleted. Without this, newly-published patterns were invisible to the
+    // Writing Conservatory for up to 10 minutes after publish — causing 師父
+    // to miss them entirely during learner critique.
+    protected static function booted(): void
+    {
+        $forget = fn () => Cache::forget(self::SHIFU_REFERENCE_CACHE_KEY);
+        static::saved($forget);
+        static::deleted($forget);
+    }
+
     // ── Group ────────────────────────────────────────────────────────────────
 
     public function group(): BelongsTo
@@ -160,9 +176,9 @@ class GrammarPattern extends Model
     // grammar patterns change rarely.
     public static function shifuReferenceList(): array
     {
-        return Cache::remember('grammar_patterns:shifu_reference_v1', 600, function () {
+        return Cache::remember(self::SHIFU_REFERENCE_CACHE_KEY, 600, function () {
             $patterns = self::query()
-                ->whereIn('status', ['published', 'review'])
+                ->whereIn('status', ['draft', 'review', 'published'])
                 ->with([
                     'labels',
                     'notes',
@@ -176,12 +192,21 @@ class GrammarPattern extends Model
                     ?? $p->labels->first()?->name
                     ?? $p->chinese_label;
                 $enNote = $p->notes->firstWhere('language_id', 1);
+
+                // Prefer explicit linked marker senses; fall back to CJK characters
+                // extracted from the pattern_template (filters out Latin placeholders
+                // like [V], [Subj], 'X', 'VP', punctuation, etc.).
                 $markers = $p->markerSenses
                     ->map(fn ($ws) => $ws->wordObject?->traditional)
                     ->filter()
                     ->unique()
                     ->values()
                     ->all();
+
+                if (empty($markers) && $p->pattern_template) {
+                    preg_match_all('/[\x{4e00}-\x{9fff}]+/u', $p->pattern_template, $m);
+                    $markers = array_values(array_unique($m[0] ?? []));
+                }
 
                 return [
                     'slug'     => $p->slug,

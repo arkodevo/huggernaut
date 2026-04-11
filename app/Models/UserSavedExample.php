@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 // User-authored sentences — NOT saves of existing word_sense_examples.
 // These are original sentences the student writes, optionally AI-verified.
@@ -48,5 +49,16 @@ class UserSavedExample extends Model
     public function wordObject(): BelongsTo
     {
         return $this->belongsTo(WordObject::class);
+    }
+
+    // Grammar patterns 師父 identified in this writing during critique.
+    public function grammarPatterns(): BelongsToMany
+    {
+        return $this->belongsToMany(
+                GrammarPattern::class,
+                'user_saved_example_grammar_patterns'
+            )
+            ->withPivot('status', 'note')
+            ->withTimestamps();
     }
 }

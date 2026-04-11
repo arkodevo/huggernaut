@@ -906,9 +906,21 @@ class ExploreController extends Controller
             'savedWordIds'   => $user->savedWords()->pluck('word_object_id')->all(),
             'fluencyLevel'   => $user->fluency_level,
             'shifuPersona'   => $user->shifu_persona ?? 'dragon',
+            'defaultWritingsPublic'    => (bool) ($user->default_writings_public ?? true),
+            'defaultDisputesAnonymous' => (bool) ($user->default_disputes_anonymous ?? false),
             'savedExamples'  => $user->savedExamples()
-                ->select('id', 'word_sense_id', 'chinese_text', 'english_text', 'original_chinese_text', 'ai_verified', 'ai_feedback', 'source_type', 'assessed_level', 'assessed_mastery', 'mastery_guidance', 'created_at')
-                ->get(),
+                ->select('id', 'word_sense_id', 'chinese_text', 'english_text', 'original_chinese_text', 'ai_verified', 'ai_feedback', 'source_type', 'assessed_level', 'assessed_mastery', 'mastery_guidance', 'is_public', 'created_at')
+                ->with(['grammarPatterns:id,slug'])
+                ->get()
+                ->map(function ($ex) {
+                    $arr = $ex->toArray();
+                    $arr['grammar_patterns'] = $ex->grammarPatterns->map(fn ($gp) => [
+                        'slug'   => $gp->slug,
+                        'status' => $gp->pivot->status,
+                        'note'   => $gp->pivot->note,
+                    ])->values()->all();
+                    return $arr;
+                }),
             'collections'    => $user->collections()
                 ->with('wordObjects:word_objects.id')
                 ->get()

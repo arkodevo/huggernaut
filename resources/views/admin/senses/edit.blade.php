@@ -94,8 +94,9 @@
 
                         <span class="ml-auto">
                             <button type="button"
-                                    onclick="if(confirm('Delete this example?')) { this.closest('.example-wrap').querySelector('.delete-form').submit(); }"
-                                    class="text-xs text-red-400 hover:text-red-600">Delete</button>
+                                    data-confirm="Click again to delete example"
+                                    onclick="this.closest('.example-wrap').querySelector('.delete-form').submit();"
+                                    class="text-xs text-red-400 hover:text-red-600 px-1.5 py-0.5 rounded">Delete</button>
                         </span>
                     </div>
                 </form>

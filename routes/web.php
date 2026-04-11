@@ -28,6 +28,7 @@ use App\Http\Controllers\CollectionTestController;
 use App\Http\Controllers\Api\ChineseNameController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\LearnerDashboardController;
+use App\Http\Controllers\MyActivityController;
 use App\Http\Controllers\MyWordsController;
 use App\Http\Controllers\MyWritingsController;
 use App\Http\Controllers\PageController;
@@ -64,11 +65,14 @@ Route::get('/help', [PageController::class, 'help'])->name('help');
 Route::get('/dashboard', [LearnerDashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 Route::get('/my-words', [MyWordsController::class, 'index'])->name('my-words')->middleware('auth');
 Route::get('/my-writings', [MyWritingsController::class, 'index'])->name('my-writings')->middleware('auth');
+Route::patch('/my-writings/{id}/visibility', [MyWritingsController::class, 'toggleVisibility'])->middleware('auth')->name('my-writings.visibility');
+Route::get('/my-activity', [MyActivityController::class, 'index'])->name('my-activity')->middleware('auth');
 Route::get('/my-words/test/{collection}', [CollectionTestController::class, 'show'])->name('my-words.test')->middleware('auth');
 Route::get('/profile', [ProfileController::class, 'show'])->name('profile')->middleware('auth');
 Route::patch('/profile/pll-name', [ProfileController::class, 'updatePllName'])->middleware('auth');
 Route::patch('/profile/chinese-name', [ProfileController::class, 'updateChineseName'])->middleware('auth');
 Route::patch('/profile/shifu-persona', [ProfileController::class, 'updateShifuPersona'])->middleware('auth')->name('profile.shifu-persona');
+Route::patch('/profile/community-privacy', [ProfileController::class, 'updateCommunityPrivacy'])->middleware('auth')->name('profile.community-privacy');
 
 // ── Learner API (auth required) ──────────────────────────────────────────────
 
@@ -212,6 +216,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('grammar/{pattern}/edit', [GrammarPatternController::class, 'edit'])->name('grammar.edit');
     Route::put('grammar/{pattern}', [GrammarPatternController::class, 'update'])->name('grammar.update');
     Route::delete('grammar/{pattern}', [GrammarPatternController::class, 'destroy'])->name('grammar.destroy');
+    Route::patch('grammar/{pattern}/status', [GrammarPatternController::class, 'updateStatus'])->name('grammar.status');
+
+    // 師父 enrichment (AJAX — returns JSON preview, nothing persisted)
+    Route::post('grammar/{pattern}/enrich', [GrammarPatternController::class, 'enrich'])
+        ->name('grammar.enrich');
+
+    // 師父 enrichment from raw seed fields (create form / pre-save)
+    Route::post('grammar/enrich-seed', [GrammarPatternController::class, 'enrichSeed'])
+        ->name('grammar.enrich-seed');
+
+    // 師父 enrichment applied in one shot (used by draft queue step-through)
+    Route::post('grammar/{pattern}/apply-enrichment', [GrammarPatternController::class, 'applyEnrichment'])
+        ->name('grammar.apply-enrichment');
+
+    // Draft enrichment queue — step-through all drafts needing notes/examples
+    Route::get('grammar-queue', [GrammarPatternController::class, 'queue'])
+        ->name('grammar.queue');
 
     // Grammar Pattern Examples
     Route::post('grammar/{pattern}/examples', [GrammarPatternExampleController::class, 'store'])
@@ -228,6 +249,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         ->name('grammar.suggestions.reject');
     Route::post('grammar/suggestions/{suggestion}/link', [GrammarPatternController::class, 'linkSuggestion'])
         ->name('grammar.suggestions.link');
+    Route::post('grammar/suggestions/{suggestion}/enrich', [GrammarPatternController::class, 'enrichSuggestion'])
+        ->name('grammar.suggestions.enrich');
 
     // Activity logs -------------------------------------------------------------
     Route::get('search-logs', [SearchLogController::class, 'index'])->name('search-logs.index');

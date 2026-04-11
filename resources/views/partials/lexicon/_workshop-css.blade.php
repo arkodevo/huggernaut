@@ -184,7 +184,26 @@
 .ws-ai-response-text .resp-cn .highlight { color: var(--accent); font-weight: 600; }
 .ws-ai-response-text .resp-en { color: var(--dim); font-style: italic; font-size: var(--fs-ex-en, 1rem); display: block; margin-bottom: 0.3rem; }
 .ws-ai-response-text .resp-note { font-family: 'Cormorant Garamond', serif; color: var(--dim); font-size: 0.9rem; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 0.3rem; margin-top: 0.1rem; }
-.ws-ai-response-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.ws-ai-response-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+.ws-share-community {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--dim);
+  cursor: pointer;
+  user-select: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.3rem;
+  transition: color 0.15s;
+}
+.ws-share-community:hover { color: var(--ink); }
+.ws-share-community input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+  margin: 0;
+}
 
 /* ── SAVED DECK ── */
 .ws-saved-deck-section {
@@ -295,6 +314,37 @@
   white-space: nowrap;
 }
 
+/* ── GRAMMAR PATTERN CHIPS (師父-identified) ── */
+.ws-grammar-patterns {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem;
+  margin-bottom: 0.3rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem; letter-spacing: 0.04em;
+}
+.ws-grammar-label {
+  color: var(--dim); text-transform: uppercase;
+}
+.ws-grammar-chip {
+  border-radius: 2px; padding: 0.15rem 0.4rem;
+  white-space: nowrap; cursor: help;
+  border: 1px solid var(--border);
+}
+.ws-grammar-correct {
+  color: var(--jade);
+  background: rgba(26,138,90,0.06);
+  border-color: rgba(26,138,90,0.22);
+}
+.ws-grammar-almost {
+  color: var(--gold);
+  background: rgba(180,140,60,0.06);
+  border-color: rgba(180,140,60,0.22);
+}
+.ws-grammar-misused {
+  color: var(--rose);
+  background: rgba(200,60,80,0.06);
+  border-color: rgba(200,60,80,0.22);
+}
+
 /* ── MASTERY GUIDANCE (in feedback) ── */
 .ws-mastery-guidance {
   margin-top: 0.4rem; padding-top: 0.3rem;
@@ -314,6 +364,33 @@
   cursor: pointer; transition: all 0.2s; white-space: nowrap;
 }
 .ws-try-again-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Primary variant — used when Try Again is the recommended next step
+   (needs_work / missing_target). Visually stronger than Save Anyway. */
+.ws-try-again-btn.ws-try-again-primary {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--accent);
+  background: var(--accent); color: #fff;
+  font-size: 0.78rem; font-weight: 600;
+}
+.ws-try-again-btn.ws-try-again-primary:hover {
+  filter: brightness(1.1);
+}
+
+/* ── SAVE ANYWAY BUTTON ── muted, secondary, deliberately understated
+   so the learner's eye goes to Try Again first. This is the "I want to
+   keep a record of my flawed attempt" escape hatch, not the main path. */
+.ws-save-anyway-btn {
+  padding: 0.3rem 0.6rem; border-radius: 2px;
+  border: 1px dashed var(--border);
+  background: transparent; color: var(--dim);
+  font-family: 'DM Mono', monospace; font-size: 0.68rem;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  opacity: 0.7;
+}
+.ws-save-anyway-btn:hover {
+  opacity: 1; border-color: var(--dim); color: var(--ink);
+}
 
 /* ── REMOVE BUTTON ── */
 .remove-btn {

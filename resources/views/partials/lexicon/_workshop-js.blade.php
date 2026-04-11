@@ -1,5 +1,11 @@
 {{-- Shared Writing Conservatory JS — used by lexicon card + IWP --}}
+@php
+  $wsGrammarPatterns = \App\Models\GrammarPattern::shifuReferenceList();
+@endphp
 <script>
+// ── GRAMMAR PATTERN REFERENCE (for 師父 detection) ───────────────────────────
+const WS_GRAMMAR_PATTERNS = @json($wsGrammarPatterns);
+
 // ── FLUENCY LEVELS & MASTERY PHASES ──────────────────────────────────────────
 const WS_LEVELS = [
   { slug: 'beginner',   en: 'Beginner',   zh: '初學', icon: '🌱' },
@@ -27,6 +33,14 @@ function wsGetFluencyLevel(wordKey) {
   if (globalOverride) return globalOverride;
   // Fall back to profile setting
   return (window.__AUTH && window.__AUTH.fluencyLevel) || 'developing';
+}
+
+// Default share-to-community toggle value: profile setting if signed in, else true (encourage sharing)
+function wsDefaultPublic() {
+  if (window.__AUTH && typeof window.__AUTH.defaultWritingsPublic === 'boolean') {
+    return window.__AUTH.defaultWritingsPublic;
+  }
+  return true;
 }
 
 function wsSetFluencyLevel(wordKey, level) {
@@ -162,12 +176,14 @@ function wsRestorePending() {
           assessed_level: pending.assessedLevel || null,
           assessed_mastery: pending.assessedMastery || null,
           mastery_guidance: pending.masteryGuidance || null,
+          grammar_patterns: pending.grammarPatterns || [],
+          is_public: typeof pending.isPublic === 'boolean' ? pending.isPublic : wsDefaultPublic(),
         }),
       }).then(r => r.json()).then(saved => {
         const wordKey = pending.wordKey;
         const source = pending.isGenerated ? '師父 generated' : pending.aiVerified ? '師父 verified' : 'My writing';
         const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        wsSaveToWord(wordKey, { id: saved.id, cn: pending.cn, en: pending.en, feedback: pending.feedback, source, date: today, originalCn: pending.originalCn || '' });
+        wsSaveToWord(wordKey, { id: saved.id, cn: pending.cn, en: pending.en, feedback: pending.feedback, source, date: today, originalCn: pending.originalCn || '', grammarPatterns: pending.grammarPatterns || [] });
         wsRefreshDeck(wordKey);
         setTimeout(() => {
           wsExpandPanel(wordKey);
@@ -245,9 +261,51 @@ ${posLine}
 ${usageNote ? `- Usage note: ${usageNote}` : ''}
 ${learnerTraps ? `- Common learner traps: ${learnerTraps}` : ''}
 
-Your task: Evaluate the user's sentence with warmth and precision.${intendedPOS ? ` Pay special attention to whether "${word.traditional}" is used correctly as a ${posDisplay(intendedPOS)}.` : ''} IMPORTANT: The corrected sentence MUST use the EXACT word "${word.traditional}" — do NOT substitute compounds, derivatives, or synonyms.
+Your task: Evaluate the user's sentence with warmth and precision.${intendedPOS ? ` Pay special attention to whether "${word.traditional}" is used correctly as a ${posDisplay(intendedPOS)}.` : ''}
 
-FEEDBACK TONE: Be warm but proportional. Praise what genuinely deserves it — do NOT flatter. A developing-level writer should feel encouraged, not told they are "remarkable." Be a caring mentor, not a cheerleader. Honest warmth > effusive praise.
+TARGET WORD IS SACRED: The whole purpose of this exercise is for the learner to practice "${word.traditional}". Treat it as a fixed requirement in every part of your response:
+- The "corrected_cn" MUST contain the exact word "${word.traditional}" — never substitute, truncate, or swap it for a compound, derivative, synonym, or single-character root (e.g. do NOT suggest 流 instead of 流動, 開 instead of 開始, 走 instead of 走路).
+- In "feedback" and "register_note", do NOT suggest replacing "${word.traditional}" with any other word when the word IS workable. If another word would also work naturally, that is irrelevant — the learner chose this word on purpose.
+- You MAY comment on how well "${word.traditional}" fits the context, and you MAY suggest restructuring the rest of the sentence to showcase it better.
+
+VERDICT OF "unworkable" — THE HARD REJECT (extremely rare): This verdict is reserved for one specific case only: when the SCENARIO the learner has chosen is fundamentally incompatible with "${word.traditional}", such that NO grammatically correct, natural sentence using "${word.traditional}" could describe that scenario. Examples of genuinely unworkable: using a literary/classical word in a casual conversational scenario; using a negative-connotation word to describe something joyful; using a word whose semantic scope simply doesn't cover the activity being described (e.g. using 流動 for something that isn't moving fluidly at all).
+
+CRITICAL: If the scenario WOULD work for "${word.traditional}" but the learner made execution errors (wrong word choice elsewhere, grammar mistakes, awkward structure, used a different word by accident instead of "${word.traditional}"), that is NEVER "unworkable" — it is "needs_work" or "minor_issues". The test is: "Could I, 師父, write a natural sentence using '${word.traditional}' that describes the same scenario the learner is trying to convey?" If yes → it is workable. Fix their sentence and return a "correct"/"minor_issues"/"needs_work" verdict with "${word.traditional}" properly used in corrected_cn. Only if the answer is genuinely no, because the scenario itself cannot host the word, do you return "unworkable".
+
+Before choosing "unworkable", ask yourself: "Is it the scenario that is wrong for the word, or is it the learner's execution?" Execution problems are never unworkable.
+
+VERDICT OF "missing_target" — THE LEARNER DRIFTED: If the learner's sentence does NOT contain "${word.traditional}" at all (they forgot it, substituted another word, or wrote an entirely different sentence), set "verdict" to "missing_target". This is a gentle but firm wake-up — the learner has lost focus and needs to come back to the exercise. The response is a TEACHING MOMENT, not a correction you hand over:
+- "corrected_cn" MUST be the learner's ORIGINAL sentence unchanged. Do NOT supply a rewritten sentence. The whole point is that the learner must rewrite it themselves.
+- "feedback" should warmly but firmly name the miss ("Where is ${word.traditional}? You've drifted from the practice — come back"), then POINT TO the structural slot where "${word.traditional}" belongs in the scenario they imagined, WITHOUT writing the finished sentence. E.g. "Your scenario calls for ${word.traditional} in the verb slot between 水從廚房 and 到客廳 — can you place it there?" Name any grammar they'd need (directional complement, aspect marker, etc.) but do not assemble the sentence for them.
+- Do NOT populate "mastery_guidance" — they haven't demonstrated mastery yet.
+- Still populate "assessed_level" and "assessed_mastery" based on the craft visible in what they DID write (grammar, structure, vocabulary outside the target).
+- Still populate "grammar_patterns_identified" and "grammar_patterns_suggested" — give them credit for patterns they used correctly.
+- Leave "redirect_suggestion" fields as empty strings.
+
+TEACH, DON'T FEED — THE CORRECTION GRADIENT: How much of the fix you hand over depends on how close the learner got:
+- "correct" — the sentence works. "corrected_cn" = the learner's sentence (or a minimal polish). Save is offered.
+- "minor_issues" — 1 or 2 small fixes (a classifier, a particle, a word-order nudge). Show the polished sentence in "corrected_cn" so the learner sees the nuance. Save is offered. This is the "you were almost there, here's the last mile" case.
+- "needs_work" — 3+ errors, OR any rule-level error (wrong valency, wrong register, wrong POS usage, collocation violation, misused grammar pattern). DO NOT hand over a polished sentence. "corrected_cn" MUST be the learner's ORIGINAL sentence unchanged. In "feedback", name every error explicitly with the rule behind it ("流動 is intransitive — it cannot take a direct object like 水"; "打開 doesn't collocate with 水 in this sense"; "the directional complement needs 到, not 在"). The learner must rewrite using your diagnosis. Save is NOT offered — they try again.
+- "missing_target" — handled above. No rewrite, point to the slot, they rewrite.
+- "unworkable" — handled below. Scenario itself is wrong; redirect to a different scenario.
+
+The principle: seeing the polished sentence is a reward for getting close. If the learner is far from it, showing them the answer robs them of the learning. Teach them to fish.
+
+VERDICT OF "unworkable" — THE HARD REJECT (extremely rare): handled above in the unworkable section. When verdict is "unworkable":
+- "corrected_cn" should be the learner's ORIGINAL sentence (do not try to fix it — we are telling them to start over)
+- "feedback" must clearly explain WHY "${word.traditional}" cannot work in this scenario (the specific register/connotation/semantic mismatch)
+- "redirect_suggestion" MUST be populated with: a different scenario (in English) where "${word.traditional}" would genuinely shine, plus a one-sentence example sentence in Traditional Chinese demonstrating it
+- Do NOT populate "mastery_guidance" — the learner isn't demonstrating mastery, they're being redirected
+- Still populate "assessed_level" and "assessed_mastery" based on the craft of the sentence they wrote (grammar, structure) — their writing skill is visible even when the word choice misfires
+
+FEEDBACK TONE — WARM BUT STRICT: You are the kind of teacher students remember for life: genuinely warm, but uncompromising on craft. Think of an old master who smiles as they correct you — the affection is real, and so is the standard. Never soften the truth to spare feelings. Never flatter. A developing-level writer should feel cared for, not told they are "remarkable." Praise only what genuinely deserves praise, and when you do, be specific about WHY. If a sentence is clumsy, say so — kindly, but clearly. If a grammar rule is broken, name the rule. If a register is wrong, explain the mismatch. Errors must be called out explicitly, not hinted at. The learner should walk away knowing exactly what they did well, exactly what was wrong, and exactly why it was wrong. Warmth without honesty is flattery; strictness without warmth is cruelty. You are both. Honest warmth + precise rigor = real teaching.
+
+GRAMMAR PATTERN DETECTION: The Living Lexicon tracks a growing library of Chinese grammar patterns. Below is the current reference list (slug · Chinese label · markers). When you review the learner's sentence:
+1. If the sentence uses any pattern from the list, report it in "grammar_patterns_identified" with the slug and a one-sentence usage note ("correct" / "almost" / "misused").
+2. If the sentence uses a notable grammar construction that is NOT in the list (e.g. 還是, 一邊...一邊, 不但...而且, 越...越, 的時候, 雖然...但是, V一下, V過, 了, 的, 要...了, resultative complements, directional complements, etc.), suggest it in "grammar_patterns_suggested" so an editor can add it. Only suggest patterns that are genuinely present in the sentence — do not speculate.
+
+Known patterns (do not duplicate these as suggestions):
+${WS_GRAMMAR_PATTERNS.map(p => `- ${p.slug} · ${p.zh_label} (${p.en_label}) · markers: ${(p.markers||[]).join('、') || '—'}`).join('\n')}
 
 MASTERY ASSESSMENT: Also assess the writing on two axes:
 1. Level: beginner | learner | developing | advanced | fluent — the actual demonstrated level of the writing (may differ from the learner's self-assessed level)
@@ -260,16 +318,29 @@ MASTERY ASSESSMENT: Also assess the writing on two axes:
 
 Respond ONLY in this exact JSON format (no markdown, no extra text):
 {
-  "verdict": "correct" | "minor_issues" | "needs_work",
-  "corrected_cn": "The corrected Traditional Chinese sentence (use Traditional characters, must contain the exact word ${word.traditional}), or the original if already correct",
+  "verdict": "correct" | "minor_issues" | "needs_work" | "missing_target" | "unworkable",
+  "corrected_cn": "For 'correct' or 'minor_issues': the polished Traditional Chinese sentence (must contain ${word.traditional}). For 'needs_work', 'missing_target', or 'unworkable': the learner's ORIGINAL sentence unchanged — do NOT hand over a fix.",
   "corrected_en": "English translation of the corrected sentence",
   "highlight_word": "${word.traditional}",
   "feedback": "Structured feedback in English. Format: (1) One sentence on what was done well. (2) If corrections were made, list each change with a brief WHY (grammar rule, valency, collocation, register). Do not lump corrections together — name each one.${intendedPOS ? ` (3) Comment on whether the word is correctly used as a ${posDisplay(intendedPOS)}.` : ''} Keep total length to 3-5 sentences. Be honest and specific.",
   "register_note": "One sentence: does this sentence match the word's register (${word.register || 'n/a'})? If not, explain gently.",
   "assessed_level": "beginner | learner | developing | advanced | fluent",
   "assessed_mastery": "seed | sprout | bud | flower | fruit",
-  "mastery_guidance": "1-2 sentences: what specifically the learner should practice to reach the next mastery phase. Give one concrete example — a pattern to try, a structure to add, a technique to experiment with."
-}` + wsGetPersonaOverlay();
+  "mastery_guidance": "1-2 sentences: what specifically the learner should practice to reach the next mastery phase. Give one concrete example — a pattern to try, a structure to add, a technique to experiment with. Leave empty string when verdict is 'unworkable'.",
+  "redirect_suggestion": {
+    "scenario": "When verdict is 'unworkable', describe in English a different scenario where ${word.traditional} would genuinely shine (2-3 sentences). Empty string otherwise.",
+    "example_cn": "When verdict is 'unworkable', one natural Traditional Chinese sentence showing ${word.traditional} in that scenario. Empty string otherwise.",
+    "example_en": "English translation of example_cn. Empty string otherwise."
+  },
+  "grammar_patterns_identified": [
+    { "slug": "pattern-slug-from-list", "status": "correct | almost | misused", "note": "one-sentence observation" }
+  ],
+  "grammar_patterns_suggested": [
+    { "pattern_text": "rough Chinese template or name (e.g. 越...越, 一邊...一邊)", "chinese_example": "the exact phrase from the learner sentence that shows this pattern", "note": "one-sentence description of what this pattern expresses" }
+  ]
+}
+
+Both grammar_patterns_identified and grammar_patterns_suggested MUST be arrays (use empty array [] if nothing applies). Never omit these fields.` + wsGetPersonaOverlay();
 }
 
 function wsGetThemePrompt(word, fluencyLevel) {
@@ -335,6 +406,14 @@ function wsRenderSavedDeck(wordKey, wordData) {
             ${item.assessedLevel ? (() => { const l = wsLevelLabel(item.assessedLevel); return l ? '<span class="ws-level-chip">' + l.icon + ' ' + (langMode === 'zh' ? l.zh : l.en) + '</span>' : ''; })() : ''}
             ${item.assessedMastery ? (() => { const m = wsMasteryLabel(item.assessedMastery); return m ? '<span class="ws-mastery-chip">' + m.icon + ' ' + (langMode === 'zh' ? m.zh : m.en) + '</span>' : ''; })() : ''}
           </div>` : ''}
+          ${(Array.isArray(item.grammarPatterns) && item.grammarPatterns.length) ? `<div class="ws-grammar-patterns ws-saved-grammar"><span class="ws-grammar-label">${langMode === 'zh' ? '句型' : 'Grammar'}:</span> ${item.grammarPatterns.map(gp => {
+            const ref = (typeof WS_GRAMMAR_PATTERNS !== 'undefined') ? WS_GRAMMAR_PATTERNS.find(p => p.slug === gp.slug) : null;
+            if (!ref) return '';
+            const icon = gp.status === 'correct' ? '✓' : gp.status === 'almost' ? '△' : '✗';
+            const label = langMode === 'zh' ? ref.zh_label : ref.en_label;
+            const noteAttr = gp.note ? ' title="' + String(gp.note).replace(/"/g,'&quot;') + '"' : '';
+            return '<span class="ws-grammar-chip ws-grammar-' + (gp.status || 'correct') + '"' + noteAttr + '>' + icon + ' ' + label + '</span>';
+          }).filter(Boolean).join(' ')}</div>` : ''}
           <div class="ex-sent-body">
             <div class="ex-sent-cn">${segmentedHTML(item.cn, {traditional: wordKey, simplified: wordData?.simplified || ''})}</div>
             <div class="ex-sent-en">${item.en}</div>
@@ -470,6 +549,39 @@ function wsToggleFilter(wordKey, filterName, btn) {
   }
 }
 
+// ── TARGET WORD DETECTION ────────────────────────────────────────────────────
+// Checks whether the learner's sentence contains the target word. Direct
+// substring match wins. If that fails, we try a tolerant splitter-aware match
+// that allows common Chinese aspect markers, potential-form particles, and
+// measure / directional morphemes BETWEEN the characters of a multi-char
+// target word. This prevents false "missing_target" flags on legitimate forms:
+//   看破 → 看不破, 看得破
+//   看懂 → 看不懂, 看得懂
+//   吃飯 → 吃了飯, 吃過飯, 吃一頓飯
+//   睡著 → 睡不著, 睡得著
+//   打電話 → 打過電話 (splitters between 打 and 電, then 電話 intact)
+// Splitter set is deliberately narrow — we don't want to accept arbitrary
+// substrings that merely happen to contain the target characters.
+function wsTargetWordUsed(sentence, traditional) {
+  if (!traditional) return true;
+  if (!sentence) return false;
+  if (sentence.includes(traditional)) return true;
+  const chars = Array.from(traditional);
+  if (chars.length < 2) return false;
+  // Common Chinese splitters inside verb-complement / separable-verb compounds
+  const splitters = '不得了過著一兩個次下來去到起完住';
+  const escape = c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Allow 1–3 splitter characters between each consecutive pair of target chars.
+  // We require at least 1 char of gap (0 would just be the direct match we
+  // already tested above).
+  const pattern = chars.map(escape).join(`[${splitters}]{1,3}`);
+  try {
+    return new RegExp(pattern).test(sentence);
+  } catch (e) {
+    return false;
+  }
+}
+
 // ── RUN CRITIQUE ─────────────────────────────────────────────────────────────
 async function wsRunCritique(wordKey) {
   const wordData = wsGetWordData(wordKey);
@@ -502,8 +614,38 @@ async function wsRunCritique(wordKey) {
     const clean = raw.replace(/```json|```/g, '').trim();
     const data = JSON.parse(clean);
 
-    const verdictColor = data.verdict === 'correct' ? 'var(--jade)' : data.verdict === 'minor_issues' ? 'var(--gold)' : 'var(--rose)';
-    const verdictLabel = data.verdict === 'correct' ? '✓ Correct' : data.verdict === 'minor_issues' ? '△ Minor issues' : '✗ Needs work';
+    // Deterministic override: if the learner's sentence doesn't contain the
+    // target word at all, force verdict to "missing_target" no matter what
+    // 師父 returned. Tolerant of Chinese verb-complement / separable-verb
+    // splitters so we don't falsely flag legitimate forms like:
+    //   看不破 (potential-negative of 看破)
+    //   看得懂 (potential-positive of 看懂)
+    //   吃了飯 / 吃過飯 (aspect markers inside 吃飯)
+    //   睡不著 (potential-negative of 睡著)
+    //   打過電話 (aspect inside 打電話)
+    // A direct substring match takes precedence; only if that fails do we
+    // try the tolerant splitter-aware match.
+    if (!wsTargetWordUsed(sentence, wordData.traditional)) {
+      data.verdict = 'missing_target';
+      // Ensure we don't accidentally show a rewrite 師父 may have supplied
+      data.corrected_cn = sentence;
+    }
+
+    const isUnworkable    = data.verdict === 'unworkable';
+    const isMissingTarget = data.verdict === 'missing_target';
+    const isNeedsWork     = data.verdict === 'needs_work';
+    // Hide corrected sentence + Save whenever the learner hasn't earned to see it
+    const hideCorrection  = isUnworkable || isMissingTarget || isNeedsWork;
+    const hideSave        = hideCorrection;
+
+    const verdictColor = data.verdict === 'correct' ? 'var(--jade)'
+      : data.verdict === 'minor_issues' ? 'var(--gold)'
+      : 'var(--rose)';
+    const verdictLabel = data.verdict === 'correct' ? '✓ Correct'
+      : data.verdict === 'minor_issues' ? '△ Minor issues'
+      : isMissingTarget ? (langMode === 'zh' ? `✗ 你沒有使用「${wordData.traditional}」— 請重新寫` : `✗ You didn't use ${wordData.traditional} — come back and try again`)
+      : isUnworkable ? (langMode === 'zh' ? '✗ 此情境不合適 — 請換一個方向' : '✗ Unworkable here — try a different scenario')
+      : (langMode === 'zh' ? '✗ 請再試一次' : '✗ Needs work — rewrite using the notes below');
     const senseIdAttr = senseId ? `data-sense-id="${senseId}"` : '';
     const wordObjIdAttr = wordObjectId ? `data-word-object-id="${wordObjectId}"` : '';
     const vertical = textDir === 'vertical';
@@ -514,20 +656,63 @@ async function wsRunCritique(wordKey) {
     const assessChips = (lvl ? `<span class="ws-level-chip">${lvl.icon} ${langMode === 'zh' ? lvl.zh : lvl.en}</span>` : '')
       + (mst ? `<span class="ws-mastery-chip">${mst.icon} ${langMode === 'zh' ? mst.zh : mst.en}</span>` : '');
 
+    // ── Grammar pattern chips ──
+    const identified = Array.isArray(data.grammar_patterns_identified) ? data.grammar_patterns_identified : [];
+    const grammarBlock = identified.length
+      ? `<div class="ws-grammar-patterns"><span class="ws-grammar-label">${langMode === 'zh' ? '句型' : 'Grammar patterns'}:</span> ${identified.map(gp => {
+          const ref = (typeof WS_GRAMMAR_PATTERNS !== 'undefined') ? WS_GRAMMAR_PATTERNS.find(p => p.slug === gp.slug) : null;
+          if (!ref) return '';
+          const icon = gp.status === 'correct' ? '✓' : gp.status === 'almost' ? '△' : '✗';
+          const label = langMode === 'zh' ? ref.zh_label : ref.en_label;
+          const noteAttr = gp.note ? ` title="${String(gp.note).replace(/"/g,'&quot;')}"` : '';
+          return `<span class="ws-grammar-chip ws-grammar-${gp.status || 'correct'}"${noteAttr}>${icon} ${label}</span>`;
+        }).filter(Boolean).join(' ')}</div>`
+      : '';
+
+    // ── Redirect suggestion card (only when unworkable) ──
+    const redirect = (isUnworkable && data.redirect_suggestion && typeof data.redirect_suggestion === 'object') ? data.redirect_suggestion : null;
+    const redirectBlock = redirect && (redirect.scenario || redirect.example_cn)
+      ? `<div class="ws-redirect-card" style="margin-top:0.6rem;padding:0.75rem 0.9rem;border:1px dashed var(--rose);border-radius:0.5rem;background:rgba(190,60,80,0.04)">
+          <div class="ws-redirect-label" style="font-size:0.78rem;font-weight:600;color:var(--rose);margin-bottom:0.3rem">${langMode === 'zh' ? '試試另一個情境' : 'Try a different scenario'}</div>
+          ${redirect.scenario ? `<div style="font-size:0.88rem;color:var(--ink);margin-bottom:0.4rem">${redirect.scenario}</div>` : ''}
+          ${redirect.example_cn ? `<div class="resp-cn${vertical ? ' ws-vertical' : ''}" style="font-size:0.95rem">${segmentedHTML(redirect.example_cn, wordData)}</div>` : ''}
+          ${redirect.example_en ? `<div class="resp-en" style="font-size:0.82rem;color:var(--dim);font-style:italic">${redirect.example_en}</div>` : ''}
+        </div>`
+      : '';
+
+    // Main sentence block: for missing_target / needs_work / unworkable we show
+    // the learner's ORIGINAL sentence (not a rewrite), for correct / minor_issues
+    // we show 師父's polished version. Either way, display corrected_cn which the
+    // upstream logic has already normalised.
+    const showCorrectedEn = !hideCorrection && data.corrected_en;
+
+    // "Save Anyway" — unverified, private-only path for needs_work / missing_target.
+    // The learner can bank their attempt as a personal draft, but it cannot be
+    // shared to community and won't carry 師父's verification flag. This gives
+    // them agency without letting them bypass the teaching signal.
+    const allowSaveAnyway = (isNeedsWork || isMissingTarget);
+
     resultEl.innerHTML = `
       <div class="ws-ai-response">
         <div class="ws-ai-response-label" style="color:${verdictColor}">${verdictLabel}</div>
         ${assessChips ? `<div class="ws-assess-chips">${assessChips}</div>` : ''}
+        ${grammarBlock}
         <div class="ws-ai-response-text">
           <span class="resp-cn${vertical ? ' ws-vertical' : ''}">${segmentedHTML(data.corrected_cn, wordData)}</span>
-          <span class="resp-en">${data.corrected_en}</span>
+          ${showCorrectedEn ? `<span class="resp-en">${data.corrected_en}</span>` : ''}
           <span class="resp-note">${data.feedback}</span>
           ${data.register_note ? `<span class="resp-note" style="margin-top:0.2rem">${data.register_note}</span>` : ''}
-          ${data.mastery_guidance ? `<span class="resp-note ws-mastery-guidance-note" style="margin-top:0.3rem"><strong>${langMode === 'zh' ? '成長建議' : 'Growth tip'}:</strong> ${data.mastery_guidance}</span>` : ''}
+          ${!isUnworkable && !isMissingTarget && data.mastery_guidance ? `<span class="resp-note ws-mastery-guidance-note" style="margin-top:0.3rem"><strong>${langMode === 'zh' ? '成長建議' : 'Growth tip'}:</strong> ${data.mastery_guidance}</span>` : ''}
         </div>
+        ${redirectBlock}
         <div class="ws-ai-response-actions">
-          <button class="ex-sent-save" ${senseIdAttr} ${wordObjIdAttr} data-word-key="${wordKey}" data-cn="${data.corrected_cn.replace(/"/g,'&quot;')}" data-en="${data.corrected_en.replace(/"/g,'&quot;')}" data-feedback="${(data.feedback + (data.register_note ? ' ' + data.register_note : '')).replace(/"/g,'&quot;')}" data-ai="1" data-original-cn="${sentence.replace(/"/g,'&quot;')}" data-assessed-level="${data.assessed_level || ''}" data-assessed-mastery="${data.assessed_mastery || ''}" data-mastery-guidance="${(data.mastery_guidance || '').replace(/"/g,'&quot;')}" onclick="wsSaveAIResult(this)">＋ Save Writing & Feedback</button>
-          <button class="ws-try-again-btn" onclick="wsTryAgain('${wordKey}','critique')">↻ ${langMode === 'zh' ? '再試一次' : 'Try Again'}</button>
+          ${hideSave ? '' : `<label class="ws-share-community" title="${langMode === 'zh' ? '分享至社群，讓其他學習者看見' : 'Share with community so other learners can see'}">
+            <input type="checkbox" class="ws-share-checkbox" data-word-key="${wordKey}" ${wsDefaultPublic() ? 'checked' : ''}>
+            <span>${langMode === 'zh' ? '分享至社群' : 'Share with community'}</span>
+          </label>
+          <button class="ex-sent-save" ${senseIdAttr} ${wordObjIdAttr} data-word-key="${wordKey}" data-cn="${data.corrected_cn.replace(/"/g,'&quot;')}" data-en="${(data.corrected_en || '').replace(/"/g,'&quot;')}" data-feedback="${(data.feedback + (data.register_note ? ' ' + data.register_note : '')).replace(/"/g,'&quot;')}" data-ai="1" data-original-cn="${sentence.replace(/"/g,'&quot;')}" data-assessed-level="${data.assessed_level || ''}" data-assessed-mastery="${data.assessed_mastery || ''}" data-mastery-guidance="${(data.mastery_guidance || '').replace(/"/g,'&quot;')}" data-grammar-patterns="${JSON.stringify(identified).replace(/"/g,'&quot;')}" onclick="wsSaveAIResult(this)">＋ Save Writing & Feedback</button>`}
+          ${hideSave ? `<button class="ws-try-again-btn ws-try-again-primary" onclick="wsTryAgain('${wordKey}','critique')">↻ ${langMode === 'zh' ? '再試一次' : 'Try Again'}</button>` : `<button class="ws-try-again-btn" onclick="wsTryAgain('${wordKey}','critique')">↻ ${langMode === 'zh' ? '再試一次' : 'Try Again'}</button>`}
+          ${allowSaveAnyway ? `<button class="ws-save-anyway-btn" ${senseIdAttr} ${wordObjIdAttr} data-word-key="${wordKey}" data-cn="${sentence.replace(/"/g,'&quot;')}" data-en="" data-feedback="${(data.feedback + (data.register_note ? ' ' + data.register_note : '')).replace(/"/g,'&quot;')}" data-ai="0" data-original-cn="${sentence.replace(/"/g,'&quot;')}" data-assessed-level="${data.assessed_level || ''}" data-assessed-mastery="${data.assessed_mastery || ''}" data-is-public="0" data-unverified="1" data-verdict="${data.verdict}" data-grammar-patterns="${JSON.stringify(identified).replace(/"/g,'&quot;')}" title="${langMode === 'zh' ? '儲存為私人草稿；不會分享，也不包含師父的驗證 — 會標記為不合格' : 'Save as a private draft — not verified by 師父, not shared to community, and flagged with the verdict'}" onclick="wsSaveAIResult(this)">${langMode === 'zh' ? '仍要儲存為草稿' : 'Save anyway as draft'}</button>` : ''}
         </div>
       </div>`;
     setTimeout(() => resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
@@ -589,6 +774,10 @@ async function wsRunTheme(wordKey) {
           <span class="resp-note">${data.note}</span>
         </div>
         <div class="ws-ai-response-actions">
+          <label class="ws-share-community" title="${langMode === 'zh' ? '分享至社群，讓其他學習者看見' : 'Share with community so other learners can see'}">
+            <input type="checkbox" class="ws-share-checkbox" data-word-key="${wordKey}" ${wsDefaultPublic() ? 'checked' : ''}>
+            <span>${langMode === 'zh' ? '分享至社群' : 'Share with community'}</span>
+          </label>
           <button class="ex-sent-save" ${senseIdAttr} ${wordObjIdAttr} data-word-key="${wordKey}" data-cn="${data.cn.replace(/"/g,'&quot;')}" data-en="${data.en.replace(/"/g,'&quot;')}" data-feedback="${(data.note || '').replace(/"/g,'&quot;')}" data-ai="1" data-generated="1" data-assessed-level="${data.assessed_level || ''}" data-assessed-mastery="${data.assessed_mastery || ''}" onclick="wsSaveAIResult(this)">＋ Save Writing & Feedback</button>
           <button class="ws-try-again-btn" onclick="wsTryAgain('${wordKey}','theme')">↻ ${langMode === 'zh' ? '再試一次' : 'Try Again'}</button>
         </div>
@@ -613,18 +802,43 @@ async function wsSaveAIResult(btn) {
   const feedback = btn.dataset.feedback || '';
   const aiVerified = btn.dataset.ai === '1';
   const isGenerated = btn.dataset.generated === '1';
+  const isUnverified = btn.dataset.unverified === '1';
+  const verdict = btn.dataset.verdict || '';
   const senseId = btn.dataset.senseId;
   const wordObjectId = btn.dataset.wordObjectId || null;
   const assessedLevel = btn.dataset.assessedLevel || '';
   const assessedMastery = btn.dataset.assessedMastery || '';
   const masteryGuidance = btn.dataset.masteryGuidance || '';
   const originalCn = btn.dataset.originalCn || '';
+  let grammarPatterns = [];
+  try {
+    grammarPatterns = JSON.parse(btn.dataset.grammarPatterns || '[]') || [];
+  } catch(e) { grammarPatterns = []; }
+  // Keep only patterns whose slug is known to the client catalogue; drop any
+  // leftovers 師父 might have emitted that don't exist in WS_GRAMMAR_PATTERNS.
+  grammarPatterns = (Array.isArray(grammarPatterns) ? grammarPatterns : [])
+    .filter(gp => gp && gp.slug && (typeof WS_GRAMMAR_PATTERNS === 'undefined' || WS_GRAMMAR_PATTERNS.some(p => p.slug === gp.slug)));
+
+  // Read the inline "Share with community" checkbox from the same action row.
+  // Save Anyway buttons explicitly force data-is-public="0" — unverified private
+  // drafts must never be shared, regardless of the user's default.
+  let isPublic = wsDefaultPublic();
+  if (btn.dataset.isPublic === '0') {
+    isPublic = false;
+  } else {
+    const actionsRow = btn.closest('.ws-ai-response-actions');
+    if (actionsRow) {
+      const shareBox = actionsRow.querySelector('.ws-share-checkbox');
+      if (shareBox) isPublic = shareBox.checked;
+    }
+  }
 
   if (!window.__AUTH) {
     const pending = {
       wordKey, context: 'save_result',
       cn, en, feedback, aiVerified, isGenerated, senseId, wordObjectId,
       assessedLevel, assessedMastery, masteryGuidance, originalCn,
+      grammarPatterns, isPublic,
     };
     localStorage.setItem('ww_pending', JSON.stringify(pending));
     wsShowAuthPrompt(wordKey, isGenerated ? 'theme' : 'critique', isGenerated ? `ws-theme-result-${wordKey}` : `ws-critique-result-${wordKey}`);
@@ -654,15 +868,35 @@ async function wsSaveAIResult(btn) {
         assessed_mastery: assessedMastery || null,
         mastery_guidance: masteryGuidance || null,
         engagement_id: wsEngagements[wordKey] || null,
+        grammar_patterns: grammarPatterns,
+        is_public: !!isPublic,
       }),
     });
 
     if (!response.ok) throw new Error('save_failed');
     const saved = await response.json();
 
-    const source = isGenerated ? '師父 generated' : aiVerified ? '師父 verified' : 'My writing';
+    // Source label reflects the verification state. Unverified "Save Anyway"
+    // drafts from needs_work / missing_target carry the verdict forward so the
+    // learner sees the flag every time they revisit the saved entry.
+    const verdictLabelMap = {
+      needs_work:     langMode === 'zh' ? '需要修改' : 'Needs work',
+      missing_target: langMode === 'zh' ? '未使用目標詞' : 'Target word missing',
+      unworkable:     langMode === 'zh' ? '情境不合適' : 'Unworkable scenario',
+    };
+    let source;
+    if (isUnverified) {
+      const flag = verdictLabelMap[verdict] || (langMode === 'zh' ? '未驗證' : 'Unverified');
+      source = langMode === 'zh' ? `⚠ 未驗證草稿 · ${flag}` : `⚠ Unverified draft · ${flag}`;
+    } else if (isGenerated) {
+      source = '師父 generated';
+    } else if (aiVerified) {
+      source = '師父 verified';
+    } else {
+      source = 'My writing';
+    }
     const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    wsSaveToWord(wordKey, { id: saved.id, cn, en, feedback, source, date: today, assessedLevel, assessedMastery, masteryGuidance, originalCn });
+    wsSaveToWord(wordKey, { id: saved.id, cn, en, feedback, source, date: today, assessedLevel, assessedMastery, masteryGuidance, originalCn, grammarPatterns });
     wsRefreshDeck(wordKey);
 
     // Close the AI response panel
@@ -805,6 +1039,7 @@ function wsHydrateSavedDeck() {
         assessedMastery: ex.assessed_mastery || '',
         masteryGuidance: ex.mastery_guidance || '',
         originalCn: ex.original_chinese_text || '',
+        grammarPatterns: Array.isArray(ex.grammar_patterns) ? ex.grammar_patterns : [],
       });
     }
   });
