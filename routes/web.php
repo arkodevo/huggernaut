@@ -29,6 +29,7 @@ use App\Http\Controllers\CollectionTestController;
 use App\Http\Controllers\Api\ChineseNameController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\LearnerDashboardController;
+use App\Http\Controllers\CommunityController;
 use App\Http\Controllers\MyActivityController;
 use App\Http\Controllers\MyWordsController;
 use App\Http\Controllers\MyWritingsController;
@@ -68,6 +69,7 @@ Route::get('/my-words', [MyWordsController::class, 'index'])->name('my-words')->
 Route::get('/my-writings', [MyWritingsController::class, 'index'])->name('my-writings')->middleware('auth');
 Route::patch('/my-writings/{id}/visibility', [MyWritingsController::class, 'toggleVisibility'])->middleware('auth')->name('my-writings.visibility');
 Route::get('/my-activity', [MyActivityController::class, 'index'])->name('my-activity')->middleware('auth');
+Route::get('/community', [CommunityController::class, 'index'])->name('community')->middleware('auth');
 Route::get('/my-words/test/{collection}', [CollectionTestController::class, 'show'])->name('my-words.test')->middleware('auth');
 Route::get('/profile', [ProfileController::class, 'show'])->name('profile')->middleware('auth');
 Route::patch('/profile/pll-name', [ProfileController::class, 'updatePllName'])->middleware('auth');

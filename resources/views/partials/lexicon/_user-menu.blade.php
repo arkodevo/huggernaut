@@ -61,6 +61,7 @@
       <a href="{{ route('my-words') }}">My Words</a>
       <a href="{{ route('my-writings') }}">My Writings</a>
       <a href="{{ route('my-activity') }}">My Activity</a>
+      <a href="{{ route('community') }}">Community</a>
       <a href="{{ route('profile') }}">Profile</a>
       <a href="{{ route('profile') }}#shifu-style">師父 Style</a>
       <form method="POST" action="{{ route('logout') }}">
