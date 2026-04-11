@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\CsvImportController;
 use App\Http\Controllers\Admin\WordObjectController;
 use App\Http\Controllers\Admin\WordPronunciationController;
 use App\Http\Controllers\Admin\WordSenseController;
+use App\Http\Controllers\Admin\GrammarPatternController;
+use App\Http\Controllers\Admin\GrammarPatternExampleController;
 use App\Http\Controllers\Admin\WordSenseExampleController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LearnerLoginController;
@@ -201,6 +203,31 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         ->name('examples.update');
     Route::delete('examples/{example}', [WordSenseExampleController::class, 'destroy'])
         ->name('examples.destroy');
+
+    // Grammar Patterns -----------------------------------------------------------
+    Route::get('grammar', [GrammarPatternController::class, 'index'])->name('grammar.index');
+    Route::get('grammar/create', [GrammarPatternController::class, 'create'])->name('grammar.create');
+    Route::post('grammar', [GrammarPatternController::class, 'store'])->name('grammar.store');
+    Route::get('grammar/{pattern}', [GrammarPatternController::class, 'show'])->name('grammar.show');
+    Route::get('grammar/{pattern}/edit', [GrammarPatternController::class, 'edit'])->name('grammar.edit');
+    Route::put('grammar/{pattern}', [GrammarPatternController::class, 'update'])->name('grammar.update');
+    Route::delete('grammar/{pattern}', [GrammarPatternController::class, 'destroy'])->name('grammar.destroy');
+
+    // Grammar Pattern Examples
+    Route::post('grammar/{pattern}/examples', [GrammarPatternExampleController::class, 'store'])
+        ->name('grammar.examples.store');
+    Route::put('grammar-examples/{example}', [GrammarPatternExampleController::class, 'update'])
+        ->name('grammar.examples.update');
+    Route::delete('grammar-examples/{example}', [GrammarPatternExampleController::class, 'destroy'])
+        ->name('grammar.examples.destroy');
+
+    // Grammar Suggestion actions
+    Route::post('grammar/suggestions/{suggestion}/accept', [GrammarPatternController::class, 'acceptSuggestion'])
+        ->name('grammar.suggestions.accept');
+    Route::post('grammar/suggestions/{suggestion}/reject', [GrammarPatternController::class, 'rejectSuggestion'])
+        ->name('grammar.suggestions.reject');
+    Route::post('grammar/suggestions/{suggestion}/link', [GrammarPatternController::class, 'linkSuggestion'])
+        ->name('grammar.suggestions.link');
 
     // Activity logs -------------------------------------------------------------
     Route::get('search-logs', [SearchLogController::class, 'index'])->name('search-logs.index');

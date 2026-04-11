@@ -42,6 +42,7 @@
                 $navItems = [
                     $navItem('admin.dashboard',   'Dashboard',   '◈'),
                     $navItem('admin.words.index',  'Words',       '字'),
+                    $navItem('admin.grammar.index', 'Grammar',    '句'),
                     $navItem('admin.badges.index',           'Badges',             '🏅'),
                     $navItem('admin.attribute-settings.index', 'Attr Settings',   '⚗'),
                     $navItem('admin.search-logs.index',         'Search Logs',     '🔍'),

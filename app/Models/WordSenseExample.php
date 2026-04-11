@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 // Example sentences attached to a sense (and optionally a specific definition).
@@ -51,6 +52,16 @@ class WordSenseExample extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(WordSenseExampleTranslation::class);
+    }
+
+    public function grammarPatterns(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            GrammarPattern::class,
+            'word_sense_example_grammar_patterns',
+            'word_sense_example_id',
+            'grammar_pattern_id'
+        )->withTimestamps();
     }
 
     public function scopeVisible($query)

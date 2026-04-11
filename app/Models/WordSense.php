@@ -167,6 +167,16 @@ class WordSense extends Model
         return $this->hasMany(AiUsageLog::class);
     }
 
+    // ── Grammar patterns (bidirectional link) ─────────────────────────────────
+
+    public function grammarPatterns(): BelongsToMany
+    {
+        return $this->belongsToMany(GrammarPattern::class, 'grammar_pattern_word_senses')
+            ->withPivot('role', 'sort_order', 'editorial_note')
+            ->orderByPivot('sort_order')
+            ->withTimestamps();
+    }
+
     // ── Scopes ────────────────────────────────────────────────────────────────
 
     public function scopePublished($query)

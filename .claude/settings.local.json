@@ -245,7 +245,11 @@
       "Bash(grep -n \"class WordSense\\\\|class WordSenseExample\" /Users/chuluoyi/Sites/huggernaut/app/Models/*.php)",
       "Bash(grep -r \"Va-t\\\\|Vp-t\\\\|Va\\\\s\" /Users/chuluoyi/Sites/huggernaut --include=*.php --include=*.json --include=*.csv)",
       "Bash(grep -E \"\\(app|resources|public\\)$\")",
-      "Bash(grep -r \"word_sense_definitions.*formula\\\\|word_sense_definitions.*usage_note\" /Users/chuluoyi/Sites/huggernaut/app --include=*.php)"
+      "Bash(grep -r \"word_sense_definitions.*formula\\\\|word_sense_definitions.*usage_note\" /Users/chuluoyi/Sites/huggernaut/app --include=*.php)",
+      "Bash(brew list:*)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/pg_dump --version)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -d huggernaut -F c -f /Users/chuluoyi/Sites/huggernaut/database/backups/huggernaut_pre-grammar-20260407.dump)",
+      "Bash(php -r \"require ''vendor/autoload.php''; $app = require ''bootstrap/app.php''; $app->make\\(Illuminate\\\\Contracts\\\\Console\\\\Kernel::class\\)->bootstrap\\(\\); foreach \\(DB::table\\(''languages''\\)->get\\(\\) as $l\\) echo \"\"$l->id: $l->code $l->name\\\\n\"\";\")"
     ]
   }
 }
