@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Affirmation;
 use App\Models\UserSavedExample;
+use App\Models\WordSense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CommunityController extends Controller
@@ -28,7 +30,7 @@ class CommunityController extends Controller
         if ($tab === 'writings') {
             $writings = $this->loadPublicWritings();
         } elseif ($tab === 'affirmations') {
-            $affirmations = $this->loadRecentAffirmations();
+            $affirmations = $this->loadMostAffirmedSenses();
         }
 
         return view('community', [
@@ -91,44 +93,64 @@ class CommunityController extends Controller
     }
 
     /**
-     * Recent affirmations across all users, newest first. Capped to 50 for
-     * the skeleton pass — pagination lands once we see real usage volume.
-     * Each row carries enough context to show "{learner} affirmed {sense}".
+     * Leaderboard of the senses the community trusts most: top N senses by
+     * affirmation count, with each sense's full display context. This is
+     * the aggregate framing of affirmations — the raw votes are silent
+     * scalars on the LWP, surfaced here as the community's collective
+     * editorial confidence. Senses with zero affirmations never appear.
      */
-    private function loadRecentAffirmations(): array
+    private function loadMostAffirmedSenses(): array
     {
-        return Affirmation::with([
-                'user',
-                'wordSense.wordObject',
-                'wordSense.pronunciation',
-                'wordSense.definitions' => fn ($q) => $q
+        // Pull the ranked sense ids + counts in a single grouped query.
+        $ranked = DB::table('affirmations')
+            ->select('word_sense_id', DB::raw('COUNT(*) as affirm_count'))
+            ->groupBy('word_sense_id')
+            ->orderByDesc('affirm_count')
+            ->orderBy('word_sense_id') // stable tiebreaker
+            ->limit(50)
+            ->get();
+
+        if ($ranked->isEmpty()) {
+            return [];
+        }
+
+        // Eager-load the senses in one query, keyed by id for O(1) lookup
+        // as we walk the ranked list in count order.
+        $senseIds = $ranked->pluck('word_sense_id')->all();
+        $senses = WordSense::with([
+                'wordObject',
+                'pronunciation',
+                'definitions' => fn ($q) => $q
                     ->where('language_id', 1)
                     ->orderBy('sort_order')
                     ->with('posLabel'),
             ])
-            ->orderByDesc('created_at')
-            ->limit(50)
+            ->whereIn('id', $senseIds)
             ->get()
-            ->map(function ($a) {
-                $s = $a->wordSense;
-                $u = $a->user;
-                if (! $s || ! $s->wordObject) {
-                    return null;
-                }
-                $def = $s->definitions->first();
+            ->keyBy('id');
 
-                return [
-                    'author'      => $u?->chinese_name ?: ($u?->name ?: 'Anonymous'),
-                    'traditional' => $s->wordObject->traditional,
-                    'smartId'     => $s->wordObject->smart_id,
-                    'pinyin'      => $s->pronunciation?->pronunciation_text ?? '',
-                    'pos'         => $def?->posLabel?->slug ?? '',
-                    'definition'  => $def?->definition_text ?? '',
-                    'affirmedAt'  => $a->created_at,
-                ];
-            })
-            ->filter()
-            ->values()
-            ->all();
+        $rows = [];
+        $rank = 0;
+        foreach ($ranked as $r) {
+            $s = $senses->get($r->word_sense_id);
+            if (! $s || ! $s->wordObject) {
+                continue;
+            }
+            $def = $s->definitions->first();
+            $rank++;
+
+            $rows[] = [
+                'rank'        => $rank,
+                'count'       => (int) $r->affirm_count,
+                'senseId'     => $s->id,
+                'traditional' => $s->wordObject->traditional,
+                'smartId'     => $s->wordObject->smart_id,
+                'pinyin'      => $s->pronunciation?->pronunciation_text ?? '',
+                'pos'         => $def?->posLabel?->slug ?? '',
+                'definition'  => $def?->definition_text ?? '',
+            ];
+        }
+
+        return $rows;
     }
 }

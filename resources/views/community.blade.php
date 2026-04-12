@@ -166,41 +166,66 @@ details[open] .com-fb-summary::before { content: '▾ '; }
 }
 .ex-sent-cn .highlight { color: var(--accent); font-weight: 600; }
 
-/* ── AFFIRMATIONS LIST ── */
-.com-aff-list { display: flex; flex-direction: column; gap: 0.5rem; }
-.com-aff-row {
-  display: flex; align-items: baseline; gap: 0.75rem;
-  padding: 0.75rem 0.9rem;
+/* ── MOST-AFFIRMED LEADERBOARD ── */
+.com-lead-intro {
+  font-family: 'Cormorant Garamond', serif; font-size: 0.95rem;
+  color: var(--dim); line-height: 1.5;
+  margin-bottom: 1rem; padding: 0 0.25rem;
+  font-style: italic;
+}
+.com-lead-list { display: flex; flex-direction: column; gap: 0.45rem; }
+.com-lead-row {
+  display: flex; align-items: center; gap: 0.85rem;
+  padding: 0.7rem 0.9rem;
   border: 1px solid var(--border); border-radius: 4px;
   text-decoration: none; color: inherit;
   transition: background 0.12s, border-color 0.12s;
 }
-.com-aff-row:hover { background: rgba(0,0,0,0.015); border-color: var(--accent); }
-.com-aff-char {
-  font-family: 'Noto Serif TC', serif; font-size: 1.35rem;
-  color: var(--ink); min-width: 2.2rem;
+.com-lead-row:hover { background: rgba(0,0,0,0.015); border-color: var(--accent); }
+.com-lead-rank {
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: var(--dim); letter-spacing: 0.03em;
+  min-width: 1.8rem; text-align: right;
+  opacity: 0.7;
 }
-.com-aff-body { flex: 1; min-width: 0; }
-.com-aff-top {
+.com-lead-row.is-top .com-lead-rank { color: var(--accent); opacity: 1; font-weight: 600; }
+.com-lead-char {
+  font-family: 'Noto Serif TC', serif; font-size: 1.4rem;
+  color: var(--ink); min-width: 2.2rem;
+  line-height: 1;
+}
+.com-lead-body { flex: 1; min-width: 0; }
+.com-lead-top {
   font-family: 'DM Mono', monospace; font-size: 0.72rem;
   color: var(--dim); letter-spacing: 0.03em;
   margin-bottom: 0.15rem;
 }
-.com-aff-pos { color: var(--accent); }
-.com-aff-def {
+.com-lead-pos { color: var(--accent); }
+.com-lead-def {
   font-family: 'Cormorant Garamond', serif; font-size: 0.95rem;
   color: var(--ink); line-height: 1.35;
-}
-.com-aff-author {
-  font-family: 'DM Mono', monospace; font-size: 0.6rem;
-  color: var(--dim); letter-spacing: 0.03em;
-  margin-top: 0.2rem;
-}
-.com-aff-author .com-author-name { color: var(--ink); }
-.com-aff-date {
-  font-family: 'DM Mono', monospace; font-size: 0.6rem;
-  color: var(--dim); letter-spacing: 0.04em;
+  overflow: hidden; text-overflow: ellipsis;
   white-space: nowrap;
+}
+.com-lead-count {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-width: 3rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(98,64,200,0.06);
+  border: 1px solid rgba(98,64,200,0.18);
+  border-radius: 3px;
+}
+.com-lead-count-num {
+  font-family: 'DM Mono', monospace; font-size: 0.95rem;
+  color: var(--accent); font-weight: 600;
+  line-height: 1.1;
+}
+.com-lead-count-lbl {
+  font-family: 'DM Mono', monospace; font-size: 0.55rem;
+  color: var(--dim); letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 0.1rem;
 }
 
 /* ── PAGINATION (match my-writings) ── */
@@ -363,25 +388,32 @@ details[open] .com-fb-summary::before { content: '▾ '; }
         </div>
       </div>
 
-    @else {{-- affirmations --}}
+    @else {{-- affirmations: most-trusted senses leaderboard --}}
       @if (empty($affirmations))
         <div class="com-empty">
-          No affirmations yet. Tap 👍 on any sense in the <a href="{{ route('lexicon.index') }}">lexicon</a> to be the first.
+          No affirmations yet. Tap 👍 on any sense in the <a href="{{ route('lexicon.index') }}">lexicon</a> to be the first. The senses the community trusts most will surface here.
         </div>
       @else
-        <div class="com-aff-list">
-          @foreach ($affirmations as $a)
-            <a class="com-aff-row" href="{{ route('lexicon.show', $a['smartId']) }}">
-              <div class="com-aff-char">{{ $a['traditional'] }}</div>
-              <div class="com-aff-body">
-                <div class="com-aff-top">
-                  @if ($a['pinyin']) <span>{{ $a['pinyin'] }}</span> @endif
-                  @if ($a['pos']) <span class="com-aff-pos">· {{ $a['pos'] }}</span> @endif
+        <div class="com-lead-intro">
+          The senses learners trust most — every 👍 is a quiet vote that the definition, examples, and nuance ring true.
+        </div>
+        <div class="com-lead-list">
+          @foreach ($affirmations as $row)
+            <a class="com-lead-row {{ $row['rank'] <= 3 ? 'is-top' : '' }}"
+               href="{{ route('lexicon.show', $row['smartId']) }}">
+              <div class="com-lead-rank">#{{ $row['rank'] }}</div>
+              <div class="com-lead-char">{{ $row['traditional'] }}</div>
+              <div class="com-lead-body">
+                <div class="com-lead-top">
+                  @if ($row['pinyin']) <span>{{ $row['pinyin'] }}</span> @endif
+                  @if ($row['pos']) <span class="com-lead-pos">· {{ $row['pos'] }}</span> @endif
                 </div>
-                <div class="com-aff-def">{{ $a['definition'] }}</div>
-                <div class="com-aff-author">affirmed by <span class="com-author-name">{{ $a['author'] }}</span></div>
+                <div class="com-lead-def">{{ $row['definition'] }}</div>
               </div>
-              <div class="com-aff-date">{{ $a['affirmedAt']->diffForHumans() }}</div>
+              <div class="com-lead-count" title="{{ $row['count'] }} affirmations">
+                <span class="com-lead-count-num">{{ $row['count'] }}</span>
+                <span class="com-lead-count-lbl">👍</span>
+              </div>
             </a>
           @endforeach
         </div>
