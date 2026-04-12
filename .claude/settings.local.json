@@ -249,7 +249,27 @@
       "Bash(brew list:*)",
       "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/pg_dump --version)",
       "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -d huggernaut -F c -f /Users/chuluoyi/Sites/huggernaut/database/backups/huggernaut_pre-grammar-20260407.dump)",
-      "Bash(php -r \"require ''vendor/autoload.php''; $app = require ''bootstrap/app.php''; $app->make\\(Illuminate\\\\Contracts\\\\Console\\\\Kernel::class\\)->bootstrap\\(\\); foreach \\(DB::table\\(''languages''\\)->get\\(\\) as $l\\) echo \"\"$l->id: $l->code $l->name\\\\n\"\";\")"
+      "Bash(php -r \"require ''vendor/autoload.php''; $app = require ''bootstrap/app.php''; $app->make\\(Illuminate\\\\Contracts\\\\Console\\\\Kernel::class\\)->bootstrap\\(\\); foreach \\(DB::table\\(''languages''\\)->get\\(\\) as $l\\) echo \"\"$l->id: $l->code $l->name\\\\n\"\";\")",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/pg_dump -h 127.0.0.1 -p 5432 -U chuluoyi -F c -f /Users/chuluoyi/Sites/huggernaut/database/backups/huggernaut_pre-shifu-grammar-20260410.dump huggernaut)",
+      "Bash(php -l app/Models/GrammarPattern.php)",
+      "Bash(php -l app/Http/Controllers/Admin/GrammarPatternController.php)",
+      "Bash(php -l app/Models/UserSavedExample.php)",
+      "Bash(php -l app/Http/Controllers/ExploreController.php)",
+      "Bash(php -l /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/Admin/GrammarPatternController.php)",
+      "Bash(ls -1t /Users/chuluoyi/Sites/huggernaut/database/migrations/*.php)",
+      "Bash(grep -l \"user_saved_examples\\\\|UserSavedExample\" /Users/chuluoyi/Sites/huggernaut/database/migrations/*.php)",
+      "Bash(grep -h \"table->.*\\(\" /Users/chuluoyi/Sites/huggernaut/database/migrations/*users*.php)",
+      "Bash(xargs basename:*)",
+      "Bash(grep -l 'my-writings\\\\|my-words\\\\|my-activity' /Users/chuluoyi/Sites/huggernaut/resources/views/partials/lexicon/*.blade.php)",
+      "Bash(php -l /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/MyActivityController.php /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/MyWritingsController.php /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/ProfileController.php /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/Api/WorkshopController.php /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/ExploreController.php /Users/chuluoyi/Sites/huggernaut/app/Models/User.php)",
+      "Bash(grep -rn \"coverageLangs\\\\|has_notes_coverage\" /Users/chuluoyi/Sites/huggernaut/resources/views/admin/words/ /Users/chuluoyi/Sites/huggernaut/app/Http/Controllers/Admin/WordObject*.php)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(ls -la /Users/chuluoyi/.claude/projects/-Users-chuluoyi-Sites-huggernaut/*.jsonl)",
+      "Bash(php -l app/Http/Controllers/Api/AffirmationController.php)",
+      "Bash(php -l app/Http/Controllers/MyActivityController.php)",
+      "Bash(php -l app/Models/Affirmation.php)",
+      "Bash(php -l app/Http/Controllers/CommunityController.php)"
     ]
   }
 }
