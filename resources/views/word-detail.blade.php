@@ -273,38 +273,70 @@
   padding: 0.25rem 0.75rem;
   margin: -0.5rem -0.6rem 0.25rem -0.6rem;
 }
-/* ── AFFIRM BUTTON (sense-level community signal) ── */
-.wd-affirm-btn {
+/* ── COMMUNITY SIGNAL BUTTONS (affirm + dispute) ──
+   Layout: [purple stripe ========][👎][scores][👍]
+   The inert .wd-signal-scores element sits between the two buttons as
+   a physical gap so an inadvertent brush can't toggle either action. */
+.wd-signal-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  justify-content: center;
+  min-width: 2rem;
   padding: 0.15rem 0.6rem;
   background: #fff;
-  border: 1px solid var(--accent);
-  border-left: none;
-  color: var(--accent);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 0.95rem;
+  line-height: 1;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, transform 0.08s;
+  text-decoration: none;
 }
-.wd-affirm-btn:hover {
-  background: var(--accent-soft, rgba(0,0,0,0.04));
+.wd-signal-btn:active { transform: scale(0.94); }
+.wd-signal-btn:disabled { opacity: 0.5; cursor: wait; }
+.wd-signal-btn.guest { opacity: 0.5; cursor: pointer; }
+
+/* Dispute — rose, flushes into the purple stripe on its left
+   (no left border, so the purple → rose handoff reads as one element). */
+.wd-dispute-btn {
+  border: 1px solid var(--rose);
+  border-left: none;
+  color: var(--rose);
 }
-.wd-affirm-btn:active { transform: scale(0.96); }
+.wd-dispute-btn:hover { background: rgba(184, 48, 80, 0.06); }
+.wd-dispute-btn.disputed {
+  background: var(--rose);
+  color: #fff;
+}
+
+/* Central inert scores panel — the gap that makes accidental clicks safe */
+.wd-signal-scores {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.65rem;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: default;
+  user-select: none;
+}
+.wd-score-dispute { color: var(--rose); }
+.wd-score-dot     { color: var(--dim); opacity: 0.5; }
+.wd-score-affirm  { color: var(--accent); }
+
+/* Affirm — accent purple, full border, sits at the far right */
+.wd-affirm-btn {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.wd-affirm-btn:hover { background: rgba(98, 64, 200, 0.06); }
 .wd-affirm-btn.affirmed {
   background: var(--accent);
   color: #fff;
 }
-.wd-affirm-btn.guest {
-  opacity: 0.5;
-  cursor: pointer;
-}
-.wd-affirm-btn:disabled { opacity: 0.5; cursor: wait; }
-.wd-affirm-icon { font-size: 0.85rem; line-height: 1; }
-.wd-affirm-count { min-width: 0.8em; text-align: left; }
 /* ── HERO ACTIONS (star + share beneath pinyin) ── */
 .wd-word-meta {
   display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem 0.3rem;
@@ -1257,11 +1289,13 @@ async function wdToggleAffirm(senseId, btn) {
       sense.affirmCount = data.count;
       sense.affirmedByMe = data.affirmed;
     }
-    // Update all buttons on the page pointing to this sense (in case of re-rendering)
+    // Update all affirm buttons pointing to this sense (class state) AND
+    // the central scores panel's affirm count (the inert display element).
     document.querySelectorAll(`.wd-affirm-btn[data-sense-id="${senseId}"]`).forEach(b => {
       b.classList.toggle('affirmed', !!data.affirmed);
-      const countEl = b.querySelector('.wd-affirm-count');
-      if (countEl) countEl.textContent = data.count;
+    });
+    document.querySelectorAll(`.wd-signal-scores[data-sense-id="${senseId}"] .wd-score-affirm`).forEach(el => {
+      el.textContent = data.count;
     });
   } catch (e) {
     console.error('affirm toggle failed', e);
@@ -1709,26 +1743,49 @@ function renderSense(sense, idx, totalOverride) {
   // Sense header: stripe + domain + pinyin (no character repetition — hero shows it)
   const totalSenses = totalOverride || (WORD.senses || []).length;
 
-  // Affirmation button — sense-level community signal
+  // Sense-level community signal cluster — three elements after the stripe:
+  // dispute button (👎), inert scores panel, affirm button (👍). The central
+  // panel is non-clickable, giving the two action buttons physical separation
+  // so a stray tap on the counts can't fire either toggle.
   const affirmCount = sense.affirmCount || 0;
   const affirmedByMe = !!sense.affirmedByMe;
+  const disputeCount = sense.disputeCount || 0;
+  const disputedByMe = !!sense.disputedByMe;
   const isAuthed = !!window.__AUTH;
+
   const affirmTitle = isAuthed
     ? (affirmedByMe
         ? langText('You affirm this sense', '您已肯定此義項')
         : langText('Affirm this sense', '肯定此義項'))
     : langText('Sign in to affirm', '登入後可肯定');
+  const disputeTitle = isAuthed
+    ? (disputedByMe
+        ? langText('You have disputed this sense', '您已對此義項提出質疑')
+        : langText('Dispute this sense', '對此義項提出質疑'))
+    : langText('Sign in to dispute', '登入後可質疑');
+
+  // Dispute button navigates to the composer page — not a toggle.
+  // Disputes are heavy (fields + rationale), never a one-click commit.
+  const disputeHref = isAuthed ? `/disputations/create?senseId=${sense.id}` : '/login';
+  const disputeBtn = `<a href="${disputeHref}"
+    class="wd-signal-btn wd-dispute-btn${disputedByMe ? ' disputed' : ''}${isAuthed ? '' : ' guest'}"
+    data-sense-id="${sense.id}"
+    title="${disputeTitle}">👎</a>`;
+
+  const scoresPanel = `<div class="wd-signal-scores" data-sense-id="${sense.id}"
+    title="${disputeCount} dispute${disputeCount === 1 ? '' : 's'} · ${affirmCount} affirmation${affirmCount === 1 ? '' : 's'}">
+    <span class="wd-score-dispute">${disputeCount}</span><span class="wd-score-dot">·</span><span class="wd-score-affirm">${affirmCount}</span>
+  </div>`;
+
   const affirmBtn = `<button type="button"
-    class="wd-affirm-btn${affirmedByMe ? ' affirmed' : ''}${isAuthed ? '' : ' guest'}"
+    class="wd-signal-btn wd-affirm-btn${affirmedByMe ? ' affirmed' : ''}${isAuthed ? '' : ' guest'}"
     data-sense-id="${sense.id}"
     ${isAuthed ? `onclick="wdToggleAffirm(${sense.id}, this)"` : 'onclick="window.location.href=\'/login\'"'}
-    title="${affirmTitle}">
-    <span class="wd-affirm-icon">👍</span><span class="wd-affirm-count">${affirmCount}</span>
-  </button>`;
+    title="${affirmTitle}">👍</button>`;
 
   parts.push(`<div class="wd-sense-stripe-row">
     <div class="wd-sense-stripe">${idx + 1} of ${totalSenses}</div>
-    ${affirmBtn}
+    ${disputeBtn}${scoresPanel}${affirmBtn}
   </div>`);
 
   // Flat domain display at sense level

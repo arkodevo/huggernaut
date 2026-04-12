@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\ChineseNameController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\LearnerDashboardController;
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\DisputationController;
 use App\Http\Controllers\MyActivityController;
 use App\Http\Controllers\MyWordsController;
 use App\Http\Controllers\MyWritingsController;
@@ -70,6 +71,10 @@ Route::get('/my-writings', [MyWritingsController::class, 'index'])->name('my-wri
 Route::patch('/my-writings/{id}/visibility', [MyWritingsController::class, 'toggleVisibility'])->middleware('auth')->name('my-writings.visibility');
 Route::get('/my-activity', [MyActivityController::class, 'index'])->name('my-activity')->middleware('auth');
 Route::get('/community', [CommunityController::class, 'index'])->name('community')->middleware('auth');
+
+// Disputations — composer page + form submit (DELETE lives under /api)
+Route::get('/disputations/create', [DisputationController::class, 'create'])->name('disputations.create')->middleware('auth');
+Route::post('/disputations', [DisputationController::class, 'store'])->name('disputations.store')->middleware('auth');
 Route::get('/my-words/test/{collection}', [CollectionTestController::class, 'show'])->name('my-words.test')->middleware('auth');
 Route::get('/profile', [ProfileController::class, 'show'])->name('profile')->middleware('auth');
 Route::patch('/profile/pll-name', [ProfileController::class, 'updatePllName'])->middleware('auth');
@@ -105,6 +110,9 @@ Route::middleware('auth')->prefix('api')->group(function () {
 
     // Affirmations (Community Phase B Step 1)
     Route::post('/affirmations/{senseId}', [AffirmationController::class, 'toggle']);
+
+    // Disputations delete (Phase B #3) — learner removes their own pending dispute
+    Route::delete('/disputations/{id}', [DisputationController::class, 'destroy']);
 
     // Fluency level (profile setting for 師父)
     Route::put('/user/fluency-level', [WorkshopController::class, 'updateFluencyLevel']);

@@ -166,6 +166,68 @@ details[open] .com-fb-summary::before { content: '▾ '; }
 }
 .ex-sent-cn .highlight { color: var(--accent); font-weight: 600; }
 
+/* ── DISPUTATIONS LIST ── */
+.com-disp-list { display: flex; flex-direction: column; gap: 0.7rem; }
+.com-disp-row {
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  transition: border-color 0.12s;
+}
+.com-disp-row:hover { border-color: rgba(184, 48, 80, 0.3); }
+.com-disp-head {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  flex-wrap: wrap; margin-bottom: 0.5rem;
+}
+.com-disp-char {
+  font-family: 'Noto Serif TC', serif; font-size: 1.45rem;
+  color: var(--ink); text-decoration: none;
+  line-height: 1;
+}
+.com-disp-char:hover { color: var(--accent); }
+.com-disp-meta {
+  font-family: 'DM Mono', monospace; font-size: 0.68rem;
+  color: var(--dim); letter-spacing: 0.03em;
+}
+.com-disp-meta-pos { color: var(--accent); }
+.com-disp-status {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.18rem 0.5rem;
+  border-radius: 2px;
+}
+.com-disp-status.pending       { color: var(--rose); background: rgba(184,48,80,0.08); border: 1px solid rgba(184,48,80,0.22); }
+.com-disp-status.under-review  { color: var(--gold); background: rgba(160,114,10,0.08); border: 1px solid rgba(160,114,10,0.28); }
+.com-disp-status.resolved      { color: var(--jade); background: rgba(26,138,90,0.08); border: 1px solid rgba(26,138,90,0.28); }
+.com-disp-def {
+  font-family: 'Cormorant Garamond', serif; font-size: 0.92rem;
+  color: var(--dim); font-style: italic;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed rgba(0,0,0,0.08);
+}
+.com-disp-rationale {
+  font-family: 'Cormorant Garamond', serif; font-size: 0.98rem;
+  color: var(--ink); line-height: 1.55;
+  margin-bottom: 0.5rem;
+  white-space: pre-wrap;
+}
+.com-disp-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: var(--dim);
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.com-disp-author .com-author-name { color: var(--ink); }
+.com-disp-author.anon .com-author-name { color: var(--dim); font-style: italic; }
+.com-disp-fieldcount {
+  color: var(--rose);
+  font-weight: 600;
+}
+
 /* ── MOST-AFFIRMED LEADERBOARD ── */
 .com-lead-intro {
   font-family: 'Cormorant Garamond', serif; font-size: 0.95rem;
@@ -381,12 +443,64 @@ details[open] .com-fb-summary::before { content: '▾ '; }
       @endif
 
     @elseif ($tab === 'disputations')
-      <div class="com-coming-soon">
-        <div class="cs-label">COMING SOON</div>
-        <div class="cs-body">
-          When learners dispute a word sense, their rationale — and 三人行's verdict once adjudicated — will appear here. Disputations are the community's editorial voice; every resolved dispute shapes the Word Object.
+      @if (! $disputations || $disputations->total() === 0)
+        <div class="com-empty">
+          No disputations yet. When a learner flags a sense's field for review, it lands here with their rationale and status.
         </div>
-      </div>
+      @else
+        <div class="com-count">{{ $disputations->total() }} {{ $disputations->total() === 1 ? 'disputation' : 'disputations' }}</div>
+        <div class="com-disp-list">
+          @foreach ($disputations as $d)
+            <div class="com-disp-row">
+              <div class="com-disp-head">
+                <a class="com-disp-char" href="{{ route('lexicon.show', $d['smartId']) }}">{{ $d['traditional'] }}</a>
+                <div>
+                  @if ($d['pinyin']) <span class="com-disp-meta">{{ $d['pinyin'] }}</span> @endif
+                  @if ($d['posAbbr']) <span class="com-disp-meta com-disp-meta-pos">· {{ $d['posAbbr'] }}</span> @endif
+                </div>
+                <span class="com-disp-status {{ str_replace('_', '-', $d['status']) }}">
+                  {{ str_replace('_', ' ', $d['status']) }}@if ($d['status'] === 'resolved' && $d['verdict']) · {{ str_replace('_', ' ', $d['verdict']) }}@endif
+                </span>
+              </div>
+              @if ($d['definition'])
+                <div class="com-disp-def">{{ $d['definition'] }}</div>
+              @endif
+              <div class="com-disp-rationale">{{ $d['rationale'] }}</div>
+              <div class="com-disp-foot">
+                <span class="com-disp-author {{ $d['isAnonymous'] ? 'anon' : '' }}">
+                  by <span class="com-author-name">{{ $d['author'] }}</span>
+                </span>
+                <span>
+                  <span class="com-disp-fieldcount">{{ $d['fieldCount'] }} {{ $d['fieldCount'] === 1 ? 'field' : 'fields' }}</span>
+                  · {{ $d['created_at'] }}
+                </span>
+              </div>
+            </div>
+          @endforeach
+        </div>
+
+        @if ($disputations->hasPages())
+          <div class="com-pagination">
+            @if ($disputations->onFirstPage())
+              <span class="disabled">&larr; Previous</span>
+            @else
+              <a href="{{ $disputations->previousPageUrl() }}">&larr; Previous</a>
+            @endif
+            @foreach ($disputations->getUrlRange(1, $disputations->lastPage()) as $page => $url)
+              @if ($page == $disputations->currentPage())
+                <span class="current">{{ $page }}</span>
+              @else
+                <a href="{{ $url }}">{{ $page }}</a>
+              @endif
+            @endforeach
+            @if ($disputations->hasMorePages())
+              <a href="{{ $disputations->nextPageUrl() }}">Next &rarr;</a>
+            @else
+              <span class="disabled">Next &rarr;</span>
+            @endif
+          </div>
+        @endif
+      @endif
 
     @else {{-- affirmations: most-trusted senses leaderboard --}}
       @if (empty($affirmations))

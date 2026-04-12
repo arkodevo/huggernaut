@@ -734,24 +734,46 @@ class ExploreController extends Controller
             ];
         })->values()->all();
 
-        // ── Affirmations (Community Phase B Step 1) ─────────────────────────
-        // Inject per-sense affirmation count + whether the current user affirms.
+        // ── Community signals (Phase B) ───────────────────────────────────────
+        // Inject per-sense affirm + dispute counts + whether the current user
+        // has already cast each signal. Aggregated in a handful of grouped
+        // queries, never per-sense, so the LWP stays cheap regardless of how
+        // heavily a sense has been engaged with.
         $senseIds = array_column($shapedSenses, 'id');
         $affirmCounts = \DB::table('affirmations')
             ->whereIn('word_sense_id', $senseIds)
             ->select('word_sense_id', \DB::raw('COUNT(*) as c'))
             ->groupBy('word_sense_id')
             ->pluck('c', 'word_sense_id');
-        $affirmedByMe = \Illuminate\Support\Facades\Auth::check()
+        // Dispute counts include pending + under_review only. Resolved disputes
+        // are archival — they shouldn't pad the LWP "live dispute" count.
+        $disputeCounts = \DB::table('disputations')
+            ->whereIn('word_sense_id', $senseIds)
+            ->whereIn('status', ['pending', 'under_review'])
+            ->select('word_sense_id', \DB::raw('COUNT(*) as c'))
+            ->groupBy('word_sense_id')
+            ->pluck('c', 'word_sense_id');
+        $isAuthed     = \Illuminate\Support\Facades\Auth::check();
+        $affirmedByMe = $isAuthed
             ? \DB::table('affirmations')
                 ->where('user_id', \Illuminate\Support\Facades\Auth::id())
                 ->whereIn('word_sense_id', $senseIds)
                 ->pluck('word_sense_id')
                 ->flip()
             : collect();
+        $disputedByMe = $isAuthed
+            ? \DB::table('disputations')
+                ->where('user_id', \Illuminate\Support\Facades\Auth::id())
+                ->whereIn('word_sense_id', $senseIds)
+                ->whereIn('status', ['pending', 'under_review'])
+                ->pluck('word_sense_id')
+                ->flip()
+            : collect();
         foreach ($shapedSenses as &$s) {
-            $s['affirmCount']   = (int) ($affirmCounts[$s['id']] ?? 0);
-            $s['affirmedByMe']  = $affirmedByMe->has($s['id']);
+            $s['affirmCount']  = (int) ($affirmCounts[$s['id']] ?? 0);
+            $s['affirmedByMe'] = $affirmedByMe->has($s['id']);
+            $s['disputeCount'] = (int) ($disputeCounts[$s['id']] ?? 0);
+            $s['disputedByMe'] = $disputedByMe->has($s['id']);
         }
         unset($s);
 

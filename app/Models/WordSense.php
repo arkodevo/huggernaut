@@ -172,6 +172,11 @@ class WordSense extends Model
         return $this->hasMany(Affirmation::class);
     }
 
+    public function disputations(): HasMany
+    {
+        return $this->hasMany(Disputation::class);
+    }
+
     // ── Grammar patterns (bidirectional link) ─────────────────────────────────
 
     public function grammarPatterns(): BelongsToMany

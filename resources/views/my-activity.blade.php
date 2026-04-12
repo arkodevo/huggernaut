@@ -76,6 +76,81 @@
   max-width: 360px; margin: 0 auto; line-height: 1.6;
 }
 
+/* ── DISPUTATION LIST ── */
+.mact-disp-list { display: flex; flex-direction: column; gap: 0.7rem; }
+.mact-disp-row {
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  transition: border-color 0.12s;
+}
+.mact-disp-row:hover { border-color: rgba(184, 48, 80, 0.3); }
+.mact-disp-head {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  flex-wrap: wrap; margin-bottom: 0.4rem;
+}
+.mact-disp-char {
+  font-family: 'Noto Serif TC', serif; font-size: 1.4rem;
+  color: var(--ink); text-decoration: none;
+  line-height: 1;
+}
+.mact-disp-char:hover { color: var(--accent); }
+.mact-disp-meta {
+  font-family: 'DM Mono', monospace; font-size: 0.68rem;
+  color: var(--dim); letter-spacing: 0.03em;
+}
+.mact-disp-meta-pos { color: var(--accent); }
+.mact-disp-status {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.18rem 0.5rem;
+  border-radius: 2px;
+}
+.mact-disp-status.pending       { color: var(--rose); background: rgba(184,48,80,0.08); border: 1px solid rgba(184,48,80,0.22); }
+.mact-disp-status.under-review  { color: var(--gold); background: rgba(160,114,10,0.08); border: 1px solid rgba(160,114,10,0.28); }
+.mact-disp-status.resolved      { color: var(--jade); background: rgba(26,138,90,0.08); border: 1px solid rgba(26,138,90,0.28); }
+.mact-disp-fields {
+  display: flex; flex-wrap: wrap; gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+.mact-disp-field-chip {
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.04em;
+  color: var(--rose);
+  background: rgba(184,48,80,0.06);
+  border: 1px solid rgba(184,48,80,0.22);
+  border-radius: 2px;
+  padding: 0.12rem 0.45rem;
+}
+.mact-disp-rationale {
+  font-family: 'Cormorant Garamond', serif; font-size: 0.95rem;
+  color: var(--ink); line-height: 1.55;
+  margin-bottom: 0.55rem;
+  white-space: pre-wrap;
+}
+.mact-disp-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: var(--dim);
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.mact-disp-date { opacity: 0.8; }
+.mact-disp-anon-tag {
+  font-size: 0.55rem; color: var(--dim);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-left: 0.4rem; opacity: 0.6;
+}
+.mact-disp-delete {
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  color: var(--dim); background: none; border: none;
+  cursor: pointer; padding: 0.18rem 0.4rem;
+  transition: color 0.15s;
+}
+.mact-disp-delete:hover { color: var(--rose); }
+
 /* ── AFFIRMATION LIST ── */
 .mact-aff-list { display: flex; flex-direction: column; gap: 0.5rem; }
 .mact-aff-row {
@@ -145,12 +220,68 @@
         Your writings live at <a href="{{ route('my-writings') }}">My Writings</a> — open any one to manage its community visibility with the 🌐 / 🔒 chip.
       </div>
     @elseif ($tab === 'disputations')
-      <div class="mact-coming-soon">
-        <div class="cs-label">COMING SOON</div>
-        <div class="cs-body">
-          When you dispute a word sense, it will appear here with its status — pending, under review by 三人行, or resolved — along with the verdict and rationale.
+      @if (empty($disputations))
+        <div class="mact-empty">
+          No disputations yet. Tap 👎 on any sense in the lexicon to flag a field for review.
         </div>
-      </div>
+      @else
+        <div class="mact-disp-list">
+          @foreach ($disputations as $d)
+            <div class="mact-disp-row" id="mact-disp-{{ $d['id'] }}">
+              <div class="mact-disp-head">
+                <a class="mact-disp-char" href="{{ route('lexicon.show', $d['smartId']) }}">{{ $d['traditional'] }}</a>
+                <div>
+                  @if ($d['pinyin']) <span class="mact-disp-meta">{{ $d['pinyin'] }}</span> @endif
+                  @if ($d['pos']) <span class="mact-disp-meta mact-disp-meta-pos">· {{ $d['pos'] }}</span> @endif
+                </div>
+                <span class="mact-disp-status {{ str_replace('_', '-', $d['status']) }}">
+                  {{ str_replace('_', ' ', $d['status']) }}@if ($d['status'] === 'resolved' && $d['verdict']) · {{ str_replace('_', ' ', $d['verdict']) }}@endif
+                </span>
+              </div>
+              @if (count($d['fields']))
+                <div class="mact-disp-fields">
+                  @foreach ($d['fields'] as $f)
+                    <span class="mact-disp-field-chip">{{ str_replace(['attribute:', 'domain:', 'example:', '_'], ['', '', 'ex ', ' '], $f) }}</span>
+                  @endforeach
+                </div>
+              @endif
+              <div class="mact-disp-rationale">{{ $d['rationale'] }}</div>
+              <div class="mact-disp-foot">
+                <span>
+                  <span class="mact-disp-date">{{ $d['createdAt']->diffForHumans() }}</span>
+                  @if ($d['isAnonymous'])
+                    <span class="mact-disp-anon-tag">anonymous to others</span>
+                  @endif
+                </span>
+                @if ($d['canDelete'])
+                  <button class="mact-disp-delete" onclick="mactDeleteDispute({{ $d['id'] }})">✕ withdraw</button>
+                @endif
+              </div>
+            </div>
+          @endforeach
+        </div>
+
+        <script>
+        function mactDeleteDispute(id) {
+          if (!confirm('Withdraw this disputation? This cannot be undone.')) return;
+          fetch('/api/disputations/' + id, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+              'Accept': 'application/json'
+            }
+          }).then(r => r.ok ? r.json() : Promise.reject(r))
+            .then(data => {
+              if (data.ok) {
+                const el = document.getElementById('mact-disp-' + id);
+                if (el) { el.style.transition = 'opacity 0.2s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 250); }
+              } else {
+                alert(data.message || 'Could not withdraw this disputation.');
+              }
+            }).catch(() => alert('Network error; please try again.'));
+        }
+        </script>
+      @endif
     @else
       @if (empty($affirmations))
         <div class="mact-empty">

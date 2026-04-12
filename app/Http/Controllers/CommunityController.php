@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Affirmation;
+use App\Models\Disputation;
 use App\Models\UserSavedExample;
 use App\Models\WordSense;
 use Illuminate\Http\Request;
@@ -26,19 +27,71 @@ class CommunityController extends Controller
 
         $writings     = null;
         $affirmations = [];
+        $disputations = null;
 
         if ($tab === 'writings') {
             $writings = $this->loadPublicWritings();
         } elseif ($tab === 'affirmations') {
             $affirmations = $this->loadMostAffirmedSenses();
+        } elseif ($tab === 'disputations') {
+            $disputations = $this->loadCommunityDisputations();
         }
 
         return view('community', [
             'tab'          => $tab,
             'writings'     => $writings,
             'affirmations' => $affirmations,
+            'disputations' => $disputations,
             'authUser'     => (new ExploreController())->authUserPayload(),
         ]);
+    }
+
+    /**
+     * Paginated cross-learner feed of disputations. Each row respects the
+     * per-row is_anonymous snapshot when rendering the author — flipping
+     * profile settings after the fact does NOT retroactively unmask past
+     * disputes. Shape carries enough context for the community view to
+     * show sense, field-count, rationale excerpt, and status badge.
+     */
+    private function loadCommunityDisputations()
+    {
+        $paginated = Disputation::with([
+                'user',
+                'wordSense' => fn ($q) => $q->with([
+                    'wordObject',
+                    'pronunciation',
+                    'definitions' => fn ($q) => $q
+                        ->where('language_id', 1)
+                        ->orderBy('sort_order')
+                        ->with('posLabel'),
+                ]),
+            ])
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        return $paginated->through(function ($d) {
+            $ws  = $d->wordSense;
+            $wo  = $ws?->wordObject;
+            $def = $ws?->definitions->first();
+
+            return [
+                'id'            => $d->id,
+                'author'        => $d->displayAuthor(),
+                'isAnonymous'   => $d->is_anonymous,
+                'traditional'   => $wo?->traditional ?? '',
+                'smartId'       => $wo?->smart_id ?? '',
+                'pinyin'        => $ws?->pronunciation?->pronunciation_text ?? '',
+                'posAbbr'       => ExploreController::POS_DISPLAY_ABBR[$def?->posLabel?->slug ?? '']
+                                   ?? ($def?->posLabel?->slug ?? ''),
+                'definition'    => $def?->definition_text ?? '',
+                'fieldCount'    => count($d->fields_disputed ?? []),
+                'rationale'     => $d->rationale,
+                'status'        => $d->status,
+                'verdict'       => $d->verdict,
+                'created_at'    => $d->created_at->diffForHumans(),
+            ];
+        });
     }
 
     /**
