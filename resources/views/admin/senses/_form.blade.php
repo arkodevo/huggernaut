@@ -196,72 +196,68 @@
         </div>
     </div>
 
-    {{-- ── Bilingual Notes (per coverage language) ────────────────────── --}}
+    {{-- ── Bilingual Notes (dynamic note types) ────────────────────── --}}
     @php
         $coverageLangs = \App\Models\Language::where('has_notes_coverage', true)->orderBy('id')->get();
-        $existingNotes = $sense
-            ? \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->get()->keyBy('language_id')
-            : collect();
+        $noteTypes = \DB::table('note_types')->orderBy('sort_order')->get();
+
+        // Build existing notes lookup: note_slug => lang_id => content
+        $existingNotes = collect();
+        if ($sense) {
+            $existingNotes = \DB::table('word_sense_notes')
+                ->join('note_types', 'word_sense_notes.note_type_id', '=', 'note_types.id')
+                ->where('word_sense_notes.word_sense_id', $sense->id)
+                ->select('note_types.slug', 'word_sense_notes.language_id', 'word_sense_notes.content')
+                ->get()
+                ->groupBy('slug')
+                ->map(fn ($rows) => $rows->pluck('content', 'language_id'));
+        }
+
+        // Per-slug styling for the collapsible sections
+        $noteTypeStyles = [
+            'formula'       => ['border' => 'border-gray-200', 'bg' => 'bg-gray-50',  'headerBorder' => 'border-gray-200', 'title' => 'text-gray-900', 'badge' => 'text-gray-400', 'input' => 'input'],
+            'usage_note'    => ['border' => 'border-amber-200', 'bg' => 'bg-amber-50', 'headerBorder' => 'border-amber-200', 'title' => 'text-amber-800', 'badge' => 'text-amber-500', 'input' => 'textarea'],
+            'learner_traps' => ['border' => 'border-red-200',   'bg' => 'bg-red-50',   'headerBorder' => 'border-red-200',   'title' => 'text-red-800',   'badge' => 'text-red-400',   'input' => 'textarea'],
+        ];
+        $defaultStyle = ['border' => 'border-gray-200', 'bg' => 'bg-gray-50', 'headerBorder' => 'border-gray-200', 'title' => 'text-gray-900', 'badge' => 'text-gray-400', 'input' => 'textarea'];
     @endphp
 
-    {{-- Formula --}}
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <details open>
-            <summary class="px-5 py-3 bg-gray-50 border-b border-gray-200 cursor-pointer">
-                <span class="text-sm font-semibold text-gray-900">Formula</span>
-                <span class="text-xs text-gray-400 ml-2">{{ $coverageLangs->pluck('code')->implode(' + ') }}</span>
-            </summary>
-            <div class="p-5 space-y-3">
-                @foreach ($coverageLangs as $cl)
-                    <div>
-                        <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($cl->code) }} · {{ $cl->name }}</label>
-                        <input name="notes[{{ $cl->id }}][formula]"
-                               value="{{ old("notes.{$cl->id}.formula", $existingNotes->get($cl->id)?->formula ?? '') }}"
-                               class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                               placeholder="[S] + 行 + [O]">
-                    </div>
-                @endforeach
-            </div>
-        </details>
-    </div>
-
-    {{-- Usage Note --}}
-    <div class="bg-white rounded-xl border border-amber-200 overflow-hidden">
-        <details open>
-            <summary class="px-5 py-3 bg-amber-50 border-b border-amber-200 cursor-pointer">
-                <span class="text-sm font-semibold text-amber-800">Usage Note</span>
-                <span class="text-xs text-amber-500 ml-2">{{ $coverageLangs->pluck('code')->implode(' + ') }}</span>
-            </summary>
-            <div class="p-5 space-y-3">
-                @foreach ($coverageLangs as $cl)
-                    <div>
-                        <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($cl->code) }} · {{ $cl->name }}</label>
-                        <textarea name="notes[{{ $cl->id }}][usage_note]" rows="2"
-                                  class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old("notes.{$cl->id}.usage_note", $existingNotes->get($cl->id)?->usage_note ?? '') }}</textarea>
-                    </div>
-                @endforeach
-            </div>
-        </details>
-    </div>
-
-    {{-- Learner Traps --}}
-    <div class="bg-white rounded-xl border border-red-200 overflow-hidden">
-        <details open>
-            <summary class="px-5 py-3 bg-red-50 border-b border-red-200 cursor-pointer">
-                <span class="text-sm font-semibold text-red-800">Learner Traps</span>
-                <span class="text-xs text-red-400 ml-2">{{ $coverageLangs->pluck('code')->implode(' + ') }}</span>
-            </summary>
-            <div class="p-5 space-y-3">
-                @foreach ($coverageLangs as $cl)
-                    <div>
-                        <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($cl->code) }} · {{ $cl->name }}</label>
-                        <textarea name="notes[{{ $cl->id }}][learner_traps]" rows="2"
-                                  class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old("notes.{$cl->id}.learner_traps", $existingNotes->get($cl->id)?->learner_traps ?? '') }}</textarea>
-                    </div>
-                @endforeach
-            </div>
-        </details>
-    </div>
+    @foreach ($noteTypes as $nt)
+        @php
+            $ntLabel = \DB::table('note_type_labels')->where('note_type_id', $nt->id)->where('language_id', 1)->value('label')
+                       ?? str_replace('_', ' ', ucfirst($nt->slug));
+            $style = $noteTypeStyles[$nt->slug] ?? $defaultStyle;
+            $isInput = ($style['input'] === 'input');
+        @endphp
+        <div class="bg-white rounded-xl {{ $style['border'] }} overflow-hidden">
+            <details open>
+                <summary class="px-5 py-3 {{ $style['bg'] }} border-b {{ $style['headerBorder'] }} cursor-pointer">
+                    <span class="text-sm font-semibold {{ $style['title'] }}">{{ $ntLabel }}</span>
+                    <span class="text-xs {{ $style['badge'] }} ml-2">{{ $coverageLangs->pluck('code')->implode(' + ') }}</span>
+                </summary>
+                <div class="p-5 space-y-3">
+                    @foreach ($coverageLangs as $cl)
+                        @php
+                            $oldKey = "notes.{$cl->id}.{$nt->slug}";
+                            $saved = $existingNotes->get($nt->slug)?->get($cl->id) ?? '';
+                        @endphp
+                        <div>
+                            <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($cl->code) }} · {{ $cl->name }}</label>
+                            @if ($isInput)
+                                <input name="notes[{{ $cl->id }}][{{ $nt->slug }}]"
+                                       value="{{ old($oldKey, $saved) }}"
+                                       class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                       placeholder="[S] + ... + [O]">
+                            @else
+                                <textarea name="notes[{{ $cl->id }}][{{ $nt->slug }}]" rows="2"
+                                          class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old($oldKey, $saved) }}</textarea>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </details>
+        </div>
+    @endforeach
 
     {{-- ── Definitions (Alpine.js dynamic rows) ────────────────────── --}}
     @php

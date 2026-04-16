@@ -109,6 +109,13 @@ class WordSense extends Model
         return $this->hasMany(WordSenseExample::class);
     }
 
+    // ── Notes (bilingual, per note_type) ─────────────────────────────────────
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(WordSenseNote::class);
+    }
+
     // ── Multi-select designations (register, dimension) ───────────────────────
 
     public function designations(): BelongsToMany

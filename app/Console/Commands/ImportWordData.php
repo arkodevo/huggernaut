@@ -218,6 +218,7 @@ class ImportWordData extends Command
                 DB::table('word_sense_designations')->whereIn('word_sense_id', $existingSenseIds)->delete();
                 DB::table('word_sense_domains')->whereIn('word_sense_id', $existingSenseIds)->delete();
                 DB::table('word_sense_pos')->whereIn('word_sense_id', $existingSenseIds)->delete();
+                DB::table('word_sense_notes')->whereIn('word_sense_id', $existingSenseIds)->delete();
                 WordSense::whereIn('id', $existingSenseIds)->delete();
             }
 
@@ -360,5 +361,101 @@ class ImportWordData extends Command
                 'is_suppressed' => false,
             ]);
         }
+
+        // Bilingual notes (word_sense_notes)
+        $this->syncNotes($sense, $s);
+    }
+
+    /**
+     * Write per-language notes to word_sense_notes (normalized: one row per note type).
+     * Supports bilingual fields (formula_en/_zh, usage_note_en/_zh, learner_traps_en/_zh)
+     * with fallback to single fields via CJK detection.
+     * Also derives canonical values on word_senses (ZH-preferred, EN fallback).
+     */
+    private function syncNotes(WordSense $sense, array $s): void
+    {
+        $now = now();
+
+        // note_type slug → JSONL field mapping
+        $noteFieldMap = [
+            'formula'       => ['en' => 'formula_en',       'zh' => 'formula_zh',       'single' => 'formula'],
+            'usage-note'    => ['en' => 'usage_note_en',    'zh' => 'usage_note_zh',    'single' => 'usage_note'],
+            'learner-traps' => ['en' => 'learner_traps_en', 'zh' => 'learner_traps_zh', 'single' => 'learner_traps'],
+        ];
+
+        // Resolve note_type IDs (cached on class)
+        if (! isset($this->noteTypeIds)) {
+            $this->noteTypeIds = \App\Models\NoteType::all()->pluck('id', 'slug')->all();
+        }
+
+        $canonicalFormula = null;
+        $canonicalUsage   = null;
+        $canonicalTraps   = null;
+
+        foreach ($noteFieldMap as $typeSlug => $fields) {
+            $typeId = $this->noteTypeIds[$typeSlug] ?? null;
+            if (! $typeId) continue;
+
+            // Resolve EN content
+            $enContent = trim($s[$fields['en']] ?? '') ?: null;
+
+            // Resolve ZH content
+            $zhContent = trim($s[$fields['zh']] ?? '') ?: null;
+
+            // Fallback: single field with CJK detection
+            $singleValue = trim($s[$fields['single']] ?? '') ?: null;
+            if ($singleValue) {
+                if ($this->isCjk($singleValue)) {
+                    $zhContent = $zhContent ?? $singleValue;
+                } else {
+                    $enContent = $enContent ?? $singleValue;
+                }
+            }
+
+            // Write EN note
+            if ($enContent) {
+                $this->writeNoteRow($sense->id, $this->langEn, $typeId, $enContent, $now);
+            }
+
+            // Write ZH note
+            if ($zhContent) {
+                $this->writeNoteRow($sense->id, $this->langZh, $typeId, $zhContent, $now);
+            }
+
+            // Derive canonical (ZH-preferred, EN fallback)
+            $canonical = $zhContent ?? $enContent;
+            if ($typeSlug === 'formula')       $canonicalFormula = $canonical;
+            if ($typeSlug === 'usage-note')    $canonicalUsage   = $canonical;
+            if ($typeSlug === 'learner-traps') $canonicalTraps   = $canonical;
+        }
+
+        // Write canonical on word_senses
+        $sense->updateQuietly([
+            'formula'       => $canonicalFormula,
+            'usage_note'    => $canonicalUsage,
+            'learner_traps' => $canonicalTraps,
+        ]);
+    }
+
+    private function writeNoteRow(int $senseId, int $langId, int $typeId, string $content, $now): void
+    {
+        DB::table('word_sense_notes')->updateOrInsert(
+            ['word_sense_id' => $senseId, 'language_id' => $langId, 'note_type_id' => $typeId],
+            [
+                'content'    => $content,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        );
+    }
+
+    /**
+     * Detect if a string is predominantly CJK (Chinese/Japanese/Korean).
+     */
+    private function isCjk(string $text): bool
+    {
+        $cjkCount = preg_match_all('/[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}\x{f900}-\x{faff}]/u', $text);
+        $totalChars = mb_strlen(preg_replace('/\s+/', '', $text));
+        return $totalChars > 0 && ($cjkCount / $totalChars) > 0.3;
     }
 }

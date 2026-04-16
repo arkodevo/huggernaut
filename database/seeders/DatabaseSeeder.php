@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PosLabelSeeder::class,
             PosGroupSeeder::class,           // simplified display groups (must follow PosLabelSeeder)
             SenseRelationTypeSeeder::class,
+            NoteTypeSeeder::class,           // formula, usage-note, learner-traps
             TaxonomySeeder::class,           // categories → attributes → designations + labels
             DomainSeeder::class,             // 11 domain groups + 41 domain designations
             DefaultIconThemeSeeder::class,   // Nature emoji theme; depends on taxonomy

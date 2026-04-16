@@ -229,6 +229,12 @@ function wsGetPersonaOverlay() {
   return p ? '\n\nFEEDBACK STYLE PERSONA:\n' + p.prompt + '\n' : '';
 }
 
+// ── NOTE LOOKUP (for AI prompts — new array shape) ──────────────────────────
+function wsNoteLookup(word, lang, slug) {
+  const arr = word.notes?.[lang] || (word.senses && word.senses[0]?.notes?.[lang]) || [];
+  return (Array.isArray(arr) ? arr : []).find(n => n.slug === slug)?.content || '';
+}
+
 // ── SYSTEM PROMPTS ───────────────────────────────────────────────────────────
 function wsGetCritiquePrompt(word, intendedPOS, fluencyLevel) {
   const posLine = intendedPOS
@@ -236,11 +242,10 @@ function wsGetCritiquePrompt(word, intendedPOS, fluencyLevel) {
     : '- Intended POS: not specified';
   const levelInfo = WS_LEVELS.find(l => l.slug === fluencyLevel);
   const levelLabel = levelInfo ? `${levelInfo.en} (${levelInfo.zh})` : fluencyLevel;
-  // Resolve bilingual notes for context
-  const notes = word.notes || (word.senses && word.senses[0]?.notes) || { en: {}, zh: {} };
-  const usageNote = notes.en?.usageNote || notes.zh?.usageNote || '';
-  const learnerTraps = notes.en?.learnerTraps || '';
-  const formula = word.formula || notes.en?.formula || notes.zh?.formula || '';
+  // Resolve notes for AI prompt context (prefer EN for prompt clarity, no legacy fallbacks)
+  const usageNote = wsNoteLookup(word, 'en', 'usage-note') || wsNoteLookup(word, 'zh', 'usage-note');
+  const learnerTraps = wsNoteLookup(word, 'en', 'learner-traps');
+  const formula = wsNoteLookup(word, 'en', 'formula') || wsNoteLookup(word, 'zh', 'formula');
   const definition = (typeof word.definition === 'object')
     ? (word.definition.en || word.definition.zh || '')
     : (word.definition || '');
@@ -357,7 +362,7 @@ Word metadata:
 - Connotation: ${word.connotation || 'n/a'}
 - Channel: ${word.channel || 'n/a'}
 - HSK Level: ${word.level || 'n/a'}
-- Syntactic formula: ${word.formula || 'n/a'}
+- Syntactic formula: ${wsNoteLookup(word, 'en', 'formula') || wsNoteLookup(word, 'zh', 'formula') || 'n/a'}
 
 Rules:
 - Use Traditional Chinese characters throughout

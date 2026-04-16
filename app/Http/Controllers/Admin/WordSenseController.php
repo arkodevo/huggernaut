@@ -10,6 +10,7 @@ use App\Models\WordObject;
 use App\Models\WordSense;
 use App\Models\WordSenseDefinition;
 use App\Models\WordSenseExample;
+use App\Models\NoteType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -218,30 +219,43 @@ class WordSenseController extends Controller
 
         $now = now();
 
+        // Map form field names → note_type slugs
+        $fieldToSlug = [
+            'formula'       => 'formula',
+            'usage_note'    => 'usage-note',
+            'learner_traps' => 'learner-traps',
+        ];
+
+        $noteTypes = NoteType::all()->pluck('id', 'slug'); // slug → id
+
         foreach ($notes as $langId => $fields) {
-            $formula      = trim($fields['formula'] ?? '') ?: null;
-            $usageNote    = trim($fields['usage_note'] ?? '') ?: null;
-            $learnerTraps = trim($fields['learner_traps'] ?? '') ?: null;
+            foreach ($fieldToSlug as $field => $slug) {
+                $noteTypeId = $noteTypes[$slug] ?? null;
+                if (! $noteTypeId) continue;
 
-            $hasContent = $formula || $usageNote || $learnerTraps;
+                $content = trim($fields[$field] ?? '') ?: null;
 
-            if ($hasContent) {
-                DB::table('word_sense_notes')->updateOrInsert(
-                    ['word_sense_id' => $sense->id, 'language_id' => $langId],
-                    [
-                        'formula'       => $formula,
-                        'usage_note'    => $usageNote,
-                        'learner_traps' => $learnerTraps,
-                        'updated_at'    => $now,
-                        'created_at'    => $now,
-                    ]
-                );
-            } else {
-                // All fields blank — remove the row if it exists
-                DB::table('word_sense_notes')
-                    ->where('word_sense_id', $sense->id)
-                    ->where('language_id', $langId)
-                    ->delete();
+                if ($content) {
+                    DB::table('word_sense_notes')->updateOrInsert(
+                        [
+                            'word_sense_id' => $sense->id,
+                            'language_id'   => $langId,
+                            'note_type_id'  => $noteTypeId,
+                        ],
+                        [
+                            'content'    => $content,
+                            'updated_at' => $now,
+                            'created_at' => $now,
+                        ]
+                    );
+                } else {
+                    // Content blank — remove the row if it exists
+                    DB::table('word_sense_notes')
+                        ->where('word_sense_id', $sense->id)
+                        ->where('language_id', $langId)
+                        ->where('note_type_id', $noteTypeId)
+                        ->delete();
+                }
             }
         }
 
@@ -252,17 +266,22 @@ class WordSenseController extends Controller
         $allNotes = DB::table('word_sense_notes')
             ->where('word_sense_id', $sense->id)
             ->whereIn('language_id', array_filter([$zhId, $enId]))
-            ->get()
-            ->keyBy('language_id');
+            ->get();
 
-        $zh = $allNotes->get($zhId);
-        $en = $allNotes->get($enId);
+        // Build lookup: noteTypeId → langId → content
+        $lookup = [];
+        foreach ($allNotes as $row) {
+            $lookup[$row->note_type_id][$row->language_id] = $row->content;
+        }
 
-        $sense->updateQuietly([
-            'formula'       => $zh->formula ?? $en->formula ?? null,
-            'usage_note'    => $zh->usage_note ?? $en->usage_note ?? null,
-            'learner_traps' => $zh->learner_traps ?? $en->learner_traps ?? null,
-        ]);
+        $canonical = [];
+        foreach ($fieldToSlug as $field => $slug) {
+            $typeId = $noteTypes[$slug] ?? null;
+            if (! $typeId) continue;
+            $canonical[$field] = $lookup[$typeId][$zhId] ?? $lookup[$typeId][$enId] ?? null;
+        }
+
+        $sense->updateQuietly($canonical);
     }
 
     private function formDependencies(): array

@@ -899,13 +899,15 @@ function getAllDefs(defs) {
   return [...(defs.en || []), ...(defs.zh || [])];
 }
 
-/** Resolve formula from bilingual notes based on langMode. */
+/** Look up a single note by slug from the new notes array shape. */
+function getNoteBySlug(sense, lang, slug) {
+  return (sense.notes?.[lang] || []).find(n => n.slug === slug)?.content || '';
+}
+
+/** Resolve formula from bilingual notes based on langMode (no fallbacks). */
 function getFormula(sense) {
-  const n = sense.notes || {};
-  const fmlEn = n.en?.formula || '';
-  const fmlZh = n.zh?.formula || '';
-  if (langMode === 'zh') return fmlZh || fmlEn || sense.formula || '';
-  return fmlEn || fmlZh || sense.formula || '';
+  const lang = langMode === 'zh' ? 'zh' : 'en';
+  return getNoteBySlug(sense, lang, 'formula');
 }
 let pinyinMode      = localStorage.getItem('pinyinMode')      || 'on';
 let currentLevel    = localStorage.getItem('currentLevel')    || 'developing';
@@ -1807,17 +1809,6 @@ function renderSense(sense, idx, totalOverride) {
   // Definitions + bilingual notes (formula, usage note)
   const resolvedDefs = getSenseDefs(sense.definitions);
   if (isSectionVisible('definitions') && resolvedDefs.length) {
-    const notes = sense.notes || { en: {}, zh: {} };
-    const fmlEn = notes.en?.formula || '';
-    const fmlZh = notes.zh?.formula || '';
-    const usageEn = notes.en?.usageNote || '';
-    const usageZh = notes.zh?.usageNote || '';
-
-    // Legacy fallback (from old flat definitions array)
-    const allD = getAllDefs(sense.definitions);
-    const legacyFml = allD[0]?.formula || '';
-    const legacyUsage = allD[0]?.usageNote || '';
-
     // Helper: apply simplified script swap to formula
     const fmlSwap = (f) => f && scriptMode === 'simplified' && WORD.traditional !== WORD.simplified
       ? f.replace(new RegExp(WORD.traditional.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), WORD.simplified) : f;
@@ -1831,21 +1822,23 @@ function renderSense(sense, idx, totalOverride) {
 
     let defBlock = `<div class="wd-defs">${defs}`;
 
-    // Formula: always one version — LPL slot labels on Chinese structure. Never stacks.
-    const fml = langMode === 'zh' ? (fmlZh || fmlEn || legacyFml) : (fmlEn || fmlZh || legacyFml);
+    // Formula: always one version — LPL. No fallbacks, no legacy.
+    const fml = getFormula(sense);
     const fmlDisplay = fmlSwap(fml);
     if (fmlDisplay) defBlock += `<div class="card-formula">${segmentedHTML(fmlDisplay, WORD)}</div>`;
 
-    // Usage note: in 'both' mode, show EN + ZH stacked for bilingual engagement
+    // Usage note: no fallbacks, no legacy fields.
+    const usageEn = getNoteBySlug(sense, 'en', 'usage-note');
+    const usageZh = getNoteBySlug(sense, 'zh', 'usage-note');
     if (langMode === 'both') {
-      if (usageEn || usageZh || legacyUsage) {
+      if (usageEn || usageZh) {
         defBlock += `<div class="card-usage-note">`;
-        if (usageEn || legacyUsage) defBlock += `<div>${segmentedHTML(usageEn || legacyUsage, WORD)}</div>`;
+        if (usageEn) defBlock += `<div>${segmentedHTML(usageEn, WORD)}</div>`;
         if (usageZh) defBlock += `<div class="card-usage-note-zh">${segmentedHTML(usageZh, WORD)}</div>`;
         defBlock += `</div>`;
       }
     } else {
-      const usageNote = langMode === 'zh' ? (usageZh || usageEn || legacyUsage) : (usageEn || usageZh || legacyUsage);
+      const usageNote = getNoteBySlug(sense, langMode === 'zh' ? 'zh' : 'en', 'usage-note');
       if (usageNote) defBlock += `<div class="card-usage-note">${segmentedHTML(usageNote, WORD)}</div>`;
     }
 
@@ -1870,29 +1863,22 @@ function renderSense(sense, idx, totalOverride) {
   // Examples now live inside the Writing Conservatory panel (renderWorkshop),
   // so the standalone section is no longer rendered here.
 
-  // Learner Traps (bilingual — pick by langMode)
+  // Learner Traps (bilingual — pick by langMode, no fallbacks)
   if (isSectionVisible('learnerTraps')) {
-    const notes = sense.notes || { en: {}, zh: {} };
-    const trapsEn = notes.en?.learnerTraps || '';
-    const trapsZh = notes.zh?.learnerTraps || '';
-    // Legacy fallback
-    const legacyTraps = sense.learnerTraps || '';
+    const trapsEn = getNoteBySlug(sense, 'en', 'learner-traps');
+    const trapsZh = getNoteBySlug(sense, 'zh', 'learner-traps');
 
     if (langMode === 'both') {
-      // Both mode: EN + ZH stacked
-      const te = trapsEn || legacyTraps;
-      const tz = trapsZh;
-      if (te || tz) {
+      if (trapsEn || trapsZh) {
         let trapsHtml = `<div class="wd-traps">
           <div class="wd-traps-title">${langText('Learner Traps', '學習陷阱')}</div>`;
-        if (te) trapsHtml += `<div class="wd-traps-text">${segmentedHTML(te, WORD)}</div>`;
-        if (tz) trapsHtml += `<div class="wd-traps-text wd-traps-zh">${segmentedHTML(tz, WORD)}</div>`;
+        if (trapsEn) trapsHtml += `<div class="wd-traps-text">${segmentedHTML(trapsEn, WORD)}</div>`;
+        if (trapsZh) trapsHtml += `<div class="wd-traps-text wd-traps-zh">${segmentedHTML(trapsZh, WORD)}</div>`;
         trapsHtml += `</div>`;
         parts.push(trapsHtml);
       }
     } else {
-      // Single language mode
-      let traps = langMode === 'zh' ? (trapsZh || trapsEn || legacyTraps) : (trapsEn || trapsZh || legacyTraps);
+      const traps = getNoteBySlug(sense, langMode === 'zh' ? 'zh' : 'en', 'learner-traps');
       if (traps) {
         parts.push(`<div class="wd-traps">
           <div class="wd-traps-title">${langText('Learner Traps', '學習陷阱')}</div>

@@ -346,11 +346,48 @@
                             </div>
                         @endif
 
-                        {{-- ── Formula / Usage / Traps (bilingual from word_sense_notes) ── --}}
+                        {{-- ── Notes (bilingual, dynamic note types) ── --}}
                         @php
-                            $enNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 1)->first();
-                            $zhNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 2)->first();
-                            $hasNotes = $enNote || $zhNote || $sense->formula || $sense->usage_note || $sense->learner_traps;
+                            $noteRows = \DB::table('word_sense_notes')
+                                ->join('note_types', 'word_sense_notes.note_type_id', '=', 'note_types.id')
+                                ->leftJoin('note_type_labels', function ($j) {
+                                    $j->on('note_type_labels.note_type_id', '=', 'note_types.id')
+                                      ->where('note_type_labels.language_id', 1);
+                                })
+                                ->where('word_sense_notes.word_sense_id', $sense->id)
+                                ->select(
+                                    'word_sense_notes.language_id',
+                                    'word_sense_notes.content',
+                                    'note_types.slug as note_slug',
+                                    'note_types.sort_order',
+                                    'note_type_labels.label as note_label',
+                                )
+                                ->orderBy('note_types.sort_order')
+                                ->get();
+
+                            // Group: slug => [ lang_id => row ]
+                            $notesByType = $noteRows->groupBy('note_slug')->map(fn ($rows) => $rows->keyBy('language_id'));
+                            $hasNotes = $noteRows->isNotEmpty();
+
+                            // Styling per note type slug
+                            $noteStyles = [
+                                'formula'       => 'text-sm font-mono bg-gray-50 rounded px-2.5 py-1.5 border border-gray-200 space-y-0.5',
+                                'usage_note'    => 'text-sm bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5',
+                                'learner_traps' => 'text-sm bg-red-50 border border-red-200 rounded px-2.5 py-1.5',
+                            ];
+                            $noteHeaderStyles = [
+                                'formula'       => '',
+                                'usage_note'    => 'text-xs font-semibold text-amber-600 uppercase tracking-wide',
+                                'learner_traps' => 'text-xs font-semibold text-red-600 uppercase tracking-wide',
+                            ];
+                            $noteTextStyles = [
+                                'usage_note'    => ['text-amber-900 mt-0.5', 'text-amber-800 mt-0.5'],
+                                'learner_traps' => ['text-red-900 mt-0.5', 'text-red-800 mt-0.5'],
+                            ];
+                            $noteDividerStyles = [
+                                'usage_note'    => 'opacity-75 border-t border-dashed border-amber-200 pt-1',
+                                'learner_traps' => 'opacity-75 border-t border-dashed border-red-200 pt-1',
+                            ];
                         @endphp
                         @if ($hasNotes || (isset($sense->valency) && $sense->valency !== null))
                             <div class="space-y-1.5">
@@ -358,52 +395,31 @@
                                     <p class="text-sm text-gray-600"><span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Valency:</span> {{ $valencyMap[$sense->valency] ?? $sense->valency }}</p>
                                 @endif
 
-                                {{-- Formula --}}
-                                @if ($enNote?->formula || $zhNote?->formula || $sense->formula)
-                                    <div class="text-sm font-mono bg-gray-50 rounded px-2.5 py-1.5 border border-gray-200 space-y-0.5">
-                                        @if ($enNote?->formula)
-                                            <p class="text-gray-700"><span class="text-xs font-sans font-semibold text-indigo-500">EN</span> {{ $enNote->formula }}</p>
-                                        @endif
-                                        @if ($zhNote?->formula && $zhNote->formula !== ($enNote?->formula ?? ''))
-                                            <p class="text-gray-500"><span class="text-xs font-sans font-semibold text-indigo-500">ZH</span> {{ $zhNote->formula }}</p>
-                                        @endif
-                                        @if (!$enNote?->formula && !$zhNote?->formula && $sense->formula)
-                                            <p class="text-gray-700">{{ $sense->formula }}</p>
-                                        @endif
-                                    </div>
-                                @endif
-
-                                {{-- Usage Note --}}
-                                @if ($enNote?->usage_note || $zhNote?->usage_note || $sense->usage_note)
-                                    <div class="text-sm bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
-                                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Usage Note</span>
-                                        @if ($enNote?->usage_note)
-                                            <p class="text-amber-900 mt-0.5"><span class="text-xs font-semibold text-indigo-500">EN</span> {{ $enNote->usage_note }}</p>
-                                        @endif
-                                        @if ($zhNote?->usage_note)
-                                            <p class="text-amber-800 mt-0.5 {{ $enNote?->usage_note ? 'opacity-75 border-t border-dashed border-amber-200 pt-1' : '' }}"><span class="text-xs font-semibold text-indigo-500">ZH</span> {{ $zhNote->usage_note }}</p>
-                                        @endif
-                                        @if (!$enNote?->usage_note && !$zhNote?->usage_note && $sense->usage_note)
-                                            <p class="text-amber-900 mt-0.5">{{ $sense->usage_note }}</p>
-                                        @endif
-                                    </div>
-                                @endif
-
-                                {{-- Learner Traps --}}
-                                @if ($enNote?->learner_traps || $zhNote?->learner_traps || $sense->learner_traps)
-                                    <div class="text-sm bg-red-50 border border-red-200 rounded px-2.5 py-1.5">
-                                        <span class="text-xs font-semibold text-red-600 uppercase tracking-wide">Learner Traps</span>
-                                        @if ($enNote?->learner_traps)
-                                            <p class="text-red-900 mt-0.5"><span class="text-xs font-semibold text-indigo-500">EN</span> {{ $enNote->learner_traps }}</p>
-                                        @endif
-                                        @if ($zhNote?->learner_traps)
-                                            <p class="text-red-800 mt-0.5 {{ $enNote?->learner_traps ? 'opacity-75 border-t border-dashed border-red-200 pt-1' : '' }}"><span class="text-xs font-semibold text-indigo-500">ZH</span> {{ $zhNote->learner_traps }}</p>
-                                        @endif
-                                        @if (!$enNote?->learner_traps && !$zhNote?->learner_traps && $sense->learner_traps)
-                                            <p class="text-red-900 mt-0.5">{{ $sense->learner_traps }}</p>
-                                        @endif
-                                    </div>
-                                @endif
+                                @foreach ($notesByType as $slug => $langNotes)
+                                    @php
+                                        $enContent = $langNotes->get(1)?->content;
+                                        $zhContent = $langNotes->get(2)?->content;
+                                        $label = $langNotes->first()->note_label ?? str_replace('_', ' ', ucfirst($slug));
+                                        $wrapClass = $noteStyles[$slug] ?? 'text-sm bg-gray-50 rounded px-2.5 py-1.5 border border-gray-200 space-y-0.5';
+                                        $headerClass = $noteHeaderStyles[$slug] ?? '';
+                                        $textEn = $noteTextStyles[$slug][0] ?? 'text-gray-700';
+                                        $textZh = $noteTextStyles[$slug][1] ?? 'text-gray-500';
+                                        $divider = $noteDividerStyles[$slug] ?? '';
+                                    @endphp
+                                    @if ($enContent || $zhContent)
+                                        <div class="{{ $wrapClass }}">
+                                            @if ($headerClass)
+                                                <span class="{{ $headerClass }}">{{ $label }}</span>
+                                            @endif
+                                            @if ($enContent)
+                                                <p class="{{ $textEn }}"><span class="text-xs font-sans font-semibold text-indigo-500">EN</span> {{ $enContent }}</p>
+                                            @endif
+                                            @if ($zhContent)
+                                                <p class="{{ $textZh }} {{ $enContent && $divider ? $divider : '' }}"><span class="text-xs font-sans font-semibold text-indigo-500">ZH</span> {{ $zhContent }}</p>
+                                            @endif
+                                        </div>
+                                    @endif
+                                @endforeach
                             </div>
                         @endif
 

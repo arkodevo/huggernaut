@@ -13,6 +13,7 @@ use App\Models\WordPronunciation;
 use App\Models\WordSense;
 use App\Models\WordSenseDefinition;
 use App\Models\WordSenseExample;
+use App\Models\NoteType;
 use App\Models\SenseRelationType;
 use App\Services\ShifuWordEnricher;
 use Illuminate\Http\JsonResponse;
@@ -286,25 +287,33 @@ class CsvImportController extends Controller
                             // source, tocfl_level_id, hsk_level_id — NOT touched
                         ]);
 
-                        // Update word_sense_notes (bilingual)
-                        DB::table('word_sense_notes')->updateOrInsert(
-                            ['word_sense_id' => $matchedSense->id, 'language_id' => $langEn],
-                            [
-                                'formula'       => $s['formula_en'] ?? null,
-                                'usage_note'    => $s['usage_note_en'] ?? null,
-                                'learner_traps' => $s['learner_traps_en'] ?? null,
-                                'updated_at'    => now(),
-                            ]
-                        );
-                        DB::table('word_sense_notes')->updateOrInsert(
-                            ['word_sense_id' => $matchedSense->id, 'language_id' => $langZh],
-                            [
-                                'formula'       => $s['formula_zh'] ?? null,
-                                'usage_note'    => $s['usage_note_zh'] ?? null,
-                                'learner_traps' => $s['learner_traps_zh'] ?? null,
-                                'updated_at'    => now(),
-                            ]
-                        );
+                        // Update word_sense_notes (bilingual, normalized)
+                        $noteTypes = NoteType::all()->pluck('id', 'slug');
+                        $noteFieldMap = [
+                            'formula'    => ['en' => $s['formula_en'] ?? null,       'zh' => $s['formula_zh'] ?? null],
+                            'usage-note' => ['en' => $s['usage_note_en'] ?? null,    'zh' => $s['usage_note_zh'] ?? null],
+                            'learner-traps' => ['en' => $s['learner_traps_en'] ?? null, 'zh' => $s['learner_traps_zh'] ?? null],
+                        ];
+
+                        foreach ($noteFieldMap as $slug => $langs) {
+                            $typeId = $noteTypes[$slug] ?? null;
+                            if (! $typeId) continue;
+
+                            foreach ([['id' => $langEn, 'val' => $langs['en']], ['id' => $langZh, 'val' => $langs['zh']]] as $lang) {
+                                if ($lang['val']) {
+                                    DB::table('word_sense_notes')->updateOrInsert(
+                                        ['word_sense_id' => $matchedSense->id, 'language_id' => $lang['id'], 'note_type_id' => $typeId],
+                                        ['content' => $lang['val'], 'updated_at' => now(), 'created_at' => now()]
+                                    );
+                                } else {
+                                    DB::table('word_sense_notes')
+                                        ->where('word_sense_id', $matchedSense->id)
+                                        ->where('language_id', $lang['id'])
+                                        ->where('note_type_id', $typeId)
+                                        ->delete();
+                                }
+                            }
+                        }
 
                         $enriched++;
                     }
@@ -414,15 +423,26 @@ class CsvImportController extends Controller
             if (! $sense->channel_id) $gaps[] = "{$label}: missing channel.";
             if (! $sense->connotation_id) $gaps[] = "{$label}: missing connotation.";
 
-            // Check word_sense_notes for bilingual coverage
-            $enNote = DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 1)->first();
-            $zhNote = DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 2)->first();
+            // Check word_sense_notes for bilingual coverage (normalized)
+            $noteTypes = NoteType::all()->pluck('id', 'slug');
+            $senseNotes = DB::table('word_sense_notes')
+                ->where('word_sense_id', $sense->id)
+                ->whereIn('language_id', [1, 2])
+                ->get();
 
-            if (! $enNote?->formula && ! $zhNote?->formula) $gaps[] = "{$label}: missing formula.";
-            if (! $enNote?->usage_note) $gaps[] = "{$label}: missing EN usage note.";
-            if (! $zhNote?->usage_note) $gaps[] = "{$label}: missing ZH usage note.";
-            if (! $enNote?->learner_traps) $gaps[] = "{$label}: missing EN learner traps.";
-            if (! $zhNote?->learner_traps) $gaps[] = "{$label}: missing ZH learner traps.";
+            // Build lookup: slug → langId → content
+            $slugById = $noteTypes->flip(); // id → slug
+            $noteLookup = [];
+            foreach ($senseNotes as $row) {
+                $slug = $slugById[$row->note_type_id] ?? null;
+                if ($slug) $noteLookup[$slug][$row->language_id] = $row->content;
+            }
+
+            if (! ($noteLookup['formula'][1] ?? null) && ! ($noteLookup['formula'][2] ?? null)) $gaps[] = "{$label}: missing formula.";
+            if (! ($noteLookup['usage-note'][1] ?? null)) $gaps[] = "{$label}: missing EN usage note.";
+            if (! ($noteLookup['usage-note'][2] ?? null)) $gaps[] = "{$label}: missing ZH usage note.";
+            if (! ($noteLookup['learner-traps'][1] ?? null)) $gaps[] = "{$label}: missing EN learner traps.";
+            if (! ($noteLookup['learner-traps'][2] ?? null)) $gaps[] = "{$label}: missing ZH learner traps.";
         }
 
         return $gaps;
@@ -519,32 +539,30 @@ class CsvImportController extends Controller
             ]);
         }
 
-        // Word sense notes (bilingual: EN + ZH)
-        $hasAnyNotes = ($s['formula_en'] ?? null) || ($s['formula_zh'] ?? null)
-            || ($s['usage_note_en'] ?? null) || ($s['usage_note_zh'] ?? null)
-            || ($s['learner_traps_en'] ?? null) || ($s['learner_traps_zh'] ?? null);
+        // Word sense notes (bilingual, normalized: one row per note type per language)
+        $noteTypes = NoteType::all()->pluck('id', 'slug');
+        $noteFieldMap = [
+            'formula'       => ['en' => $s['formula_en'] ?? null,       'zh' => $s['formula_zh'] ?? null],
+            'usage-note'    => ['en' => $s['usage_note_en'] ?? null,    'zh' => $s['usage_note_zh'] ?? null],
+            'learner-traps' => ['en' => $s['learner_traps_en'] ?? null, 'zh' => $s['learner_traps_zh'] ?? null],
+        ];
 
-        if ($hasAnyNotes) {
-            DB::table('word_sense_notes')->updateOrInsert(
-                ['word_sense_id' => $sense->id, 'language_id' => $langEn],
-                [
-                    'formula'      => $s['formula_en'] ?? null,
-                    'usage_note'   => $s['usage_note_en'] ?? null,
-                    'learner_traps' => $s['learner_traps_en'] ?? null,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
-                ]
-            );
-            DB::table('word_sense_notes')->updateOrInsert(
-                ['word_sense_id' => $sense->id, 'language_id' => $langZh],
-                [
-                    'formula'      => $s['formula_zh'] ?? null,
-                    'usage_note'   => $s['usage_note_zh'] ?? null,
-                    'learner_traps' => $s['learner_traps_zh'] ?? null,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
-                ]
-            );
+        foreach ($noteFieldMap as $slug => $langs) {
+            $typeId = $noteTypes[$slug] ?? null;
+            if (! $typeId) continue;
+
+            foreach ([['id' => $langEn, 'val' => $langs['en']], ['id' => $langZh, 'val' => $langs['zh']]] as $lang) {
+                if ($lang['val']) {
+                    DB::table('word_sense_notes')->insert([
+                        'word_sense_id' => $sense->id,
+                        'language_id'   => $lang['id'],
+                        'note_type_id'  => $typeId,
+                        'content'       => $lang['val'],
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ]);
+                }
+            }
         }
 
         if ($posId) {

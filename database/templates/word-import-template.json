@@ -1,7 +1,7 @@
 {
-  "_template_version": "2.1",
-  "_last_updated": "2026-04-07",
-  "_instructions": "One file per word. Each sense must have exactly ONE POS. If a word has multiple POS roles (e.g., Vi and N), create SEPARATE senses. Fields prefixed with _ are documentation -- strip them before import. TOCFL is the authoritative source for POS classification. Editorial corrections are tracked via alignment + source fields.",
+  "_template_version": "2.3",
+  "_last_updated": "2026-04-15",
+  "_instructions": "One file per word. Each sense must have exactly ONE POS. If a word has multiple POS roles (e.g., Vi and N), create SEPARATE senses. Fields prefixed with _ are documentation -- strip them before import. TOCFL is the authoritative source for POS classification. Editorial corrections are tracked via alignment + source fields. ALL note fields (formula, usage_note, learner_traps) MUST use bilingual format: _en and _zh suffixes. Single-field versions are deprecated and will be flagged in review.",
 
   "word": {
     "smart_id": "u81a8_u8139",
@@ -98,19 +98,21 @@
 
       "domains": ["nature", "business", "society"],
       "_domains_note": "Flat array. The FIRST domain is treated as primary. All others are secondary. Domains are lenses -- they describe WHERE the word is used, not WHAT it means.",
+      "_domains_frozen_set": "animals · appearance · art · body · business · cognition · communication · culture · daily-living · education · emotion · energy · environment · family · food · health · history · housing · identity · language · law · leisure · life · materials · media · medicine · money · movement · music · nature · number-quantity · objects · perception · personal · personality · philosophy · place · politics · properties · religion · safety · science · social-relations · society · sound · space · sports · technology · time · transportation · travel · values · weather · work (54 slugs — AUTHORITATIVE, matches DB)",
       "_domain_groups": {
+        "_note": "Groups are for navigation only. The FROZEN SET (54 slugs) in the domains field below is authoritative. Every slug here must exist in the DB.",
         "Human Inner Life": ["emotion", "cognition", "perception", "personality", "values"],
         "Body & Health": ["body", "health", "medicine"],
         "Identity & Relationships": ["identity", "family", "social-relations"],
         "Language & Communication": ["language", "communication"],
-        "Daily Living": ["food", "clothing", "housing", "objects", "safety"],
+        "Daily Living": ["daily-living", "food", "housing", "objects", "safety"],
         "Society & Institutions": ["education", "work", "business", "law", "politics", "society", "money"],
-        "Physical World": ["nature", "animals", "plants", "weather", "materials", "energy", "science"],
-        "Appearance & Aesthetics": ["appearance", "aesthetics", "sound"],
-        "Space, Time & Motion": ["place", "space", "time", "movement", "transportation"],
-        "Culture & Knowledge": ["art", "music", "leisure", "hobby", "sports", "technology", "media", "religion", "philosophy", "culture", "history", "martial-arts"],
-        "Life & Experience": ["life", "light"],
-        "Conceptual": ["properties", "number-quantity"]
+        "Physical World": ["nature", "animals", "environment", "weather", "materials", "energy", "science"],
+        "Appearance & Perception": ["appearance", "sound", "perception"],
+        "Space, Time & Motion": ["place", "space", "time", "movement", "transportation", "travel"],
+        "Culture & Knowledge": ["art", "music", "leisure", "sports", "technology", "media", "religion", "philosophy", "culture", "history"],
+        "Life & Experience": ["life", "personal"],
+        "Conceptual": ["properties", "number-quantity", "language"]
       },
 
       "register": ["standard"],
@@ -170,7 +172,7 @@
 
       "formula_en": "[Entity/Quantity] + 膨脹",
       "formula_zh": "[實體/數量] + 膨脹",
-      "_formula_note": "Bilingual formulas. The word itself stays in Chinese in both versions. Slot labels in [] are translated to the target language. formula_en uses English slot labels, formula_zh uses Chinese slot labels. Both versions stored in word_sense_notes per language.",
+      "_formula_note": "REQUIRED: Both formula_en AND formula_zh must be provided. The word itself stays in Chinese in both versions. Slot labels in [] are translated to the target language. formula_en uses English slot labels, formula_zh uses Chinese slot labels. Both versions are stored in word_sense_notes per language. Single-field 'formula' is NOT accepted — always provide _en and _zh separately.",
       "_formula_notation": {
         "brackets": "[Verb], [Person], [Clause] -- variable slots the learner fills in. Labels should be grammatically or semantically specific.",
         "plus": "+ connects elements in sequence. Spaces around + for readability.",
@@ -230,11 +232,11 @@
 
       "usage_note_en": "Broader and more systemic than 漲. Common with prices, egos, ambitions, and physical objects.",
       "usage_note_zh": "比「漲」更廣泛、更系統性。常見於物價、自我膨脹、野心及物理膨脹。",
-      "_usage_note_note": "Bilingual usage notes. EN version for English-speaking learners, ZH version for Chinese-immersion learners. Both stored in word_sense_notes per language. Write each independently — do NOT translate word-for-word. Each should feel natural in its language.",
+      "_usage_note_note": "REQUIRED: Both usage_note_en AND usage_note_zh must be provided. EN version for English-speaking learners, ZH version for Chinese-immersion learners. Both stored in word_sense_notes per language. Write each independently — do NOT translate word-for-word. Each should feel natural in its language. Single-field 'usage_note' is NOT accepted.",
 
       "learner_traps_en": "Often confused with 擴大. 膨脹 implies internal pressure or uncontrolled growth; 擴大 implies deliberate expansion.",
       "learner_traps_zh": "容易和「擴大」搞混。膨脹強調內部壓力或不受控制的增長；擴大強調刻意的擴展。",
-      "_learner_traps_note": "Bilingual learner traps. These warn learners about common mistakes. A trap hidden in the language the learner is still learning is useless — it MUST be available in the learner's preferred language (LPL). Write each version naturally, not as a translation.",
+      "_learner_traps_note": "REQUIRED: Both learner_traps_en AND learner_traps_zh must be provided. These warn learners about common mistakes. A trap hidden in the language the learner is still learning is useless — it MUST be available in the learner's preferred language (LPL). Write each version naturally, not as a translation. Single-field 'learner_traps' is NOT accepted.",
 
       "relations": {
         "synonym_close": ["擴張"],
@@ -282,7 +284,9 @@
     "Register, dimension, and domains are multi-select (arrays). Other attributes are single-select.",
     "Channel describes spoken/written usage spectrum. Dimension describes semantic character. Do not confuse.",
     "Pinyin uses numeric tones (liu2, not liú). Neutral tone = no number (de, ma, ba).",
-    "All _ prefixed fields are documentation and will be stripped on import."
+    "All _ prefixed fields are documentation and will be stripped on import.",
+    "BILINGUAL NOTES ARE REQUIRED: formula_en + formula_zh, usage_note_en + usage_note_zh, learner_traps_en + learner_traps_zh. Do NOT use single-field 'formula', 'usage_note', or 'learner_traps'. Each version feeds into word_sense_notes per language. Missing bilingual fields will be flagged in review.",
+    "Write EN and ZH notes INDEPENDENTLY — not as word-for-word translations. Each should feel natural in its language."
   ],
 
   "_known_tendencies": {
@@ -290,7 +294,10 @@
       "Vsep avoidance -- tends to tag V-O compounds as Vp instead of Vsep",
       "Vpt over-application -- some simple action verbs tagged as Vpt without resultative complement",
       "N under-assigned for primary noun senses",
-      "Separable notes in definitions -- strip '(separable: X+Y)' from all definitions"
+      "Separable notes in definitions -- strip '(separable: X+Y)' from all definitions",
+      "Single-field notes -- uses 'formula'/'usage_note'/'learner_traps' instead of required _en/_zh bilingual fields",
+      "Antonym-as-contrast -- puts obvious antonym pairs into contrast bucket instead of antonym",
+      "Proximity-linking -- treats domain neighbors as synonyms (e.g. 動物 as synonym of 熊貓)"
     ],
     "Guangliu": [
       "Vsattr over-applied to gradable Vs words",

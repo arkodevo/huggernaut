@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DesignationGroup;
+use App\Models\NoteType;
 use App\Models\SearchLog;
 use App\Models\LexiconGap;
 use App\Models\SearchNotFound;
@@ -152,6 +153,75 @@ class ExploreController extends Controller
         'Ph'      => 'Phrase',
     ];
 
+    // Language ID → short code mapping
+    private const LANG_CODE = [1 => 'en', 2 => 'zh'];
+
+    // ── Notes helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Batch-load notes from the normalized note_types schema.
+     * Returns a nested collection: senseId → langCode → [ {slug, label, content}, ... ]
+     *
+     * @param  array       $senseIds
+     * @param  array|null  $slugFilter  Optional slugs to include (e.g. ['formula', 'usage-note'])
+     */
+    private function loadNotes(array $senseIds, ?array $slugFilter = null): \Illuminate\Support\Collection
+    {
+        if (empty($senseIds)) {
+            return collect();
+        }
+
+        $query = \DB::table('word_sense_notes')
+            ->join('note_types', 'word_sense_notes.note_type_id', '=', 'note_types.id')
+            ->join('note_type_labels', function ($join) {
+                $join->on('note_types.id', '=', 'note_type_labels.note_type_id')
+                     ->on('word_sense_notes.language_id', '=', 'note_type_labels.language_id');
+            })
+            ->whereIn('word_sense_notes.word_sense_id', $senseIds)
+            ->select(
+                'word_sense_notes.word_sense_id',
+                'word_sense_notes.language_id',
+                'note_types.slug',
+                'note_types.sort_order',
+                'note_type_labels.label',
+                'word_sense_notes.content',
+            );
+
+        if ($slugFilter) {
+            $query->whereIn('note_types.slug', $slugFilter);
+        }
+
+        return $query->orderBy('note_types.sort_order')
+            ->get()
+            ->groupBy('word_sense_id')
+            ->map(function ($rows) {
+                return $rows->groupBy(fn ($r) => self::LANG_CODE[$r->language_id] ?? 'en')
+                    ->map(fn ($langRows) => $langRows->map(fn ($r) => [
+                        'slug'    => $r->slug,
+                        'label'   => $r->label,
+                        'content' => $r->content,
+                    ])->values()->all());
+            });
+    }
+
+    /**
+     * Get notes for a single sense, keyed by language code.
+     * Returns: ['en' => [...], 'zh' => [...]]
+     */
+    private function loadSenseNotes(int $senseId, ?array $slugFilter = null): array
+    {
+        $all = $this->loadNotes([$senseId], $slugFilter);
+        $senseNotes = $all->get($senseId, collect());
+        $result = [];
+        foreach (self::LANG_CODE as $code) {
+            $langNotes = $senseNotes->get($code);
+            if ($langNotes && !empty($langNotes)) {
+                $result[$code] = $langNotes;
+            }
+        }
+        return $result;
+    }
+
     // ── Controller ────────────────────────────────────────────────────────────
 
     public function index(Request $request): View
@@ -246,14 +316,10 @@ class ExploreController extends Controller
         $tocflNum   = $tocflSlug ? (self::TOCFL_NUM_MAP[$tocflSlug]  ?? null) : null;
 
         // ── Definitions: all senses in order ─────────────────────────────────
-        // Notes (formula, usageNote) come from word_sense_notes with fallback to definitions table.
 
-        // Pre-load all notes for these senses in one query
+        // Pre-load notes (formula + usage-note only for search index) via normalized schema
         $senseIds = $senses->pluck('id')->all();
-        $allNotes = \DB::table('word_sense_notes')
-            ->whereIn('word_sense_id', $senseIds)
-            ->get()
-            ->groupBy('word_sense_id');
+        $allNotes = $this->loadNotes($senseIds, ['formula', 'usage-note']);
 
         $shapeDef = fn ($d) => [
             'pos' => self::POS_FULL_NAMES[$d->posLabel?->slug ?? ''] ?? ($d->posLabel?->slug ?? ''),
@@ -276,9 +342,14 @@ class ExploreController extends Controller
             $dimensionDes = $s->designations
                 ->filter(fn ($d) => in_array($d->slug, self::DIMENSION_SLUGS));
 
-            $sNotes = $allNotes->get($s->id, collect());
-            $enNote = $sNotes->firstWhere('language_id', 1);
-            $zhNote = $sNotes->firstWhere('language_id', 2);
+            $senseNotes = $allNotes->get($s->id, collect());
+            $notes = [];
+            foreach (self::LANG_CODE as $code) {
+                $langNotes = $senseNotes->get($code);
+                if ($langNotes && !empty($langNotes)) {
+                    $notes[$code] = $langNotes;
+                }
+            }
 
             $defsByLang = $s->definitions->groupBy('language_id');
             $shapeD = fn ($d) => [
@@ -291,16 +362,7 @@ class ExploreController extends Controller
                     'en' => ($defsByLang->get(1) ?? collect())->map($shapeD)->values()->all(),
                     'zh' => ($defsByLang->get(2) ?? collect())->map($shapeD)->values()->all(),
                 ],
-                'notes' => [
-                    'en' => [
-                        'formula'   => $enNote?->formula ?? '',
-                        'usageNote' => $enNote?->usage_note ?? '',
-                    ],
-                    'zh' => [
-                        'formula'   => $zhNote?->formula ?? '',
-                        'usageNote' => $zhNote?->usage_note ?? '',
-                    ],
-                ],
+                'notes' => $notes,
                 'register'    => self::REGISTER_MAP[$registerDes?->slug ?? 'standard'] ?? 'neutral',
                 'connotation' => $s->connotation?->slug ?? 'neutral',
                 'channel'     => self::CHANNEL_MAP[$s->channel?->slug ?? 'channel-balanced'] ?? ($s->channel?->slug ?? 'channel-balanced'),
@@ -379,16 +441,18 @@ class ExploreController extends Controller
                                   ->values()->all(),
             'example'         => $allExamples[0] ?? ['cn' => '', 'en' => ''],
             'extraExamples'   => array_slice($allExamples, 1),
-            // Bilingual notes for search surface matching
-            'notes'           => $senses->mapWithKeys(function ($s) use ($allNotes) {
-                $sNotes = $allNotes->get($s->id, collect());
-                $en = $sNotes->firstWhere('language_id', 1);
-                $zh = $sNotes->firstWhere('language_id', 2);
-                return [$s->id => [
-                    'en' => ['formula' => $en?->formula ?? '', 'usageNote' => $en?->usage_note ?? ''],
-                    'zh' => ['formula' => $zh?->formula ?? '', 'usageNote' => $zh?->usage_note ?? ''],
-                ]];
-            })->first() ?? ['en' => ['formula' => '', 'usageNote' => ''], 'zh' => ['formula' => '', 'usageNote' => '']],
+            // Bilingual notes for search surface matching (primary sense only)
+            'notes'           => (function () use ($allNotes, $senses) {
+                $primaryNotes = $allNotes->get($senses->first()?->id, collect());
+                $result = [];
+                foreach (self::LANG_CODE as $code) {
+                    $langNotes = $primaryNotes->get($code);
+                    if ($langNotes && !empty($langNotes)) {
+                        $result[$code] = $langNotes;
+                    }
+                }
+                return $result ?: new \stdClass();
+            })(),
             'senseIds'        => $senses->pluck('id')->values()->all(),
             'alignment'       => $word->alignment,
         ];
@@ -555,8 +619,12 @@ class ExploreController extends Controller
             ];
         }
 
+        // Pre-load all notes for all senses in one query (no N+1)
+        $allSenseIds = $senses->pluck('id')->all();
+        $allNotes = $this->loadNotes($allSenseIds);
+
         // Shape each sense independently
-        $shapedSenses = $senses->map(function (WordSense $sense) {
+        $shapedSenses = $senses->map(function (WordSense $sense) use ($allNotes) {
             // Multi-select: register
             $registerDes = $sense->designations
                 ->first(fn ($d) => in_array($d->slug, self::REGISTER_SLUGS));
@@ -576,9 +644,15 @@ class ExploreController extends Controller
             $tocflShort  = $tocflSlug ? (self::TOCFL_SLUG_MAP[$tocflSlug] ?? null) : null;
             $hskSlug     = $sense->hskLevel?->slug;
 
-            // Bilingual notes from word_sense_notes
-            $enNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 1)->first();
-            $zhNote = \DB::table('word_sense_notes')->where('word_sense_id', $sense->id)->where('language_id', 2)->first();
+            // Bilingual notes from normalized word_sense_notes + note_types
+            $senseNotesRaw = $allNotes->get($sense->id, collect());
+            $senseNotes = [];
+            foreach (self::LANG_CODE as $code) {
+                $langNotes = $senseNotesRaw->get($code);
+                if ($langNotes && !empty($langNotes)) {
+                    $senseNotes[$code] = $langNotes;
+                }
+            }
 
             // Definitions grouped by language (1=EN, 2=ZH-TW)
             $defsByLang = $sense->definitions->groupBy('language_id');
@@ -714,18 +788,7 @@ class ExploreController extends Controller
                 'hsk'             => $hskSlug,
                 'domain'           => $domainShaped,
                 'secondaryDomains' => $secondaryDomainsShaped,
-                'notes'           => [
-                    'en' => [
-                        'formula'      => $enNote?->formula ?? '',
-                        'usageNote'    => $enNote?->usage_note ?? '',
-                        'learnerTraps' => $enNote?->learner_traps ?? '',
-                    ],
-                    'zh' => [
-                        'formula'      => $zhNote?->formula ?? '',
-                        'usageNote'    => $zhNote?->usage_note ?? '',
-                        'learnerTraps' => $zhNote?->learner_traps ?? '',
-                    ],
-                ],
+                'notes'           => $senseNotes,
                 'collocations'    => $collocations,
                 'relations'       => $relations,
                 'family'          => $family,
