@@ -2543,11 +2543,11 @@ function renderCommunityForView(view, data, { append = false } = {}) {
         )}</div>`;
         return;
       }
-      el.innerHTML = `<div class="ex-sentences">${items.map(w => renderWritingCard(w, { showAuthor: true, showDate: true, showVisibility: true })).join('')}</div>`;
+      el.innerHTML = `<div class="ex-sentences">${items.map(w => renderWritingCard(w, { showAuthor: true, showDate: true, editableVisibility: !!w.isMine })).join('')}</div>`;
     } else {
       const list = el.querySelector('.ex-sentences');
       if (!list) return;
-      list.insertAdjacentHTML('beforeend', items.map(w => renderWritingCard(w, { showAuthor: true, showDate: true, showVisibility: true })).join(''));
+      list.insertAdjacentHTML('beforeend', items.map(w => renderWritingCard(w, { showAuthor: true, showDate: true, editableVisibility: !!w.isMine })).join(''));
     }
     return;
   }

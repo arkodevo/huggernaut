@@ -264,14 +264,18 @@ class CommunityController extends Controller
         ]);
     }
 
-    /** Public writings for a word, excluding the current user's own rows. */
+    /**
+     * Public writings for a word — includes ALL public rows, including the
+     * current user's own. The "Your Writings" view is a superset (public +
+     * private for the learner); the public view shows what the community can
+     * see. Excluding the user's own rows here was the previous behavior and
+     * caused the trust strip's public-writing count to disagree with the
+     * visible list when the learner's own writing was the only public one.
+     */
     private function wordPublicWritings(int $wordObjectId, ?int $userId, int $offset, int $limit): array
     {
         $query = UserSavedExample::where('is_public', true)
             ->whereHas('wordSense', fn ($q) => $q->where('word_object_id', $wordObjectId));
-        if ($userId) {
-            $query->where('user_id', '!=', $userId);
-        }
         $total = (clone $query)->count();
 
         $items = $query
@@ -290,7 +294,9 @@ class CommunityController extends Controller
             ->skip($offset)
             ->take($limit)
             ->get()
-            ->map(fn ($ex) => $this->shapeWritingCard($ex, false))
+            // Mark the learner's own rows as isMine so the card renders the
+            // editable privacy toggle + the "— You" attribution.
+            ->map(fn ($ex) => $this->shapeWritingCard($ex, $userId !== null && $ex->user_id === $userId))
             ->values()
             ->all();
 
