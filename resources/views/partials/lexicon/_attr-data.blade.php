@@ -28,8 +28,6 @@ const ATTR_HEADER_ZH = {
   dimension: '維度', intensity: '強度', tocfl: '華測',
 };
 
-const connoClass = { positive: 'conno-pos', neutral: 'conno-neu', negative: 'conno-neg', 'context-dependent': 'conno-ctx' };
-
 // Attribute chip toggle — toggles ALL translatable elements within the chip
 // (both header and label spans) between preferred language and Chinese.
 function toggleAttrLang(e) {

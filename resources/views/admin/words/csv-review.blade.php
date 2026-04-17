@@ -114,7 +114,6 @@ var csvTotal = CSV_WORDS.length;
 // ── Emoji maps ────────────────────────────────────────────────────
 var registerIcons    = {literary:'🦋',formal:'🐝',standard:'🐞',colloquial:'🪲',informal:'🦗',slang:'🕷️'};
 var connotationIcons = {positive:'☀️','positive-dominant':'🌤️',neutral:'⛅','negative-dominant':'🌥️',negative:'⛈️','context-dependent':'🌦️'};
-var connotationClass = {positive:'conno-pos','positive-dominant':'conno-pos',neutral:'conno-neu','negative-dominant':'conno-neg',negative:'conno-neg','context-dependent':'conno-ctx'};
 var channelIcons     = {'spoken-only':'🦎','spoken-dominant':'🐍','channel-balanced':'🦜','written-dominant':'🦚','written-only':'🐉'};
 var dimensionIcons   = {abstract:'🐙',concrete:'🐢',internal:'🐟',external:'🦂','dim-fluid':'🦀',aspectual:'🐡',grammatical:'🪼',spatial:'🐚',pragmatic:'🦑',temporal:'🐠'};
 var intensityIcons   = {1:'🌸',2:'🌼',3:'🪷',4:'🌻',5:'🌺'};
@@ -127,7 +126,7 @@ function slugLabel(s) { return ucfirst((s||'').replace(/-/g, ' ')); }
 
 // ── Build attribute card HTML ─────────────────────────────────────
 function attrCard(cat, slug, header, icon) {
-  return '<div class="card-attr attr-' + cat + (cat==='connotation'?' '+(connotationClass[slug]||'conno-neu'):'') + '">' +
+  return '<div class="card-attr attr-' + cat + '">' +
     '<div class="card-attr-header">' + header + '</div>' +
     '<div class="card-attr-value">' +
       (icon ? '<span class="attr-icon">' + icon + '</span>' : '') +

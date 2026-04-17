@@ -31,18 +31,9 @@
 .card-attr.attr-register   .card-attr-header { color: #12a84e; background: rgba(18,168,78,0.08); border-color: rgba(18,168,78,0.15); }
 .card-attr.attr-register   .card-attr-value  { color: #12a84e; }
 
-.card-attr.attr-connotation.conno-pos { background: rgba(40,120,220,0.07);  border-color: rgba(40,120,220,0.3); }
-.card-attr.attr-connotation.conno-pos .card-attr-header { color: #1e5cb0; background: rgba(40,120,220,0.1); border-color: rgba(40,120,220,0.2); }
-.card-attr.attr-connotation.conno-pos .card-attr-value  { color: #1e5cb0; }
-.card-attr.attr-connotation.conno-neg { background: rgba(30,80,180,0.07);   border-color: rgba(30,80,180,0.3); }
-.card-attr.attr-connotation.conno-neg .card-attr-header { color: #1a3c90; background: rgba(30,80,180,0.1); border-color: rgba(30,80,180,0.2); }
-.card-attr.attr-connotation.conno-neg .card-attr-value  { color: #1a3c90; }
-.card-attr.attr-connotation.conno-neu { background: rgba(60,100,190,0.07);  border-color: rgba(60,100,190,0.3); }
-.card-attr.attr-connotation.conno-neu .card-attr-header { color: #2c58a0; background: rgba(60,100,190,0.1); border-color: rgba(60,100,190,0.2); }
-.card-attr.attr-connotation.conno-neu .card-attr-value  { color: #2c58a0; }
-.card-attr.attr-connotation.conno-ctx { background: rgba(36,104,208,0.07);  border-color: rgba(36,104,208,0.3); }
-.card-attr.attr-connotation.conno-ctx .card-attr-header { color: #2468d0; background: rgba(36,104,208,0.1); border-color: rgba(36,104,208,0.2); }
-.card-attr.attr-connotation.conno-ctx .card-attr-value  { color: #2468d0; }
+.card-attr.attr-connotation { background: rgba(40,120,220,0.07); border-color: rgba(40,120,220,0.3); }
+.card-attr.attr-connotation .card-attr-header { color: #1e5cb0; background: rgba(40,120,220,0.1); border-color: rgba(40,120,220,0.2); }
+.card-attr.attr-connotation .card-attr-value  { color: #1e5cb0; }
 
 .card-attr.attr-channel   { background: rgba(208,48,48,0.05);   border-color: rgba(208,48,48,0.2); }
 .card-attr.attr-channel   .card-attr-header { color: #d03030; background: rgba(208,48,48,0.08); border-color: rgba(208,48,48,0.15); }
