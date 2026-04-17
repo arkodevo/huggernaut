@@ -2728,6 +2728,7 @@ function _csrf() {
 @include('partials.lexicon._attr-data')
 @include('partials.lexicon._word-header-js')
 @include('partials.lexicon._example-sentence-js')
+@include('partials.lexicon._writing-card-js')
 @include('partials.lexicon._workshop-js')
 <script>
 // Legacy aliases for code referencing old function names

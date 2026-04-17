@@ -185,6 +185,12 @@ function wsRestorePending() {
         const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         wsSaveToWord(wordKey, { id: saved.id, cn: pending.cn, en: pending.en, feedback: pending.feedback, source, date: today, originalCn: pending.originalCn || '', grammarPatterns: pending.grammarPatterns || [] });
         wsRefreshDeck(wordKey);
+        window.dispatchEvent(new CustomEvent('hn:writing-saved', {
+          detail: {
+            wordObjectId: pending.wordObjectId ? parseInt(pending.wordObjectId) : null,
+            senseId: pending.senseId ? parseInt(pending.senseId) : null,
+          }
+        }));
         setTimeout(() => {
           wsExpandPanel(wordKey);
           const deckEl = document.getElementById(`ws-deck-${wordKey}`);
@@ -387,49 +393,27 @@ Respond ONLY in this exact JSON format (no markdown, no extra text):
 }
 
 // ── RENDER SAVED DECK ────────────────────────────────────────────────────────
+// State-reading wrapper around the shared `renderWritingCard` renderer.
+// See _writing-card-js.blade.php — that file owns the card HTML. This wrapper
+// pulls Workshop-specific state (wsSavedDeck, wordData POS) and decorates each
+// card with a per-index delete button. No card HTML lives here.
 function wsRenderSavedDeck(wordKey, wordData) {
   const items = wsGetSaved(wordKey);
   if (!items.length) return '';
   const wsDefs = wordData ? (Array.isArray(wordData.definitions) ? wordData.definitions : getAllDefs(wordData.definitions)) : [];
   const primaryPOS = wsDefs[0]?.pos || '';
-  const posChip = primaryPOS ? `<span class="ex-sent-pos">${POS_ABBR[primaryPOS] || primaryPOS}</span>` : '';
-  const vertical = textDir === 'vertical';
+  const target = { traditional: wordKey, simplified: wordData?.simplified || '' };
 
   return `
     <div class="ws-saved-deck-section" id="ws-deck-${wordKey}">
       <span class="ws-saved-deck-label">${langMode === 'zh' ? '我的寫作' : langMode === 'both' ? 'My Writings 我的寫作' : 'My Writings'} (${items.length})</span>
       <div class="ex-sentences">
-      ${items.map((item, i) => {
-        const sourceType = item.source === '師父 generated' ? 'shifu' : (item.source === '師父 verified' ? 'mine' : 'mine');
-        return `
-        <div class="ex-sent${vertical ? ' vertical' : ''} saved-writing" data-source-type="${sourceType}">
-          <div class="ws-saved-writing-chips">
-            ${posChip}
-            ${item.source === '師父 generated' ? '<span class="ws-shifu-chip">🙏 師父 generated</span>' : item.source === '師父 verified' ? '<span class="ws-shifu-chip">👏 師父 verified</span>' : ''}
-          </div>
-          ${item.assessedLevel || item.assessedMastery ? `<div class="ws-saved-writing-chips ws-assess-row">
-            ${item.assessedLevel ? (() => { const l = wsLevelLabel(item.assessedLevel); return l ? '<span class="ws-level-chip">' + l.icon + ' ' + (langMode === 'zh' ? l.zh : l.en) + '</span>' : ''; })() : ''}
-            ${item.assessedMastery ? (() => { const m = wsMasteryLabel(item.assessedMastery); return m ? '<span class="ws-mastery-chip">' + m.icon + ' ' + (langMode === 'zh' ? m.zh : m.en) + '</span>' : ''; })() : ''}
-          </div>` : ''}
-          ${(Array.isArray(item.grammarPatterns) && item.grammarPatterns.length) ? `<div class="ws-grammar-patterns ws-saved-grammar"><span class="ws-grammar-label">${langMode === 'zh' ? '句型' : 'Grammar'}:</span> ${item.grammarPatterns.map(gp => {
-            const ref = (typeof WS_GRAMMAR_PATTERNS !== 'undefined') ? WS_GRAMMAR_PATTERNS.find(p => p.slug === gp.slug) : null;
-            if (!ref) return '';
-            const icon = gp.status === 'correct' ? '✓' : gp.status === 'almost' ? '△' : '✗';
-            const label = langMode === 'zh' ? ref.zh_label : ref.en_label;
-            const noteAttr = gp.note ? ' title="' + String(gp.note).replace(/"/g,'&quot;') + '"' : '';
-            return '<span class="ws-grammar-chip ws-grammar-' + (gp.status || 'correct') + '"' + noteAttr + '>' + icon + ' ' + label + '</span>';
-          }).filter(Boolean).join(' ')}</div>` : ''}
-          <div class="ex-sent-body">
-            <div class="ex-sent-cn">${segmentedHTML(item.cn, {traditional: wordKey, simplified: wordData?.simplified || ''})}</div>
-            <div class="ex-sent-en">${item.en}</div>
-            ${item.feedback || item.originalCn ? `<details class="ws-saved-feedback"><summary>師父 feedback</summary><div class="ws-saved-feedback-text">${item.originalCn ? '<div class="ws-original-submission"><div class="ws-original-label">' + (langMode === 'zh' ? '你的原稿' : 'Your original') + ':</div><div class="ws-original-text">' + item.originalCn + '</div></div>' : ''}${item.feedback || ''}${item.masteryGuidance ? '<div class="ws-mastery-guidance">' + item.masteryGuidance + '</div>' : ''}</div></details>` : ''}
-            <div class="ws-saved-meta">
-              <span class="ws-saved-date">${item.date || ''}</span>
-              <button class="remove-btn" onclick="wsConfirmDelete(this, '${wordKey}', ${i})">✕ ${langMode === 'zh' ? '刪除' : 'delete'}</button>
-            </div>
-          </div>
-        </div>
-      `}).join('')}
+      ${items.map((item, i) => renderWritingCard(
+        Object.assign({}, item, { pos: primaryPOS, target }),
+        {
+          rightAction: `<button class="remove-btn" onclick="wsConfirmDelete(this, '${wordKey}', ${i})">✕ ${langMode === 'zh' ? '刪除' : 'delete'}</button>`
+        }
+      )).join('')}
       </div>
     </div>`;
 }
@@ -903,6 +887,13 @@ async function wsSaveAIResult(btn) {
     const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     wsSaveToWord(wordKey, { id: saved.id, cn, en, feedback, source, date: today, assessedLevel, assessedMastery, masteryGuidance, originalCn, grammarPatterns });
     wsRefreshDeck(wordKey);
+    // Signal the LWP Community section to refresh if it's watching this word.
+    window.dispatchEvent(new CustomEvent('hn:writing-saved', {
+      detail: {
+        wordObjectId: wordObjectId ? parseInt(wordObjectId) : null,
+        senseId: senseId ? parseInt(senseId) : null,
+      }
+    }));
 
     // Close the AI response panel
     const responseEl = btn.closest('.ws-ai-response');
