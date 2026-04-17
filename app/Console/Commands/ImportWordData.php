@@ -10,6 +10,7 @@ use App\Models\WordPronunciation;
 use App\Models\WordSense;
 use App\Models\WordSenseDefinition;
 use App\Models\WordSenseExample;
+use App\Services\Enrichment\FrozenSets;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -159,27 +160,30 @@ class ImportWordData extends Command
                     $issues[] = "{$trad} sense " . ($j + 1) . ": needs at least 2 examples";
                 }
 
+                // Category-strict validation via FrozenSets (single source of truth).
+                // Replaces permissive "any designation" checks that let e.g. 'tocfl-high'
+                // pass a channel check because it exists as *some* designation.
                 $channel = $s['channel'] ?? '';
-                if ($channel && ! isset($this->designations[$channel])) {
-                    $issues[] = "{$trad}: unknown channel '{$channel}'";
+                if ($channel && ! FrozenSets::isValidChannel($channel)) {
+                    $issues[] = "{$trad}: unknown channel '{$channel}' — valid: " . implode(', ', FrozenSets::channels());
                 }
                 $connotation = $s['connotation'] ?? '';
-                if ($connotation && ! isset($this->designations[$connotation])) {
-                    $issues[] = "{$trad}: unknown connotation '{$connotation}'";
+                if ($connotation && ! FrozenSets::isValidConnotation($connotation)) {
+                    $issues[] = "{$trad}: unknown connotation '{$connotation}' — valid: " . implode(', ', FrozenSets::connotations());
                 }
                 foreach ($s['domains'] ?? [] as $d) {
-                    if (! isset($this->designations[$d])) {
+                    if (! FrozenSets::isValidDomain($d)) {
                         $issues[] = "{$trad}: unknown domain '{$d}'";
                     }
                 }
                 foreach ($s['register'] ?? [] as $r) {
-                    if (! isset($this->designations[$r])) {
-                        $issues[] = "{$trad}: unknown register '{$r}'";
+                    if (! FrozenSets::isValidRegister($r)) {
+                        $issues[] = "{$trad}: unknown register '{$r}' — valid: " . implode(', ', FrozenSets::registers());
                     }
                 }
                 foreach ($s['dimension'] ?? [] as $dim) {
-                    if (! isset($this->designations[$dim])) {
-                        $issues[] = "{$trad}: unknown dimension '{$dim}' — may need to create it";
+                    if (! FrozenSets::isValidDimension($dim)) {
+                        $issues[] = "{$trad}: unknown dimension '{$dim}' — valid: " . implode(', ', FrozenSets::dimensions());
                     }
                 }
             }
