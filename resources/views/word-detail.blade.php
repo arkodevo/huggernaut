@@ -575,6 +575,45 @@
   font-size: 0.55rem; color: var(--gold);
 }
 
+/* ── STROKE SECTION (Hanzi Writer) ── */
+.wd-stroke-chars {
+  display: flex; flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.wd-vertical .wd-stroke-chars {
+  flex-direction: column; align-items: flex-start;
+}
+.wd-stroke-char {
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, transform 0.1s;
+  overflow: hidden;
+}
+.wd-stroke-char:hover {
+  border-color: var(--accent); transform: translateY(-1px);
+}
+.wd-stroke-char-missing {
+  font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
+  font-size: 3rem; color: var(--dim);
+}
+.wd-stroke-controls {
+  display: flex; gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.wd-stroke-btn {
+  background: none; border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.4rem 0.8rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--dim);
+  transition: color 0.18s, border-color 0.18s;
+}
+.wd-stroke-btn:hover { color: var(--accent); border-color: var(--accent); }
+.wd-stroke-status:empty { display: none; }
+
 /* ── COMMUNITY SECTION ──
  * Writings use the shared writing-card renderer (_writing-card-js) — all card
  * styling lives in _example-sentence-css + _workshop-css. This block only
@@ -2278,6 +2317,114 @@ function renderRelatedWords(results) {
   }
 }
 
+// ── STROKE SECTION (Hanzi Writer) ──
+// Lazy-loads the Hanzi Writer CDN script on first use. Per-character data
+// fetched on demand from jsDelivr (~2–10 KB per char). Each character in the
+// word becomes a tap-to-animate 120x120 box. Layout respects text orientation:
+// horizontal → row, vertical → column (wd-vertical class on #wdMain).
+const HANZI_WRITER_CDN = 'https://cdn.jsdelivr.net/npm/hanzi-writer@3.7/dist/hanzi-writer.min.js';
+let hanziWriterLoading = null; // Promise cache — ensures the script loads exactly once
+let strokeWriters = {};         // map: char + index → HanziWriter instance
+
+function renderStrokeContent() {
+  const chars = [...(WORD.traditional || '')];
+  if (!chars.length) {
+    return `<div class="wd-section-stub">${langText('No characters to animate', '沒有可動畫的字')}</div>`;
+  }
+  const cells = chars.map((c, i) =>
+    `<div class="wd-stroke-char" data-char="${c}" data-idx="${i}" id="wdStroke-${i}" onclick="wdAnimateChar(${i})" title="${langText('Tap to animate', '點擊播放')}"></div>`
+  ).join('');
+  return `
+    <div class="wd-stroke-chars">${cells}</div>
+    <div class="wd-stroke-controls">
+      <button class="wd-stroke-btn" onclick="wdAnimateAll()">▶ ${langText('Animate All', '全部播放')}</button>
+      <button class="wd-stroke-btn" onclick="wdReplayAll()">↻ ${langText('Replay', '重播')}</button>
+    </div>
+    <div id="wdStrokeStatus" class="wd-stroke-status"></div>
+  `;
+}
+
+function loadHanziWriter() {
+  if (typeof HanziWriter !== 'undefined') return Promise.resolve();
+  if (hanziWriterLoading) return hanziWriterLoading;
+  hanziWriterLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = HANZI_WRITER_CDN;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => { hanziWriterLoading = null; reject(new Error('hanzi_writer_load_failed')); };
+    document.head.appendChild(s);
+  });
+  return hanziWriterLoading;
+}
+
+async function loadStrokeAnimators() {
+  const containers = document.querySelectorAll('.wd-stroke-char');
+  if (!containers.length) return;
+  try {
+    await loadHanziWriter();
+  } catch (e) {
+    const statusEl = document.getElementById('wdStrokeStatus');
+    if (statusEl) statusEl.innerHTML = `<div class="wd-community-empty">${langText('Stroke animation unavailable (offline or blocked).', '筆順動畫暫時無法載入。')}</div>`;
+    return;
+  }
+  // Reset any previous writers (happens on re-renders after toggle)
+  strokeWriters = {};
+  containers.forEach(el => {
+    const char = el.getAttribute('data-char');
+    const idx  = el.getAttribute('data-idx');
+    if (!char) return;
+    // Clear any prior render (writers leave SVG children behind)
+    el.innerHTML = '';
+    try {
+      const writer = HanziWriter.create(el, char, {
+        width: 120,
+        height: 120,
+        padding: 5,
+        strokeAnimationSpeed: 1,
+        delayBetweenStrokes: 100,
+        showCharacter: true,
+        showOutline: true,
+        strokeColor: '#1a1a1a',
+        outlineColor: '#d8d8d8',
+        radicalColor: '#7060a8',
+        drawingColor: '#7060a8',
+      });
+      strokeWriters[idx] = writer;
+    } catch (e) {
+      // Character not in dataset — show as static text fallback
+      el.textContent = char;
+      el.classList.add('wd-stroke-char-missing');
+    }
+  });
+}
+
+function wdAnimateChar(idx) {
+  const w = strokeWriters[idx];
+  if (w) { try { w.animateCharacter(); } catch (e) {} }
+}
+
+function wdAnimateAll() {
+  const keys = Object.keys(strokeWriters).sort((a, b) => Number(a) - Number(b));
+  let i = 0;
+  const next = () => {
+    if (i >= keys.length) return;
+    const w = strokeWriters[keys[i]];
+    i++;
+    if (!w) return next();
+    try {
+      w.animateCharacter({ onComplete: next });
+    } catch (e) { next(); }
+  };
+  next();
+}
+
+function wdReplayAll() {
+  Object.values(strokeWriters).forEach(w => {
+    try { w.animateCharacter(); } catch (e) {}
+  });
+}
+
 // ── COMMUNITY SECTION ──
 // Dropdown-driven views backed by the shared writing-card renderer
 // (_writing-card-js.blade.php). Views: writings · my-writings · disputes ·
@@ -2525,10 +2672,8 @@ function renderPage() {
     sections.push(renderSense(sense, i, visibleSenses.length));
   });
 
-  // Section 2: Stroke (stub)
-  sections.push(renderSection('stroke',
-    `<div class="wd-section-stub">${langText('Stroke animation coming soon', '筆順動畫即將推出')}</div>`
-  ));
+  // Section 2: Stroke (async-loaded Hanzi Writer animators)
+  sections.push(renderSection('stroke', renderStrokeContent()));
 
   // Section 3: Characters
   const identityContent = renderIdentity();
@@ -2571,6 +2716,8 @@ function renderPage() {
   loadRelatedWords();
   // Re-populate async community panel (uses cached state, fetches when cache is null)
   loadCommunityPanel();
+  // Initialize Hanzi Writer animators for Stroke section (lazy-loads CDN on first call)
+  loadStrokeAnimators();
 }
 
 // ── INIT ──
