@@ -223,7 +223,7 @@
   font-size: 0.55rem; color: var(--dim); letter-spacing: 0.1em;
 }
 .wd-identity-row {
-  display: flex; flex-wrap: wrap; gap: 0.3rem 1rem;
+  display: flex; flex-direction: column; gap: 0.3rem;
   font-size: 0.78rem; color: var(--dim);
 }
 .wd-identity-row strong { color: var(--text); font-weight: 500; }
@@ -550,6 +550,9 @@
   min-width: 80px;
 }
 .wd-rel-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.wd-rel-card-body {
+  display: flex; flex-direction: column; gap: 0.1rem; min-width: 0;
+}
 .wd-rel-card-char {
   font-family: 'BiauKai', 'STKaiti', 'KaiTi', '楷體-繁', 'Noto Serif TC', serif;
   font-size: 1.4rem; font-weight: 300; color: var(--ink); line-height: 1.2;
@@ -570,6 +573,182 @@
 }
 .wd-rel-card-tocfl {
   font-size: 0.55rem; color: var(--gold);
+}
+
+/* ── COMMUNITY SECTION ──
+ * Writings use the shared writing-card renderer (_writing-card-js) — all card
+ * styling lives in _example-sentence-css + _workshop-css. This block only
+ * styles the Community section's own chrome: dropdown, trust strip, disputes
+ * list, affirmed-senses list, empty states. Do NOT duplicate writing-card
+ * styles here.
+ */
+.wd-community-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+.wd-community-select {
+  font-family: 'DM Mono', monospace; font-size: 0.75rem;
+  color: var(--ink); background: rgba(255,255,255,0.7);
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  flex: 1; max-width: 280px;
+}
+.wd-community-select:focus {
+  outline: none; border-color: var(--accent);
+}
+.wd-community-trust-strip {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(98,64,200,0.04);
+  border: 1px solid rgba(98,64,200,0.12);
+  border-radius: 2px;
+  font-family: 'DM Mono', monospace; font-size: 0.72rem;
+  color: var(--dim);
+  margin-bottom: 0.8rem;
+}
+.wd-community-trust-strip .wd-trust-num { color: var(--ink); font-weight: 500; }
+.wd-community-trust-strip .wd-trust-dot { opacity: 0.35; }
+
+.wd-community-empty {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 0.9rem; color: var(--dim);
+  padding: 0.6rem 0;
+}
+.wd-community-section-title {
+  font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--dim);
+  margin: 0.6rem 0 0.5rem;
+}
+.wd-community-section-title:first-child { margin-top: 0; }
+
+/* ── Disputes list (not a writing card) ── */
+.wd-dispute-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.wd-dispute-card {
+  padding: 0.6rem 0.8rem;
+  background: rgba(200,70,70,0.04);
+  border: 1px solid rgba(200,70,70,0.15);
+  border-left: 3px solid rgba(200,70,70,0.5);
+  border-radius: 2px;
+}
+.wd-dispute-head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.5rem;
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  color: var(--dim);
+  margin-bottom: 0.4rem;
+}
+.wd-dispute-sense {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  color: var(--ink); font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+.wd-dispute-rationale {
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--ink); font-size: 0.85rem; line-height: 1.4;
+}
+.wd-dispute-fields {
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+.wd-dispute-field-chip {
+  font-family: 'DM Mono', monospace; font-size: 0.6rem;
+  padding: 0.1rem 0.4rem; border-radius: 2px;
+  color: #a04040; background: rgba(200,70,70,0.07);
+  border: 1px solid rgba(200,70,70,0.2);
+  letter-spacing: 0.05em;
+}
+.wd-dispute-status {
+  font-family: 'DM Mono', monospace; font-size: 0.58rem;
+  padding: 0.08rem 0.38rem; border-radius: 2px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: #a04040; background: rgba(200,70,70,0.07);
+  border: 1px solid rgba(200,70,70,0.2);
+}
+.wd-dispute-status.under_review {
+  color: var(--gold); background: rgba(160,114,10,0.08); border-color: rgba(160,114,10,0.2);
+}
+
+/* ── Affirmed senses ranked list ── */
+.wd-affirmed-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.wd-affirmed-row {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid var(--border); border-radius: 2px;
+}
+.wd-affirmed-count {
+  font-family: 'DM Mono', monospace; font-size: 1.1rem;
+  color: var(--accent); font-weight: 600;
+  min-width: 2.5rem;
+}
+.wd-affirmed-body { flex: 1; min-width: 0; }
+.wd-affirmed-pos {
+  font-family: 'DM Mono', monospace; font-size: 0.7rem;
+  color: #7060a8; background: rgba(98,64,200,0.07);
+  border: 1px solid rgba(98,64,200,0.18);
+  border-radius: 2px; padding: 0.08rem 0.4rem;
+  letter-spacing: 0.04em; margin-right: 0.5rem;
+}
+.wd-affirmed-def {
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--ink); font-size: 0.9rem;
+}
+.wd-affirmed-me {
+  font-size: 0.85rem; color: var(--accent);
+}
+
+/* ── Trust view (expanded detail) ── */
+.wd-trust-detail {
+  display: flex; flex-direction: column; gap: 0.4rem;
+  font-family: 'Cormorant Garamond', serif; font-size: 0.95rem;
+  color: var(--ink);
+  padding: 0.4rem 0;
+}
+.wd-trust-detail-row { display: flex; gap: 0.5rem; align-items: baseline; }
+.wd-trust-detail-num { font-family: 'DM Mono', monospace; color: var(--accent); font-weight: 600; }
+
+/* ── Actions row ── */
+.wd-community-actions {
+  display: flex; justify-content: flex-end; gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+.wd-see-more, .wd-refresh-btn {
+  background: none; border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.35rem 0.7rem; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--dim);
+  transition: color 0.18s, border-color 0.18s;
+}
+.wd-see-more:hover, .wd-refresh-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── Ex-sent Community overrides ──
+ * The shared writing card (_writing-card-js) renders .ex-sent.saved-writing.
+ * In Community context, we want a modest background tint and the
+ * "mine" indicator (left border accent) when it's the learner's own writing.
+ */
+.wd-community-content .ex-sent.saved-writing {
+  background: rgba(255,255,255,0.7);
+  border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.6rem 0.8rem;
+  transition: border-color 0.15s, transform 0.1s;
+}
+.wd-community-content .ex-sent.saved-writing:hover {
+  border-color: var(--accent); transform: translateY(-1px);
+}
+.wd-community-content .ex-sentences {
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+
+/* ── VERTICAL TEXT ORIENTATION: char on left, body stacked to right ── */
+.wd-vertical .wd-rel-card {
+  flex-direction: row; align-items: flex-start; gap: 0.6rem;
+}
+.wd-vertical .wd-rel-card-char {
+  writing-mode: vertical-rl; text-orientation: mixed;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+.wd-vertical .wd-rel-card-body {
+  flex: 1; min-width: 0;
 }
 
 /* ── Workshop styles: loaded from shared partial _workshop-css ── */
@@ -1025,6 +1204,7 @@ window.onSegNavigate = function(smartId, trad) {
 @include('partials.lexicon._segmentation')
 @include('partials.lexicon._word-header-js')
 @include('partials.lexicon._example-sentence-js')
+@include('partials.lexicon._writing-card-js')
 @include('partials.lexicon._workshop-js')
 <script>
 // Workshop adapter for IWP: look up word data from WORD global
@@ -1299,6 +1479,10 @@ async function wdToggleAffirm(senseId, btn) {
     document.querySelectorAll(`.wd-signal-scores[data-sense-id="${senseId}"] .wd-score-affirm`).forEach(el => {
       el.textContent = data.count;
     });
+    // Signal the Community section to refresh its trust strip.
+    window.dispatchEvent(new CustomEvent('hn:affirmation-changed', {
+      detail: { senseId, affirmed: !!data.affirmed, count: data.count }
+    }));
   } catch (e) {
     console.error('affirm toggle failed', e);
   } finally {
@@ -1850,7 +2034,7 @@ function renderSense(sense, idx, totalOverride) {
   if (isSectionVisible('attributes')) {
     const chips = [];
     if (sense.register) chips.push(cardAttr('register', sense.register, 'Register', metaAttrLabel('register', sense.register)));
-    if (sense.connotation) chips.push(cardAttr('connotation', sense.connotation, 'Connotation', metaAttrLabel('connotation', sense.connotation), connoClass[sense.connotation]));
+    if (sense.connotation) chips.push(cardAttr('connotation', sense.connotation, 'Connotation', metaAttrLabel('connotation', sense.connotation)));
     if (sense.channel) chips.push(cardAttr('channel', sense.channel, 'Channel', metaAttrLabel('channel', sense.channel)));
     if ((sense.dimensions || []).length) chips.push(cardAttrMulti('dimension', sense.dimensions, 'Dimension'));
     if (sense.intensity) chips.push(cardAttr('intensity', sense.intensity, 'Intensity', metaAttrLabel('intensity', sense.intensity)));
@@ -1914,10 +2098,12 @@ function renderRelCard(r) {
   const tocflLabel = r.tocfl && LABELS.tocfl[r.tocfl] ? (iconsMode === 'on' ? LABELS.tocfl[r.tocfl].icon : LABELS.tocfl[r.tocfl].en) : '';
   return `<a class="wd-rel-card" href="/lexicon/${r.smartId}" onclick="pushTrail('${r.smartId}','${r.traditional}')">
     <span class="wd-rel-card-char">${r.traditional}</span>
-    <span class="wd-rel-card-pinyin">${formatPinyin(r.pinyin)}</span>
-    ${r.posAbbr ? `<span class="wd-rel-card-pos">${r.posAbbr}</span>` : ''}
-    <span class="wd-rel-card-def">${r.def || ''}</span>
-    ${tocflLabel ? `<span class="wd-rel-card-tocfl">${tocflLabel}</span>` : ''}
+    <span class="wd-rel-card-body">
+      ${r.posAbbr ? `<span class="wd-rel-card-pos">${r.posAbbr}</span>` : ''}
+      <span class="wd-rel-card-def">${r.def || ''}</span>
+      <span class="wd-rel-card-pinyin">${formatPinyin(r.pinyin)}</span>
+      ${tocflLabel ? `<span class="wd-rel-card-tocfl">${tocflLabel}</span>` : ''}
+    </span>
   </a>`;
 }
 
@@ -2092,6 +2278,241 @@ function renderRelatedWords(results) {
   }
 }
 
+// ── COMMUNITY SECTION ──
+// Dropdown-driven views backed by the shared writing-card renderer
+// (_writing-card-js.blade.php). Views: writings · my-writings · disputes ·
+// affirmed-senses · trust. Each view fetches from a single endpoint with a
+// `view` query param. Last-selected view persists via localStorage.
+
+const COMMUNITY_VIEWS = ['writings', 'my-writings', 'disputes', 'affirmed-senses', 'trust'];
+const COMMUNITY_PAGE  = 3;
+
+let communityCurrentView = localStorage.getItem('lwpCommunityView') || 'writings';
+let communityOffset     = 0; // offset within the current view, for paginated writings
+let communityLastData   = null; // last payload, used for "See more" append logic
+
+function renderCommunityContent() {
+  const options = [
+    { value: 'writings',         en: 'Public Writings',  zh: '公開寫作' },
+    { value: 'my-writings',      en: 'Your Writings',    zh: '我的寫作', authOnly: true },
+    { value: 'disputes',         en: 'Active Disputes',  zh: '討論中' },
+    { value: 'affirmed-senses',  en: 'Most Affirmed',    zh: '最多贊同' },
+    { value: 'trust',            en: 'Trust Signals',    zh: '信任訊號' },
+  ];
+  const isAuthed = !!window.__AUTH;
+  // Honor auth gating: drop 'my-writings' for unauth visitors. If their
+  // last-selected view was 'my-writings', fall back to 'writings'.
+  const visible = options.filter(o => !o.authOnly || isAuthed);
+  if (!isAuthed && communityCurrentView === 'my-writings') communityCurrentView = 'writings';
+
+  const optsHtml = visible.map(o => {
+    const label = langMode === 'zh' ? o.zh : langMode === 'both' ? `${o.en} · ${o.zh}` : o.en;
+    return `<option value="${o.value}"${o.value === communityCurrentView ? ' selected' : ''}>${label}</option>`;
+  }).join('');
+
+  return `
+    <div class="wd-community-header">
+      <select id="wdCommunityView" class="wd-community-select" onchange="wdCommunitySetView(this.value)">${optsHtml}</select>
+      <button class="wd-refresh-btn" onclick="wdRefreshCommunity()" title="${langText('Refresh', '刷新')}">↻</button>
+    </div>
+    <div id="wdCommunityTrustStrip"></div>
+    <div id="wdCommunityContent"></div>
+    <div id="wdCommunityActions" class="wd-community-actions"></div>
+  `;
+}
+
+function wdCommunitySetView(view) {
+  if (!COMMUNITY_VIEWS.includes(view)) view = 'writings';
+  communityCurrentView = view;
+  localStorage.setItem('lwpCommunityView', view);
+  communityOffset = 0;
+  communityLastData = null;
+  loadCommunityPanel({ force: true });
+}
+
+function wdRefreshCommunity() {
+  communityOffset = 0;
+  communityLastData = null;
+  loadCommunityPanel({ force: true });
+}
+
+async function loadCommunityPanel({ append = false, force = false } = {}) {
+  if (!WORD.wordObjectId) return;
+  const view = communityCurrentView;
+  const offset = append ? communityOffset : 0;
+  const limit  = (view === 'writings') ? COMMUNITY_PAGE : 10;
+
+  try {
+    const url = `/api/community/word/${WORD.wordObjectId}?view=${encodeURIComponent(view)}&offset=${offset}&limit=${limit}`;
+    const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!resp.ok) { renderCommunityError(); return; }
+    const data = await resp.json();
+    communityLastData = data;
+
+    renderCommunityTrustStrip(data.trust);
+    renderCommunityForView(view, data, { append });
+    renderCommunityActions(view, data);
+  } catch (e) {
+    renderCommunityError();
+  }
+}
+
+function renderCommunityError() {
+  const el = document.getElementById('wdCommunityContent');
+  if (!el) return;
+  el.innerHTML = `<div class="wd-community-empty">${langText('Unable to load community content right now.', '社群內容暫時無法載入。')}</div>`;
+}
+
+function renderCommunityTrustStrip(trust) {
+  const el = document.getElementById('wdCommunityTrustStrip');
+  if (!el || !trust) return;
+  const noContent = (trust.affirmTotal === 0 && trust.disputeTotal === 0 && (trust.publicWritingCount || 0) === 0 && (trust.myWritingCount || 0) === 0);
+  if (noContent) { el.innerHTML = ''; return; }
+  const parts = [];
+  parts.push(`<span>👍 <span class="wd-trust-num">${trust.affirmTotal}</span> ${langText('affirmations', '贊同')}</span>`);
+  parts.push(`<span class="wd-trust-dot">·</span>`);
+  parts.push(`<span>👎 <span class="wd-trust-num">${trust.disputeTotal}</span> ${langText('active disputes', '討論中')}</span>`);
+  parts.push(`<span class="wd-trust-dot">·</span>`);
+  parts.push(`<span>✎ <span class="wd-trust-num">${trust.publicWritingCount || 0}</span> ${langText('public writings', '公開寫作')}</span>`);
+  if (trust.senseCount > 0) {
+    parts.push(`<span class="wd-trust-dot">·</span>`);
+    parts.push(`<span>${langText(`${trust.senseCount} sense${trust.senseCount === 1 ? '' : 's'}`, `${trust.senseCount} 個義項`)}</span>`);
+  }
+  el.innerHTML = `<div class="wd-community-trust-strip">${parts.join('')}</div>`;
+}
+
+function renderCommunityForView(view, data, { append = false } = {}) {
+  const el = document.getElementById('wdCommunityContent');
+  if (!el) return;
+
+  if (view === 'writings') {
+    const items = (data.data && data.data.items) || [];
+    communityOffset = (append ? communityOffset : 0) + items.length;
+    if (!append) {
+      if (!items.length) {
+        el.innerHTML = `<div class="wd-community-empty">${langText(
+          'No public writings yet — be the first to share one in the Writing Conservatory.',
+          '尚無公開寫作 — 在寫作院分享第一篇。'
+        )}</div>`;
+        return;
+      }
+      el.innerHTML = `<div class="ex-sentences">${items.map(w => renderWritingCard(w, { showAuthor: true, showDate: true, showVisibility: true })).join('')}</div>`;
+    } else {
+      const list = el.querySelector('.ex-sentences');
+      if (!list) return;
+      list.insertAdjacentHTML('beforeend', items.map(w => renderWritingCard(w, { showAuthor: true, showDate: true, showVisibility: true })).join(''));
+    }
+    return;
+  }
+
+  if (view === 'my-writings') {
+    const items = (data.data && data.data.items) || [];
+    if (!window.__AUTH) {
+      el.innerHTML = `<div class="wd-community-empty">${langText('Sign in to see your writings for this word.', '登入以查看您的寫作。')}</div>`;
+      return;
+    }
+    if (!items.length) {
+      el.innerHTML = `<div class="wd-community-empty">${langText(
+        'You have not written about this word yet — try the Writing Conservatory.',
+        '您還沒寫過這個詞 — 在寫作院試試。'
+      )}</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="ex-sentences">${items.map(w => renderWritingCard(w, { showAuthor: false, showDate: true, showVisibility: true })).join('')}</div>`;
+    return;
+  }
+
+  if (view === 'disputes') {
+    const items = (data.data && data.data.items) || [];
+    if (!items.length) {
+      el.innerHTML = `<div class="wd-community-empty">${langText('No active disputes on this word.', '此詞目前沒有討論中的爭議。')}</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="wd-dispute-list">${items.map(renderDisputeCard).join('')}</div>`;
+    return;
+  }
+
+  if (view === 'affirmed-senses') {
+    const items = (data.data && data.data.items) || [];
+    if (!items.length) {
+      el.innerHTML = `<div class="wd-community-empty">${langText('No senses of this word have been affirmed yet.', '此詞的義項尚未有人贊同。')}</div>`;
+      return;
+    }
+    el.innerHTML = `<div class="wd-affirmed-list">${items.map(renderAffirmedRow).join('')}</div>`;
+    return;
+  }
+
+  if (view === 'trust') {
+    const t = data.trust || {};
+    el.innerHTML = `
+      <div class="wd-trust-detail">
+        <div class="wd-trust-detail-row"><span class="wd-trust-detail-num">${t.affirmTotal || 0}</span> ${langText('total affirmations across all senses of this word', '此詞所有義項的贊同總數')}</div>
+        <div class="wd-trust-detail-row"><span class="wd-trust-detail-num">${t.disputeTotal || 0}</span> ${langText('active disputes (pending or under review)', '討論中的爭議（待處理或審核中）')}</div>
+        <div class="wd-trust-detail-row"><span class="wd-trust-detail-num">${t.publicWritingCount || 0}</span> ${langText('public writings from the community', '社群公開寫作')}</div>
+        ${window.__AUTH ? `<div class="wd-trust-detail-row"><span class="wd-trust-detail-num">${t.myWritingCount || 0}</span> ${langText('your writings on this word', '您對此詞的寫作')}</div>` : ''}
+        <div class="wd-trust-detail-row"><span class="wd-trust-detail-num">${t.senseCount || 0}</span> ${langText('senses tracked', '已收錄義項')}</div>
+      </div>
+    `;
+    return;
+  }
+}
+
+function renderCommunityActions(view, data) {
+  const el = document.getElementById('wdCommunityActions');
+  if (!el) return;
+  const parts = [];
+  if (view === 'writings' && data.data && data.data.hasMore) {
+    parts.push(`<button class="wd-see-more" onclick="wdLoadMoreCommunity()">${langText('See more', '看更多')} ↓</button>`);
+  }
+  el.innerHTML = parts.join('');
+}
+
+function wdLoadMoreCommunity() { loadCommunityPanel({ append: true }); }
+
+// ── Disputes renderer (distinct shape from writings) ──
+function renderDisputeCard(d) {
+  const statusLabel = d.status === 'under_review'
+    ? langText('under review', '審核中')
+    : langText('pending', '待處理');
+  const senseLine = [
+    d.sensePosAbbr ? `<span class="ex-sent-pos">${d.sensePosAbbr}</span>` : '',
+    d.sensePinyin ? `<span style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--accent)">${formatPinyin(d.sensePinyin)}</span>` : '',
+  ].filter(Boolean).join(' ');
+  const fieldsHtml = (d.fieldsDisputed || []).map(f =>
+    `<span class="wd-dispute-field-chip">${f}</span>`
+  ).join('');
+  return `
+    <div class="wd-dispute-card">
+      <div class="wd-dispute-head">
+        ${senseLine}
+        <span class="wd-dispute-status ${d.status}">${statusLabel}</span>
+        <span>— ${d.disputer}</span>
+        <span>·</span>
+        <span>${d.createdAt || ''}</span>
+      </div>
+      ${d.senseDefinition ? `<div class="wd-dispute-sense">${d.senseDefinition}</div>` : ''}
+      ${d.rationale ? `<div class="wd-dispute-rationale">${d.rationale}</div>` : ''}
+      ${fieldsHtml ? `<div class="wd-dispute-fields">${fieldsHtml}</div>` : ''}
+    </div>
+  `;
+}
+
+// ── Affirmed-senses row renderer ──
+function renderAffirmedRow(s) {
+  const posChip = s.posAbbr ? `<span class="wd-affirmed-pos">${s.posAbbr}</span>` : '';
+  const pinyin = s.pinyin ? `<span style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--accent);margin-right:0.4rem">${formatPinyin(s.pinyin)}</span>` : '';
+  const mine = s.affirmedByMe ? `<span class="wd-affirmed-me" title="${langText('You affirmed this', '您已贊同')}">★</span>` : '';
+  return `
+    <div class="wd-affirmed-row">
+      <span class="wd-affirmed-count">${s.affirmCount}</span>
+      <div class="wd-affirmed-body">
+        ${posChip}${pinyin}<span class="wd-affirmed-def">${s.definition}</span>
+      </div>
+      ${mine}
+    </div>
+  `;
+}
+
 // ── MAIN RENDER ──
 function renderPage() {
   renderHeader();
@@ -2131,13 +2552,8 @@ function renderPage() {
     familyContent || `<div class="wd-section-stub">${langText('No constellation data yet', '尚無詞族資料')}</div>`
   ));
 
-  // Section 6: Community (stub)
-  sections.push(renderSection('community',
-    `<div class="wd-section-stub">${langText(
-      'Community contributions coming soon — public learner writing, AI-verified examples, ratings, and more.',
-      '社群內容即將推出 — 學習者公開寫作、AI 驗證例句、評分等功能。'
-    )}</div>`
-  ));
+  // Section 6: Community (async-loaded placeholders, filled by loadCommunityPanel)
+  sections.push(renderSection('community', renderCommunityContent()));
 
   // Actions — now in hero area
 
@@ -2151,6 +2567,10 @@ function renderPage() {
   document.body.classList.toggle('wd-no-pinyin', pinyinMode === 'off');
   // Apply text dir
   document.getElementById('wdMain').classList.toggle('wd-vertical', textDir === 'vertical');
+  // Re-populate async related-words placeholders (cached after first fetch)
+  loadRelatedWords();
+  // Re-populate async community panel (uses cached state, fetches when cache is null)
+  loadCommunityPanel();
 }
 
 // ── INIT ──
@@ -2203,6 +2623,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Load related words asynchronously (once)
   loadRelatedWords();
+
+  // Community panel: listen for writing-save + affirmation-change events so
+  // the section auto-refreshes without a reload. Both events reset offset
+  // to reflect the new state.
+  window.addEventListener('hn:writing-saved', e => {
+    const targetWordId = e.detail?.wordObjectId;
+    if (!targetWordId || targetWordId === WORD.wordObjectId) {
+      communityOffset = 0;
+      communityLastData = null;
+      loadCommunityPanel({ force: true });
+    }
+  });
+  window.addEventListener('hn:affirmation-changed', () => {
+    communityOffset = 0;
+    communityLastData = null;
+    loadCommunityPanel({ force: true });
+  });
 
   // Init pills after render
   requestAnimationFrame(() => {

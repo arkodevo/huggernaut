@@ -71,6 +71,7 @@ Route::get('/my-writings', [MyWritingsController::class, 'index'])->name('my-wri
 Route::patch('/my-writings/{id}/visibility', [MyWritingsController::class, 'toggleVisibility'])->middleware('auth')->name('my-writings.visibility');
 Route::get('/my-activity', [MyActivityController::class, 'index'])->name('my-activity')->middleware('auth');
 Route::get('/community', [CommunityController::class, 'index'])->name('community')->middleware('auth');
+Route::get('/api/community/word/{wordObjectId}', [CommunityController::class, 'wordPanel'])->where('wordObjectId', '[0-9]+');
 
 // Disputations — composer page + form submit (DELETE lives under /api)
 Route::get('/disputations/create', [DisputationController::class, 'create'])->name('disputations.create')->middleware('auth');
