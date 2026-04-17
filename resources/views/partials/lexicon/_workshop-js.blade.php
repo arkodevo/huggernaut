@@ -183,7 +183,7 @@ function wsRestorePending() {
         const wordKey = pending.wordKey;
         const source = pending.isGenerated ? '師父 generated' : pending.aiVerified ? '師父 verified' : 'My writing';
         const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        wsSaveToWord(wordKey, { id: saved.id, cn: pending.cn, en: pending.en, feedback: pending.feedback, source, date: today, originalCn: pending.originalCn || '', grammarPatterns: pending.grammarPatterns || [] });
+        wsSaveToWord(wordKey, { id: saved.id, cn: pending.cn, en: pending.en, feedback: pending.feedback, source, date: today, originalCn: pending.originalCn || '', grammarPatterns: pending.grammarPatterns || [], isPublic: typeof pending.isPublic === 'boolean' ? pending.isPublic : wsDefaultPublic() });
         wsRefreshDeck(wordKey);
         window.dispatchEvent(new CustomEvent('hn:writing-saved', {
           detail: {
@@ -409,8 +409,9 @@ function wsRenderSavedDeck(wordKey, wordData) {
       <span class="ws-saved-deck-label">${langMode === 'zh' ? '我的寫作' : langMode === 'both' ? 'My Writings 我的寫作' : 'My Writings'} (${items.length})</span>
       <div class="ex-sentences">
       ${items.map((item, i) => renderWritingCard(
-        Object.assign({}, item, { pos: primaryPOS, target }),
+        Object.assign({}, item, { pos: primaryPOS, target, isMine: true }),
         {
+          editableVisibility: true,
           rightAction: `<button class="remove-btn" onclick="wsConfirmDelete(this, '${wordKey}', ${i})">✕ ${langMode === 'zh' ? '刪除' : 'delete'}</button>`
         }
       )).join('')}
@@ -885,7 +886,7 @@ async function wsSaveAIResult(btn) {
       source = 'My writing';
     }
     const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    wsSaveToWord(wordKey, { id: saved.id, cn, en, feedback, source, date: today, assessedLevel, assessedMastery, masteryGuidance, originalCn, grammarPatterns });
+    wsSaveToWord(wordKey, { id: saved.id, cn, en, feedback, source, date: today, assessedLevel, assessedMastery, masteryGuidance, originalCn, grammarPatterns, isPublic: !!isPublic });
     wsRefreshDeck(wordKey);
     // Signal the LWP Community section to refresh if it's watching this word.
     window.dispatchEvent(new CustomEvent('hn:writing-saved', {
@@ -1015,6 +1016,59 @@ if (typeof wsGetWordData === 'undefined') {
 }
 
 // ── HYDRATE SAVED DECK FROM DB ───────────────────────────────────────────────
+// ── TOGGLE WRITING VISIBILITY ────────────────────────────────────────────────
+// Flips is_public on a user_saved_example via the existing
+// /my-writings/{id}/visibility endpoint. Updates local wsSavedDeck state AND
+// any live card DOM, then dispatches hn:writing-saved so the LWP Community
+// section refreshes if it's watching this word.
+async function wsToggleWritingVisibility(evt, btn) {
+  if (evt) { evt.preventDefault(); evt.stopPropagation(); }
+  if (!btn || btn.disabled || !window.__AUTH) return;
+  const id = parseInt(btn.getAttribute('data-writing-id'), 10);
+  if (!id) return;
+  const wasPublic = btn.getAttribute('data-is-public') === '1';
+  const nextPublic = !wasPublic;
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/my-writings/${id}/visibility`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': wsCsrf(),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ is_public: nextPublic }),
+    });
+    if (!res.ok) throw new Error('visibility_toggle_failed');
+    const data = await res.json();
+    const actual = !!data.is_public;
+
+    // Update local deck state so re-renders reflect the flip
+    for (const key in wsSavedDeck) {
+      const idx = wsSavedDeck[key].findIndex(it => it.id === id);
+      if (idx >= 0) wsSavedDeck[key][idx].isPublic = actual;
+    }
+
+    // Update button state in place (avoid forcing a full re-render)
+    btn.setAttribute('data-is-public', actual ? '1' : '0');
+    btn.classList.toggle('is-public', actual);
+    btn.classList.toggle('is-private', !actual);
+    const zhMode = (typeof langMode !== 'undefined') && langMode === 'zh';
+    const icon   = actual ? '🌐' : '🔒';
+    const label  = actual ? (zhMode ? '公開' : 'Public') : (zhMode ? '私人' : 'Private');
+    btn.textContent = `${icon} ${label}`;
+
+    // Signal LWP Community + anywhere else listening so they refetch
+    window.dispatchEvent(new CustomEvent('hn:writing-saved', {
+      detail: { wordObjectId: (typeof WORD !== 'undefined') ? WORD.wordObjectId : null, senseId: null, visibilityChanged: true }
+    }));
+  } catch (e) {
+    console.error('visibility toggle failed', e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function wsHydrateSavedDeck() {
   if (!window.__AUTH || !window.__AUTH.savedExamples) return;
   window.__AUTH.savedExamples.forEach(ex => {
@@ -1036,6 +1090,7 @@ function wsHydrateSavedDeck() {
         masteryGuidance: ex.mastery_guidance || '',
         originalCn: ex.original_chinese_text || '',
         grammarPatterns: Array.isArray(ex.grammar_patterns) ? ex.grammar_patterns : [],
+        isPublic: !!ex.is_public,
       });
     }
   });

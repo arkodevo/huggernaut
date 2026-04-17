@@ -314,6 +314,42 @@
   white-space: nowrap;
 }
 
+/* Interactive visibility toggle — public/private flip on a writing.
+   Shared across Workshop deck + LWP Community "Your Writings" view. */
+.ws-visibility-toggle {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem; letter-spacing: 0.04em;
+  border-radius: 2px; padding: 0.15rem 0.5rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.ws-visibility-toggle.is-public {
+  color: var(--jade); background: rgba(26,138,90,0.06);
+  border: 1px solid rgba(26,138,90,0.25);
+}
+.ws-visibility-toggle.is-public:hover {
+  background: rgba(26,138,90,0.12); border-color: rgba(26,138,90,0.45);
+}
+.ws-visibility-toggle.is-private {
+  color: var(--dim); background: rgba(60,60,60,0.04);
+  border: 1px solid var(--border);
+}
+.ws-visibility-toggle.is-private:hover {
+  color: var(--accent); border-color: var(--accent);
+}
+.ws-visibility-toggle:disabled { opacity: 0.5; cursor: wait; }
+
+/* Static visibility chip (non-interactive, e.g. read-only community views) */
+.ws-visibility-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.05em;
+  color: var(--dim); background: rgba(60,60,60,0.04);
+  border: 1px solid var(--border);
+  border-radius: 2px; padding: 0.08rem 0.38rem;
+  white-space: nowrap;
+}
+
 /* ── GRAMMAR PATTERN CHIPS (師父-identified) ── */
 .ws-grammar-patterns {
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem;

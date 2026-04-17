@@ -2565,7 +2565,7 @@ function renderCommunityForView(view, data, { append = false } = {}) {
       )}</div>`;
       return;
     }
-    el.innerHTML = `<div class="ex-sentences">${items.map(w => renderWritingCard(w, { showAuthor: false, showDate: true, showVisibility: true })).join('')}</div>`;
+    el.innerHTML = `<div class="ex-sentences">${items.map(w => renderWritingCard(w, { showAuthor: false, showDate: true, editableVisibility: true })).join('')}</div>`;
     return;
   }
 

@@ -30,27 +30,31 @@
       }
 
     Options (opts):
-      vertical:       bool   (default: read textDir)
-      showDate:       bool   (default true)
-      showAuthor:     bool   (default false — workshop doesn't show author)
-      showVisibility: bool   (default false — only community 'my writings' view)
-      rightAction:    string (HTML for a right-side action button, e.g. delete)
-      extraClass:     string (additional class on .ex-sent root)
-      dataAttrs:      object (extra data-* attributes on root)
-      segFn:          function (defaults to window.segmentedHTML)
+      vertical:           bool   (default: read textDir)
+      showDate:           bool   (default true)
+      showAuthor:         bool   (default false — workshop doesn't show author)
+      showVisibility:     bool   (default false — show static private/public chip)
+      editableVisibility: bool   (default false — render as interactive toggle;
+                                 requires item.id and ownership. Overrides
+                                 showVisibility if true.)
+      rightAction:        string (HTML for a right-side action button, e.g. delete)
+      extraClass:         string (additional class on .ex-sent root)
+      dataAttrs:          object (extra data-* attributes on root)
+      segFn:              function (defaults to window.segmentedHTML)
 --}}
 <script>
 function renderWritingCard(item, opts) {
   opts = opts || {};
-  const vertical       = typeof opts.vertical === 'boolean' ? opts.vertical : (typeof textDir !== 'undefined' && textDir === 'vertical');
-  const showDate       = opts.showDate !== false;
-  const showAuthor     = opts.showAuthor === true;
-  const showVisibility = opts.showVisibility === true;
-  const rightAction    = opts.rightAction || '';
-  const extraClass     = opts.extraClass || '';
-  const dataAttrs      = opts.dataAttrs || {};
-  const segFn          = opts.segFn || (typeof segmentedHTML === 'function' ? segmentedHTML : null);
-  const zhMode         = (typeof langMode !== 'undefined') && langMode === 'zh';
+  const vertical           = typeof opts.vertical === 'boolean' ? opts.vertical : (typeof textDir !== 'undefined' && textDir === 'vertical');
+  const showDate           = opts.showDate !== false;
+  const showAuthor         = opts.showAuthor === true;
+  const showVisibility     = opts.showVisibility === true;
+  const editableVisibility = opts.editableVisibility === true && !!item.id;
+  const rightAction        = opts.rightAction || '';
+  const extraClass         = opts.extraClass || '';
+  const dataAttrs          = opts.dataAttrs || {};
+  const segFn              = opts.segFn || (typeof segmentedHTML === 'function' ? segmentedHTML : null);
+  const zhMode             = (typeof langMode !== 'undefined') && langMode === 'zh';
 
   // POS chip — prefer precomputed abbr, else map from full POS name
   const posAbbr = item.posAbbr || (item.pos && typeof POS_ABBR !== 'undefined' ? (POS_ABBR[item.pos] || item.pos) : (item.pos || ''));
@@ -124,7 +128,16 @@ function renderWritingCard(item, opts) {
   if (showDate && item.date) {
     metaParts.push(`<span class="ws-saved-date">${item.date}</span>`);
   }
-  if (showVisibility && item.isMine && item.isPublic === false) {
+  if (editableVisibility) {
+    // Interactive toggle: flips is_public on the writing. Owner-only endpoint
+    // enforces auth server-side.
+    const isPub = item.isPublic !== false; // default to true if unset
+    const icon  = isPub ? '🌐' : '🔒';
+    const label = isPub ? (zhMode ? '公開' : 'Public') : (zhMode ? '私人' : 'Private');
+    const cls   = isPub ? 'ws-visibility-toggle is-public' : 'ws-visibility-toggle is-private';
+    const titl  = zhMode ? '點擊切換公開／私人' : 'Click to toggle public/private';
+    metaParts.push(`<button type="button" class="${cls}" data-writing-id="${item.id}" data-is-public="${isPub ? '1' : '0'}" onclick="wsToggleWritingVisibility(event, this)" title="${titl}">${icon} ${label}</button>`);
+  } else if (showVisibility && item.isMine && item.isPublic === false) {
     metaParts.push(`<span class="ws-visibility-chip">${zhMode ? '私人' : 'private'}</span>`);
   }
   if (rightAction) {
