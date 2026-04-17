@@ -681,6 +681,7 @@ class ExploreController extends Controller
                     'source'       => $e->source,
                     'theme'        => $e->theme,
                     'isSuppressed' => $e->is_suppressed,
+                    'hasAudio'     => is_array($e->has_audio) ? $e->has_audio : (json_decode($e->has_audio ?? '{}', true) ?: (object) []),
                 ];
             })->values()->all();
 
@@ -867,9 +868,11 @@ class ExploreController extends Controller
             'strokesSimp'     => $word->strokes_simp,
             'structure'       => $word->structure,
             'pronunciations'  => $word->pronunciations->map(fn ($p) => [
+                'id'        => $p->id,
                 'text'      => $p->pronunciation_text,
                 'system'    => $p->pronunciationSystem?->slug ?? 'pinyin',
                 'isPrimary' => (bool) $p->is_primary,
+                'hasAudio'  => is_array($p->has_audio) ? $p->has_audio : (json_decode($p->has_audio ?? '{}', true) ?: (object) []),
             ])->values()->all(),
             'senses'          => $shapedSenses,
             'family'          => $allFamily,

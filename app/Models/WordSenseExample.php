@@ -23,6 +23,7 @@ class WordSenseExample extends Model
         'is_public',
         'is_suppressed',
         'theme',
+        'has_audio',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class WordSenseExample extends Model
             'ai_verified'   => 'boolean',
             'is_public'     => 'boolean',
             'is_suppressed' => 'boolean',
+            'has_audio'     => 'array',
         ];
     }
 

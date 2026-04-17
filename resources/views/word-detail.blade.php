@@ -163,6 +163,18 @@
   pointer-events: none;
 }
 
+/* ── Simple checklist (pronunciation preferences, etc.) ── */
+.iface-checklist {
+  display: flex; flex-direction: column; gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+.iface-check {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-family: 'DM Mono', monospace; font-size: 0.8rem;
+  color: var(--ink); cursor: pointer; user-select: none;
+}
+.iface-check input[type="checkbox"] { cursor: pointer; }
+
 /* ── SECTION VISIBILITY TOGGLES ── */
 .iface-section-toggles {
   display: flex; flex-direction: column; gap: 0.45rem;
@@ -983,6 +995,19 @@
         </div>
 
         <div class="iface-group">
+          <div class="iface-group-label">PRONUNCIATION</div>
+          <div class="iface-checklist">
+            <label class="iface-check">
+              <input type="checkbox" id="wdChkAudioTW" onchange="audioSyncFromCheckboxes()"> 🇹🇼 Taiwan
+            </label>
+            <label class="iface-check">
+              <input type="checkbox" id="wdChkAudioCN" onchange="audioSyncFromCheckboxes()"> 🇨🇳 Mainland
+            </label>
+          </div>
+          <div class="iface-hint">Each 🔊 tap cycles female / male</div>
+        </div>
+
+        <div class="iface-group">
           <div class="iface-group-label">SECTIONS</div>
           <div class="iface-section-toggles" id="wdSectionToggles"></div>
           <div class="iface-hint">Hide sections globally</div>
@@ -1241,6 +1266,7 @@ window.onSegNavigate = function(smartId, trad) {
 };
 </script>
 @include('partials.lexicon._segmentation')
+@include('partials.lexicon._audio-js')
 @include('partials.lexicon._word-header-js')
 @include('partials.lexicon._example-sentence-js')
 @include('partials.lexicon._writing-card-js')
@@ -1901,7 +1927,11 @@ function renderHeader() {
     </div>
     <div class="card-hdr-mid">
       ${sensePairsHTML ? `<div class="card-sense-pairs">${sensePairsHTML}</div>` : ''}
-      ${pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${pinyin}</span></div>` : ''}
+      ${pinyin ? `<div class="card-pinyin-row"><span class="pinyin pinyin-h">${pinyin}</span>${(() => {
+        // Primary pronunciation's 🔊 button — uses the first pronunciation's id
+        const p = (WORD.pronunciations || []).find(x => x.isPrimary) || (WORD.pronunciations || [])[0];
+        return p ? ` ${audioButton('pronunciations', p.id, p.hasAudio || {}, WORD.traditional)}` : '';
+      })()}</div>` : ''}
       ${(() => {
         const bits = [];
         if (WORD.subtlexRank) bits.push(`<span title="${langText('Frequency rank (SUBTLEX-CH)', '使用頻率排名')}">#${WORD.subtlexRank.toLocaleString()}</span>`);
@@ -2740,6 +2770,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('wdBtnPinyinOn').classList.remove('active');
     document.getElementById('wdBtnPinyinOff').classList.add('active');
   }
+  // Sync pronunciation checkboxes from saved preference
+  if (typeof audioInitCheckboxes === 'function') audioInitCheckboxes();
+
   if (textDir === 'vertical') {
     document.getElementById('wdBtnHoriz').classList.remove('active');
     document.getElementById('wdBtnVert').classList.add('active');

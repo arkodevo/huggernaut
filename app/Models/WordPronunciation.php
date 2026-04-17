@@ -17,12 +17,14 @@ class WordPronunciation extends Model
         'is_primary',
         'dialect_region',
         'audio_file',
+        'has_audio',
     ];
 
     protected function casts(): array
     {
         return [
             'is_primary' => 'boolean',
+            'has_audio'  => 'array',
         ];
     }
 

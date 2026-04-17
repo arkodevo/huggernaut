@@ -40,12 +40,19 @@ function renderExSentence(ex, opts = {}) {
     ? ''
     : (enText ? `<div class="ex-sent-en">${enText}</div>` : '');
 
+  // 🔊 audio button — only rendered when ex.id exists (dictionary examples,
+  // not user-generated). Shared audioButton() owns the chip; we just place it.
+  const audioBtn = (ex.id && typeof audioButton === 'function')
+    ? ` ${audioButton('examples', ex.id, ex.hasAudio || {}, ex.cn)}`
+    : '';
+
   return `<div class="ex-sent${vertical ? ' vertical' : ''}">
     ${posChip}
     <div class="ex-sent-body">
       <div class="ex-sent-cn">${cnHTML}</div>
       ${translationHTML}
       ${themeTag}${sourceTag}
+      ${audioBtn ? `<div class="ex-sent-audio">${audioBtn}</div>` : ''}
     </div>
     ${saveBtn}
   </div>`;
