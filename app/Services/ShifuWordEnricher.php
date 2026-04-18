@@ -348,6 +348,18 @@ RELATIONS:
 - If a word has an obvious opposite on a shared dimension, include antonym.
 - N and V senses of the same word MUST have DIFFERENT relations — they live in different semantic neighborhoods.
 
+RECIPROCITY (for in-batch pairs):
+If you list Y as a relation of X, and Y is another word in this same batch, Y must list X with the SAME relation type on its own sense. Asymmetric pairings (X says "Y is synonym_related" but Y says nothing about X, or Y calls X "contrast") are rejected.
+
+- If X says Y is `synonym_related` → Y must have X as `synonym_related`
+- If X says Y is `antonym` → Y must have X as `antonym`
+- If X says Y is `contrast` → Y must have X as `contrast`
+- If X says Y is `synonym_close` → Y must have X as `synonym_close`
+
+Cross-batch asymmetries (Y not in current batch) are OK as long as the pairing is defensible — those get flagged separately, not forced.
+
+For the word you are enriching, you cannot verify reciprocity alone — but if you know from context that a pair is being worked on together, make the relations symmetric from your side.
+
 CONTRAST-OR-TRAP TEST (crucial — read this):
 Before classifying any pair as `contrast`, write the SHARED DIMENSION in ≤5 words. If you cannot, it is not a contrast — it belongs in learner_traps.
 
