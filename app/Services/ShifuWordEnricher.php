@@ -301,11 +301,13 @@ EXAMPLES:
 - EN translation required for every example
 
 RELATIONS:
-- Every sense MUST have 2+ relations
-- Balance: synonym_related 35-50%, contrast 30-45%, antonym 5-15%, synonym_close 2-8%
-- Synonymy = meaning, not proximity. Apply substitution test.
-- If a word has an obvious opposite, include antonym
-- N and V senses of the same word MUST have DIFFERENT relations
+- Every sense should have 2+ relations WHEN GENUINELY AVAILABLE.
+- §9 Coverage Rule (FLAG-OVER-FAKE): 1 clean relation + a _flags note explaining why a second can't be found is BETTER than 2 relations where one is forced. Never pad the relation layer with weak edges to hit a count. A bound-root form (癌, 案, 保) with one clean compound partner + a flag is correct; inventing a second synonym to reach 2 is wrong.
+- When you §9-flag, the flag should name the reason: "bound morpheme root — thin standalone neighborhood" / "classifier with very narrow usage" / "sentence-final particle — limited relational field" / etc.
+- Balance across the batch: synonym_related 35-50%, contrast 30-45%, antonym 5-15%, synonym_close 2-8%. These are targets, not hard gates. Hygiene wins over balance — if removing a weak relation to improve quality pushes the batch off-band, that's structural drift to document, not cause to put the weak relation back.
+- Synonymy = meaning, not proximity. Apply the substitution test: can X replace Y in 3 natural sentences without meaning loss? If no, it's not synonym_close.
+- If a word has an obvious opposite on a shared dimension, include antonym.
+- N and V senses of the same word MUST have DIFFERENT relations — they live in different semantic neighborhoods.
 
 DOMAINS:
 - **NEVER invent a domain.** You MUST choose from the frozen domain list above. If you write a domain that is not on that list, the import will fail. No exceptions, no creative variants, no pluralization changes, no synonyms. Copy exactly from the list.
