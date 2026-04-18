@@ -134,6 +134,15 @@ class LessonsLedger
             'example'     => '光流\'s rev1 feedback on batch 01 prescribed `social-relations → relationships`, `work → labor` etc. — the prescribed targets were not in the DB. 澄言 applied faithfully, causing 148 slug failures across batches 02-09 before FrozenSets caught them.',
             'correct'     => 'Every slug in your output gets verified against FrozenSets::domains() (or the equivalent method) before submission. A reviewer\'s authority does not override the DB\'s authority.',
         ],
+        [
+            'id'          => 'category-as-synonymy',
+            'category'    => 'relation_typing',
+            'title'       => 'Category / sequence / hypernym forced into synonym_related',
+            'seen_in'     => ['L4-batch-04 rev1→rev3 (丙, 菠菜)'],
+            'description' => 'When no true lexical relation exists, downgrading to a category relation (hypernym/hyponym), a sequence member, or a taxonomic sibling is NOT synonym_related. These are category relations, distinct from lexical neighborhoods — they fail the substitution test.',
+            'example'     => '丙 → synonym_related [甲, 乙, 丁] — these are ordering members of 天干, not synonyms. 丙 doesn\'t mean the same thing as 甲. · 菠菜 → synonym_related [青菜] — 青菜 is a hypernym (菠菜 is-a 青菜), category inclusion not meaning-equivalence.',
+            'correct'     => 'Apply the substitution test: can X replace Y in 3 natural sentences without meaning loss? If no, it\'s not synonym_related. When only category/sequence/hypernym candidates exist, keep the §9 flag — don\'t force them into the synonym slot. This error pattern was introduced by a Claude-side reviewer push-back (光流) accepted by a Claude-side enricher (澄言). Cross-provider (OpenAI / 惠明) caught what same-provider reasoning missed.',
+        ],
     ];
 
     /**
