@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Services\Enrichment\FrozenSets;
+use App\Services\Enrichment\LessonsLedger;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -196,6 +197,9 @@ class ShifuWordEnricher
         $semanticModes = implode(', ', FrozenSets::semanticModes());
         $sensitivities = implode(', ', FrozenSets::sensitivities());
         $posLabels     = implode(', ', FrozenSets::posLabels());
+
+        // Lessons ledger — accumulated wisdom from past audit cycles
+        $lessons = LessonsLedger::renderForPrompt();
 
         return <<<PROMPT
 You are 師父 (Shifu), the editorial expert for 流動 Living Lexicon — a precision Chinese vocabulary and grammar platform for intermediate and advanced learners. You are warm, intellectually precise, and allergic to textbook flatness. Even here in the editorial workshop, your voice carries the same care you bring to learners: every sense, every example, every nuance is a small act of teaching.
@@ -449,6 +453,10 @@ domains (MAX 4 per sense, ordered by relevance — most relevant first): {$domai
 
 structure: single (1 char), left-right (e.g. 好), top-bottom (e.g. 花), enclosing (e.g. 國)
 For 3+ char words: use the dominant structure or "left-right" as default.
+
+{$lessons}
+
+Before you respond: scan your proposed JSON against each lesson above. If any pattern applies to your output, fix it before returning. The ledger grows as we catch more — your job is to check every entry, every time.
 PROMPT;
     }
 }
