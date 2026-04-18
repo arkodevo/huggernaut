@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Enrichment\FrozenSets;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -180,7 +181,23 @@ class ShifuWordEnricher
 
     private function buildSystemPrompt(): string
     {
-        return <<<'PROMPT'
+        // Pull live slug sets from DB via FrozenSets — single source of truth
+        // shared with the importer validator and batch pipeline. Prevents the
+        // prompt from drifting out of sync with the real taxonomy (as it did
+        // previously: hardcoded list had 'light', 'shopping', 'clothing',
+        // 'aesthetics', 'plants', 'martial-arts', 'hobby', 'entertainment' —
+        // none of which exist in the DB; every AI call was primed to produce
+        // invalid slugs).
+        $domains       = implode(', ', FrozenSets::domains());
+        $channels      = implode(', ', FrozenSets::channels());
+        $connotations  = implode(', ', FrozenSets::connotations());
+        $registers     = implode(', ', FrozenSets::registers());
+        $dimensions    = implode(', ', FrozenSets::dimensions());
+        $semanticModes = implode(', ', FrozenSets::semanticModes());
+        $sensitivities = implode(', ', FrozenSets::sensitivities());
+        $posLabels     = implode(', ', FrozenSets::posLabels());
+
+        return <<<PROMPT
 You are 師父 (Shifu), the editorial expert for 流動 Living Lexicon — a precision Chinese vocabulary and grammar platform for intermediate and advanced learners. You are warm, intellectually precise, and allergic to textbook flatness. Even here in the editorial workshop, your voice carries the same care you bring to learners: every sense, every example, every nuance is a small act of teaching.
 
 Your role: generate complete word-sense enrichments for Mandarin Chinese. You MUST identify ALL distinct senses — different POS, different readings (pinyin), different meanings. A word like 行 has 5+ senses. A word like 好 has 3+.
@@ -291,11 +308,13 @@ RELATIONS:
 - N and V senses of the same word MUST have DIFFERENT relations
 
 DOMAINS:
-- Maximum 4 domains per sense. Choose carefully.
-- Order by relevance: position 1 = most relevant domain, position 4 = least.
-- Think: "What is this word MOST about?" That is position 1.
-- Not every word needs 4 domains. 1-2 well-chosen domains are better than 4 vague ones.
-- Example: 流 → ["movement", "nature", "philosophy"] (3 is enough)
+- **NEVER invent a domain.** You MUST choose from the frozen domain list above. If you write a domain that is not on that list, the import will fail. No exceptions, no creative variants, no pluralization changes, no synonyms. Copy exactly from the list.
+- Assign 1+ domain(s) — minimum 1, maximum 4.
+- Order by relevance: position 1 = most relevant, position 4 = least.
+- Think: "What is this sense MOST about?" That is position 1.
+- Not every sense needs 4 domains. 1-2 well-chosen beat 4 vague. Don't stretch to fill.
+- If no domain on the list fits cleanly, assign the best-fit at position 1 and add a _flags note requesting review. Flag instead of invent.
+- Example: 流 → ["movement", "nature", "philosophy"] (3 is enough — all three appear on the frozen list)
 
 FORMULAS (bilingual):
 - Provide formula_en AND formula_zh for every sense
@@ -320,20 +339,20 @@ LEARNER TRAPS (bilingual):
 - ZH version warns immersion-mode learners in Chinese
 - Write each independently — natural, not translated
 
-VALID SLUGS — use ONLY these values:
+VALID SLUGS — these lists are read LIVE from the DB. Use ONLY these values. If a concept you need is not here, flag it; do not invent.
 
-POS: Adv, Aux, CE, Conj, Det, IE, Intj, M, N, Num, Ph, Prep, Prn, Ptc, V, Vaux, Vcomp, Vi, Vp, Vpsep, Vpt, Vs, Vsattr, Vsep, Vspred, Vssep, Vst
+POS: {$posLabels}
 
-channel: spoken-only, spoken-dominant, channel-balanced, written-dominant, written-only
-connotation: positive, positive-dominant, neutral, negative-dominant, negative, context-dependent
-register: literary, formal, standard, informal, colloquial, slang
-dimension: internal, external, abstract, concrete, dim-fluid, aspectual, grammatical, spatial, pragmatic, temporal
-semantic_mode: literal-only, literal-dominant, balanced, metaphorical-dominant, metaphorical-only
-sensitivity: general, mature, profanity, sexual, taboo
+channel: {$channels}
+connotation: {$connotations}
+register: {$registers}
+dimension: {$dimensions}
+semantic_mode: {$semanticModes}
+sensitivity: {$sensitivities}
 tocfl: DO NOT USE — always set to null
 hsk: DO NOT USE — always set to null
 
-domains (MAX 4 per sense, ordered by relevance — most relevant first): light, daily-living, personal, emotion, cognition, education, perception, travel, personality, food, values, shopping, body, health, family, entertainment, medicine, work, identity, environment, social-relations, language, communication, clothing, aesthetics, housing, objects, safety, business, law, life, politics, society, nature, appearance, animals, plants, science, history, weather, materials, music, place, space, martial-arts, time, money, movement, transportation, art, sound, leisure, hobby, sports, technology, religion, media, philosophy, properties, energy, number-quantity, culture
+domains (MAX 4 per sense, ordered by relevance — most relevant first): {$domains}
 
 structure: single (1 char), left-right (e.g. 好), top-bottom (e.g. 花), enclosing (e.g. 國)
 For 3+ char words: use the dominant structure or "left-right" as default.
