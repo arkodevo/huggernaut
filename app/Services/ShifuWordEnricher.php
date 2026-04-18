@@ -309,6 +309,28 @@ RELATIONS:
 - If a word has an obvious opposite on a shared dimension, include antonym.
 - N and V senses of the same word MUST have DIFFERENT relations — they live in different semantic neighborhoods.
 
+CONTRAST-OR-TRAP TEST (crucial — read this):
+Before classifying any pair as `contrast`, write the SHARED DIMENSION in ≤5 words. If you cannot, it is not a contrast — it belongs in learner_traps.
+
+Clean contrasts (pass the test):
+- 暗 ↔ 亮: "brightness level" ✓
+- 安慰 ↔ 責備: "response to another's state" ✓
+- 保存 ↔ 保留: "mode of preservation" ✓
+- 報仇 ↔ 報答: "reciprocation type" ✓
+- 包裹 ↔ 信件: "postal item type" ✓
+- 半路 ↔ 全程: "journey coverage" ✓
+
+Failed the test (these got rejected in past batches):
+- 罷工 ↔ 抗議: shared dimension = ? (strike is a TYPE OF protest, not polarity) → trap, not contrast
+- 癌症 ↔ 腫瘤: shared dimension = ? (cancer is-a tumor-related condition) → trap, not contrast
+- 安慰 ↔ 鼓勵: shared dimension = ? (both supportive, different target conditions) → trap, not contrast
+- 愛人 ↔ 情人: shared dimension = ? (regional/role distinction, not polarity) → trap, not contrast
+- 保障 ↔ 威脅: shared dimension too broad (safeguard-vs-threaten is rhetorical, not lexically parallel) → remove
+- 扮演 ↔ 導演: shared dimension = ? (same performance domain, not contrasting acts) → trap, not contrast
+- 半數 ↔ 多數: "statistical quantity" is schematic, not lexical → weak; prefer 全數 if available
+
+If the pair fails the test, put the distinction in learner_traps_zh / learner_traps_en where it teaches the nuance. DO NOT stuff traps into the relation layer.
+
 DOMAINS:
 - **NEVER invent a domain.** You MUST choose from the frozen domain list above. If you write a domain that is not on that list, the import will fail. No exceptions, no creative variants, no pluralization changes, no synonyms. Copy exactly from the list.
 - Assign 1+ domain(s) — minimum 1, maximum 4.
