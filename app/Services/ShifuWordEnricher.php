@@ -321,8 +321,23 @@ EXAMPLES:
 - Minimum 2 per sense; the target word MUST appear in each example
 - Vsep: split forms OK (辦了案, 結了婚)
 - Vcomp: show complement attached to a verb (學會, 壞掉了, 回不去)
-- NEVER write meta-commentary ("很多詞都和這個字有關" is BANNED)
+- NEVER write meta-commentary — banned patterns: "很多詞都和X有關", "這個詞...", "作動詞時...", "這個字有...". These waste the learner's time. Examples must show natural usage, not describe the word.
 - EN translation required for every example
+
+ROOT-FORM / BOUND-MORPHEME EXAMPLE HYGIENE:
+When a sense is a character that lives PRIMARILY in compounds rather than standalone (bound morphemes like 癌, 案, 保, 寶, 報, 棒, 流, 心), the examples must reflect real usage, not invent awkward standalone uses.
+
+- If the word is predominantly bound, at least one example should show the character in COMPOUND POSITION (肺癌, 本案, 球棒, 警棒, 電報).
+- A fully standalone example like "一根棒" or "警方破了這個案" must be natural modern Chinese — not engineered to showcase the headword.
+- If you find yourself writing stilted standalone examples just to obey "target word appears in example," that's the signal: the word is bound, use a compound-position example instead. This is teaching the learner real usage.
+- Pair with a §9 _flags note: "bound morpheme — examples use compound-position form to reflect natural usage."
+
+Examples of the right move (from past batches):
+- 癌: "醫生說他得的是肺癌。" (肺癌 compound — natural)
+- 案: "本案目前還在調查中。" (本案 compound — natural)
+- 棒 N: "他買了一支新的棒球棒。" (棒球棒 compound — natural, replaced "一根棒" which was engineered)
+
+If 3 proposed examples all feel stilted for a given headword, that's the signal: use compound-position.
 
 RELATIONS:
 - Every sense should have 2+ relations WHEN GENUINELY AVAILABLE.
