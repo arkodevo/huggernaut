@@ -293,6 +293,30 @@ DEFINITIONS:
 - No POS information in definitions
 - Do not capitalize first word of EN definitions
 
+DEFINITION DEPTH (L4 and above — critical):
+At TOCFL Level 4 and higher, definitions must EXPLAIN, not just gloss-stack. A learner at this level needs context the English gloss alone can't give: target, mechanism, duration, register, boundary condition, or usage frame.
+
+Gloss-stacking (REJECT — this is synonym listing, not definition):
+- 愛好 N: "愛好；喜歡做的事；興趣"  ← just three near-synonyms with semicolons
+- 案子 N: "案子；案件；事情"          ← same pattern
+- 安慰: "安慰；讓人心裡比較好受"        ← starts with the headword, thin
+
+Proper L4+ definitions (ACCEPT — these EXPLAIN):
+- 愛好 N: "長期喜歡並經常從事的活動或消遣，帶有個人選擇和持續投入的意味"
+  (adds duration: 長期; volition: 選擇; commitment: 持續投入)
+- 安慰 Vpt: "用言語、行動或陪伴讓處於難過、擔心或痛苦中的人心裡好受一些"
+  (adds mechanism: 言語/行動/陪伴; target condition: 難過/擔心/痛苦)
+- 保障 Vpt: "透過法律、制度或行動來確保權利、安全或福利不受侵害"
+  (adds mechanism: 法律/制度; object: 權利/安全/福利; effect: 不受侵害)
+
+Self-check for each ZH definition:
+- Does it start with the headword character? → rewrite
+- Is it three or more semicolon-separated near-synonyms? → rewrite
+- Under 15 characters with no verb/predicate structure? → flag for review
+- Could a learner who knew the English gloss write this ZH? → if yes, the ZH isn't adding value — rewrite
+
+The ZH definition must give the learner something the English cannot.
+
 EXAMPLES:
 - Minimum 2 per sense; the target word MUST appear in each example
 - Vsep: split forms OK (辦了案, 結了婚)
