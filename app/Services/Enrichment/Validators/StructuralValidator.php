@@ -46,6 +46,22 @@ class StructuralValidator
         'learner_traps_en', 'learner_traps_zh',
     ];
 
+    /** Valid word-level structure values (not in DB — schema constant). */
+    private const STRUCTURE_VALUES = ['single', 'left-right', 'top-bottom', 'enclosing'];
+
+    /** Valid alignment values (word-level and sense-level). */
+    private const ALIGNMENT_VALUES = ['full', 'partial', 'disputed'];
+
+    /** Valid source values. */
+    private const SOURCE_VALUES = ['tocfl', 'editorial'];
+
+    /** Valid relation type keys. */
+    private const RELATION_KEYS = ['synonym_close', 'synonym_related', 'antonym', 'contrast'];
+
+    /** Intensity range (1-5, inclusive). Null allowed for non-intensity-scaling POS. */
+    private const INTENSITY_MIN = 1;
+    private const INTENSITY_MAX = 5;
+
     /**
      * Validate a single sense. Returns blockers + warnings.
      *
@@ -208,6 +224,51 @@ class StructuralValidator
             $blockers[] = self::issue('R16', $label, "unknown POS '{$pos}'");
         }
 
+        // R18b: Sense-level alignment must be valid
+        $senseAlignment = $sense['alignment'] ?? null;
+        if ($senseAlignment !== null && $senseAlignment !== '' && ! in_array($senseAlignment, self::ALIGNMENT_VALUES, true)) {
+            $blockers[] = self::issue('R18b', $label, "unknown alignment '{$senseAlignment}' — valid: " . implode(', ', self::ALIGNMENT_VALUES));
+        }
+
+        // R19: Source must be valid
+        $source = $sense['source'] ?? null;
+        if ($source !== null && $source !== '' && ! in_array($source, self::SOURCE_VALUES, true)) {
+            $blockers[] = self::issue('R19', $label, "unknown source '{$source}' — valid: " . implode(', ', self::SOURCE_VALUES));
+        }
+
+        // R20: TOCFL level must be in frozen set (if present)
+        $tocfl = $sense['tocfl'] ?? null;
+        if ($tocfl !== null && $tocfl !== '' && ! in_array($tocfl, FrozenSets::tocflLevels(), true)) {
+            $blockers[] = self::issue('R20', $label, "unknown tocfl level '{$tocfl}' — valid: " . implode(', ', FrozenSets::tocflLevels()));
+        }
+
+        // R21: HSK level must be in frozen set (if present)
+        $hsk = $sense['hsk'] ?? null;
+        if ($hsk !== null && $hsk !== '' && ! in_array($hsk, FrozenSets::hskLevels(), true)) {
+            $blockers[] = self::issue('R21', $label, "unknown hsk level '{$hsk}' — valid: " . implode(', ', FrozenSets::hskLevels()));
+        }
+
+        // R22: Intensity must be integer 1-5 or null.
+        // Intensity is a graded semantic force (flower/lotus icons 🌸→🌺). Default-1 without
+        // consideration is the systemic gap we surfaced on 2026-04-19: 5,599 senses sat at
+        // intensity=1 because no layer required explicit consideration. Range check is the
+        // minimum guard; real discipline lives in the enrichment guide + 師父 prompt.
+        $intensity = $sense['intensity'] ?? null;
+        if ($intensity !== null) {
+            if (! is_int($intensity)) {
+                $blockers[] = self::issue('R22', $label, "intensity must be integer 1-5 or null, got " . var_export($intensity, true));
+            } elseif ($intensity < self::INTENSITY_MIN || $intensity > self::INTENSITY_MAX) {
+                $blockers[] = self::issue('R22', $label, "intensity {$intensity} out of range (must be " . self::INTENSITY_MIN . "-" . self::INTENSITY_MAX . " or null)");
+            }
+        }
+
+        // R23: Relation keys must be valid (synonym_close / synonym_related / antonym / contrast)
+        foreach (($sense['relations'] ?? []) as $key => $_) {
+            if (! in_array($key, self::RELATION_KEYS, true)) {
+                $blockers[] = self::issue('R23', $label, "unknown relation type '{$key}' — valid: " . implode(', ', self::RELATION_KEYS));
+            }
+        }
+
         return [
             'blockers' => $blockers,
             'warnings' => $warnings,
@@ -224,6 +285,18 @@ class StructuralValidator
     {
         $traditional = $wordEntry['word']['traditional'] ?? 'unknown';
         $blockers = $warnings = [];
+
+        // R17: Word-level structure must be valid
+        $structure = $wordEntry['word']['structure'] ?? null;
+        if ($structure !== null && $structure !== '' && ! in_array($structure, self::STRUCTURE_VALUES, true)) {
+            $blockers[] = self::issue('R17', $traditional, "unknown structure '{$structure}' — valid: " . implode(', ', self::STRUCTURE_VALUES));
+        }
+
+        // R18a: Word-level alignment must be valid
+        $wordAlignment = $wordEntry['word']['alignment'] ?? null;
+        if ($wordAlignment !== null && $wordAlignment !== '' && ! in_array($wordAlignment, self::ALIGNMENT_VALUES, true)) {
+            $blockers[] = self::issue('R18a', $traditional, "unknown word-level alignment '{$wordAlignment}' — valid: " . implode(', ', self::ALIGNMENT_VALUES));
+        }
 
         foreach ($wordEntry['senses'] ?? [] as $sense) {
             $r = self::validateSense($sense, $traditional);
