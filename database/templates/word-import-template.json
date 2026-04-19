@@ -1,6 +1,7 @@
 {
-  "_template_version": "2.3",
-  "_last_updated": "2026-04-15",
+  "_template_version": "2.4",
+  "_last_updated": "2026-04-19",
+  "_parity_note": "Operationally aligned with Enrichment Quality Guide v2.1 (canonical .docx at /Users/chuluoyi/Documents/華語/planning/流動_Enrichment_Quality_Guide_v2.1.docx). Every rule here mirrors the guide; the two are meant to travel together.",
   "_instructions": "One file per word. Each sense must have exactly ONE POS. If a word has multiple POS roles (e.g., Vi and N), create SEPARATE senses. Fields prefixed with _ are documentation -- strip them before import. TOCFL is the authoritative source for POS classification. Editorial corrections are tracked via alignment + source fields. ALL note fields (formula, usage_note, learner_traps) MUST use bilingual format: _en and _zh suffixes. Single-field versions are deprecated and will be flagged in review.",
 
   "_variant_rule": "Variant spellings (e.g., 佈告/布告, 佈告欄/布告欄) MAY cross-link as reciprocal synonym_related, but each variant entry must STAND ON ITS OWN: differentiated definitions, independent examples, its own relations beyond the variant link. Variants may NOT rely on each other to pad relation coverage. Variant inflation is a recurring audit flag.",
@@ -151,9 +152,10 @@
       "_sensitivity_options": ["general", "mature", "profanity", "sexual", "taboo"],
 
       "valency": 0,
-      "_valency_note": "0 = intransitive (Vi, Vp, Vs, Vspred), 1 = transitive (V, Vpt, Vst, Vaux), 2 = ditransitive. null for non-verbs. Matches the guide exactly — every verb POS has a valency assignment.",
+      "_valency_note": "Every verb POS has a valency assignment. 0 = intransitive (Vi, Vp, Vs, Vspred, Vsattr, Vcomp, Vssep). 1 = transitive (V, Vpt, Vst, Vaux, Vsep, Vpsep — Vsep/Vpsep count the separable O as valency). 2 = ditransitive (rare, e.g. 給). null for non-verbs (N, M, Adv, Prep, Conj, Ptc, Det, Prn, Num, IE, Ph, CE, Intj, Aux). Source for Vsattr/Vcomp/Vsep/Vpsep/Vssep: 澄言's batch-11 calibration, confirmed in v2.1 audit.",
 
       "tocfl": "tocfl-advanced",
+      "_tocfl_example_context": "Example value shown assumes the skeleton already carried it from official source data. If your skeleton sense has no tocfl value, leave as null — do not fill it from your own judgment.",
       "_tocfl_CRITICAL": "Do not override or invent TOCFL values; pass through what the source data provides. Skeleton batches carry TOCFL values pre-populated from official wordlists — keep them untouched. If a skeleton sense arrives with no TOCFL value, leave as null. Never derive a value from your own judgment of difficulty, frequency, or semantic similarity.",
       "_tocfl_options": ["tocfl-novice1", "tocfl-novice2", "tocfl-entry", "tocfl-basic", "tocfl-advanced", "tocfl-high", "tocfl-fluency"],
       "_tocfl_labels": {
