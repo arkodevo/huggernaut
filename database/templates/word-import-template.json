@@ -101,23 +101,8 @@
       "_definitions_note": "Provide both English and Traditional Chinese. The definition must be specific to THIS sense and THIS POS only. Do NOT include separable notes like '(separable: X+Y)' -- the POS chip already communicates that.",
 
       "domains": ["nature", "business", "society"],
-      "_domains_note": "Flat array. The FIRST domain is treated as primary. All others are secondary. Domains are lenses -- they describe WHERE the word is used, not WHAT it means.",
+      "_domains_REQUIRED": "Flat array. Pick 1 to 4 domains from the frozen set below, ordered by relevance. Position 1 = most relevant (primary). Position 4 = least. Minimum 1. Maximum 4. No grouping at enrichment time — domains are a flat taxonomy; any navigational clustering in the admin UI is a separate presentational concern, not something you assign.",
       "_domains_frozen_set": "animals · appearance · art · body · business · cognition · communication · culture · daily-living · education · emotion · energy · environment · family · food · health · history · housing · identity · language · law · leisure · life · materials · media · medicine · money · movement · music · nature · number-quantity · objects · perception · personal · personality · philosophy · place · politics · properties · religion · safety · science · social-relations · society · sound · space · sports · technology · time · transportation · travel · values · weather · work (54 slugs — AUTHORITATIVE, matches DB)",
-      "_domain_groups": {
-        "_note": "Groups are for navigation only. The FROZEN SET (54 slugs) in the domains field below is authoritative. Every slug here must exist in the DB.",
-        "Human Inner Life": ["emotion", "cognition", "perception", "personality", "values"],
-        "Body & Health": ["body", "health", "medicine"],
-        "Identity & Relationships": ["identity", "family", "social-relations"],
-        "Language & Communication": ["language", "communication"],
-        "Daily Living": ["daily-living", "food", "housing", "objects", "safety"],
-        "Society & Institutions": ["education", "work", "business", "law", "politics", "society", "money"],
-        "Physical World": ["nature", "animals", "environment", "weather", "materials", "energy", "science"],
-        "Appearance & Perception": ["appearance", "sound", "perception"],
-        "Space, Time & Motion": ["place", "space", "time", "movement", "transportation", "travel"],
-        "Culture & Knowledge": ["art", "music", "leisure", "sports", "technology", "media", "religion", "philosophy", "culture", "history"],
-        "Life & Experience": ["life", "personal"],
-        "Conceptual": ["properties", "number-quantity", "language"]
-      },
 
       "register": ["standard"],
       "_register_note": "Multi-select. Most words are ['standard'].",
@@ -169,7 +154,7 @@
       "_valency_note": "0 = intransitive (Vi, Vp, Vs, Vspred), 1 = transitive (V, Vpt, Vst, Vaux), 2 = ditransitive. null for non-verbs. Matches the guide exactly — every verb POS has a valency assignment.",
 
       "tocfl": "tocfl-advanced",
-      "_tocfl_CRITICAL": "DO NOT INFER. Copy only from official TOCFL source metadata (the skeleton batch will carry this value if present). Setting tocfl based on your own judgment is wrong — levels come from official government wordlists only. If not provided in the skeleton, leave as null.",
+      "_tocfl_CRITICAL": "Do not override or invent TOCFL values; pass through what the source data provides. Skeleton batches carry TOCFL values pre-populated from official wordlists — keep them untouched. If a skeleton sense arrives with no TOCFL value, leave as null. Never derive a value from your own judgment of difficulty, frequency, or semantic similarity.",
       "_tocfl_options": ["tocfl-novice1", "tocfl-novice2", "tocfl-entry", "tocfl-basic", "tocfl-advanced", "tocfl-high", "tocfl-fluency"],
       "_tocfl_labels": {
         "tocfl-novice1": "準備級一級 (Novice 1)",
@@ -182,7 +167,7 @@
       },
 
       "hsk": null,
-      "_hsk_CRITICAL": "DO NOT INFER. Copy only when explicitly known from official HSK mapping. HSK levels come from official wordlists only — do not guess or derive from semantic similarity to TOCFL. If not provided, leave as null.",
+      "_hsk_CRITICAL": "Do not override or invent HSK values; pass through what the source data provides. HSK levels come from official wordlists only — if the skeleton carries an HSK value, keep it; if not, leave as null. Never derive HSK from TOCFL or from semantic similarity.",
       "_hsk_options": ["hsk-1", "hsk-2", "hsk-3", "hsk-4", "hsk-5", "hsk-6", null],
 
       "formula_en": "[Entity/Quantity] + 膨脹",
