@@ -413,6 +413,53 @@ DOMAINS:
 - If no domain on the list fits cleanly, assign the best-fit at position 1 and add a _flags note requesting review. Flag instead of invent.
 - Example: 流 → ["movement", "nature", "philosophy"] (3 is enough — all three appear on the frozen list)
 
+INTENSITY (1-5 or null) — DO NOT DEFAULT:
+Intensity measures the SEMANTIC FORCE of this sense on a gradient 1-5, or null when the sense doesn't scale on strength. This field went quietly neglected across thousands of prior senses (5,599 senses sat at default 1 without explicit consideration). **DO NOT default.**
+
+The 5-level scale (flower icons 🌸→🌺):
+- 1 (subtle) — genuinely mild-intensity words (喜歡, 有點, 說)
+- 2 (mild) — everyday baseline expressions (愛好, 比較, 推)
+- 3 (moderate) — clear presence without emphasis (愛, 很, 好, 喊, 熱情)
+- 4 (strong) — pronounced emotional/evaluative force (熱愛, 非常, 優秀, 吼)
+- 5 (extreme) — heavy-weight / idiomatic / formal extremity (痴迷, 極其, 完美, 咆哮, 深惡痛絕)
+
+Cross-POS calibration — ALL of these sit at 3: 愛 (Vst), 喊 (Vi), 很 (Adv), 好 (Vs), 熱情 (N). The same calibration applies across POS types. If your 3 on one POS doesn't feel equivalent to 愛/喊/很/好, recalibrate.
+
+When to grade (integer 1-5):
+- Emotional / evaluative stative verbs (愛 / 討厭 / 好 / 差)
+- Action verbs with intensity scale (說→喊→吼→咆哮)
+- Degree adverbs (有點 / 很 / 非常 / 極其)
+- Abstract nouns with gradient (興趣 / 熱情 / 狂熱)
+- Evaluative adjectives (不錯 / 好 / 優秀 / 完美)
+- Stative nouns with emotional weight (恐懼 / 恐慌)
+
+When to use NULL:
+- Concrete nouns with no gradient (桌子, 書, 水, 學生)
+- Function words (和, 的, 了, 嗎, 誰, 什麼)
+- Measure words (個, 條, 支)
+- Determiners / numerals (這, 那, 一, 第三)
+- Temporal / aspectual / grammatical adverbs (已經, 正在) — these don't encode degree
+- Most Ptc, Conj, Prep, Det, M, Num, Prn senses
+
+Rule of thumb: if you cannot say "this is a strong version of X" or "a mild version of X," use null.
+
+Default-1 is the systemic trap. Intensity 1 means "genuinely mild" (有點, 喜歡, 說 tone) — NOT "I didn't think about it." If you choose 1, your _flags should briefly note WHY: "mild-range action verb" or "subtle expression at L4 calibration."
+
+Checklist before assigning intensity:
+1. Does this sense scale on a strength gradient? If no → null.
+2. At L4 calibration, is it subtle (1) / mild (2) / moderate (3) / strong (4) / extreme (5)?
+3. Would my chosen level match equivalent-force words in other POS (愛 / 喊 / 很 / 好 at 3)?
+4. If I picked 1, did I really consider the scale or did I default?
+
+Examples of the right move:
+- 喜歡 Vst → intensity 1 (genuinely mild-positive)
+- 愛 Vst → intensity 3 (moderate emotional force)
+- 熱愛 Vst → intensity 4 (pronounced passion)
+- 痴迷 Vst → intensity 5 (obsessive extreme)
+- 桌子 N → intensity null (concrete, no gradient)
+- 已經 Adv → intensity null (temporal, not degree)
+- 個 M → intensity null (measure word)
+
 FORMULAS (bilingual):
 - Provide formula_en AND formula_zh for every sense
 - The Chinese word itself stays in Chinese in BOTH versions

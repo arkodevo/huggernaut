@@ -147,7 +147,9 @@
       },
 
       "intensity": 3,
-      "_intensity_note": "1-5 scale. How strong/emphatic is this word? 1 = mild, 5 = extreme. NOT how common it is.",
+      "_intensity_REQUIRED": "Integer 1-5 OR null. DO NOT default to 1. Every sense must be explicitly considered. Scale: 1=subtle (喜歡, 有點, 說), 2=mild (愛好, 比較, 推), 3=moderate (愛, 很, 好, 喊, 熱情), 4=strong (熱愛, 非常, 優秀, 吼), 5=extreme (痴迷, 極其, 完美, 咆哮). Use null for concrete nouns (桌子, 書), function words (和, 的, 誰), measure words (個), determiners (這), and non-degree adverbs (已經). Cross-POS calibration: 愛 (Vst), 喊 (Vi), 很 (Adv), 好 (Vs), 熱情 (N) all sit at 3 — the force level should feel equivalent across POS. If you choose 1, add a _flags note explaining why (mild-range action verb / subtle-expression word / etc). Full specification: project_intensity_specification.md in memory.",
+      "_intensity_when_null": "Assign null for senses that don't scale on strength: concrete nouns, function words, measure words, determiners, numerals, temporal/aspectual/grammatical adverbs. Add _flags note: 'intensity-null: concrete noun' (or: function word / measure word / etc).",
+      "_intensity_default_trap": "Intensity 1 is NOT a safe default. It means 'genuinely subtle intensity' (like 有點 or 說 tone). 5,599 senses sat at intensity=1 because prior enrichment treated 1 as the unconscious default. DO NOT repeat this. Every assignment must be an explicit decision.",
 
       "sensitivity": "general",
       "_sensitivity_options": ["general", "mature", "profanity", "sexual", "taboo"],

@@ -143,6 +143,15 @@ class LessonsLedger
             'example'     => '丙 → synonym_related [甲, 乙, 丁] — these are ordering members of 天干, not synonyms. 丙 doesn\'t mean the same thing as 甲. · 菠菜 → synonym_related [青菜] — 青菜 is a hypernym (菠菜 is-a 青菜), category inclusion not meaning-equivalence.',
             'correct'     => 'Apply the substitution test: can X replace Y in 3 natural sentences without meaning loss? If no, it\'s not synonym_related. When only category/sequence/hypernym candidates exist, keep the §9 flag — don\'t force them into the synonym slot. This error pattern was introduced by a Claude-side reviewer push-back (光流) accepted by a Claude-side enricher (澄言). Cross-provider (OpenAI / 惠明) caught what same-provider reasoning missed.',
         ],
+        [
+            'id'          => 'intensity-default-1',
+            'category'    => 'definition_quality',
+            'title'       => 'Intensity silently defaulted to 1 without explicit consideration',
+            'seen_in'     => ['Pre-2026-04-19 DB state (5,599 senses at intensity=1 out of ~7,600 total)'],
+            'description' => 'The intensity field (1-5 or null) measures semantic force, but for 5,599 senses it was reflexively set to 1 because no enrichment layer required explicit consideration. Template, 師父 prompt, validator, and audit rubric were all silent. Intensity 1 should mean "genuinely mild" (喜歡, 有點, 說) — not "the enricher didn\'t think about it."',
+            'example'     => 'Prior state: 愛 (to love) at intensity=1 alongside 熱愛 (passionate love) at intensity=1 alongside 痴迷 (obsession) at intensity=1 — the scale is pedagogically broken because no distinction was made. Cross-POS: 很 (Adv "very") and 有點 (Adv "a bit") shouldn\'t sit at the same level, but often do in pre-spec data.',
+            'correct'     => 'Treat intensity as a required editorial decision for every sense. Grade on the 1-5 scale OR assign null (concrete nouns, function words, measure words, non-degree adverbs). Cross-POS calibration: 愛/喊/很/好/熱情 all sit at 3 — same force across POS. If choosing 1, note the reasoning in _flags ("mild-range action verb" / "subtle-expression Vs"). Full spec: memory/project_intensity_specification.md. Validator rule R22 enforces range 1-5 or null; editorial discipline enforces explicit consideration.',
+        ],
     ];
 
     /**
