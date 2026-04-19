@@ -58,8 +58,13 @@ class StructuralValidator
     /** Valid relation type keys. */
     private const RELATION_KEYS = ['synonym_close', 'synonym_related', 'antonym', 'contrast'];
 
-    /** Intensity range (1-5, inclusive). Null allowed for non-intensity-scaling POS. */
-    private const INTENSITY_MIN = 1;
+    /**
+     * Intensity range (0-5, inclusive).
+     *   0    = Not Applicable (explicit editorial decision — word doesn't have intensity dimension)
+     *   1-5  = Graded intensity
+     *   null = Not yet enriched/assessed (pending; warns on apparently-enriched senses)
+     */
+    private const INTENSITY_MIN = 0;
     private const INTENSITY_MAX = 5;
 
     /**
@@ -248,22 +253,32 @@ class StructuralValidator
             $blockers[] = self::issue('R21', $label, "unknown hsk level '{$hsk}' — valid: " . implode(', ', FrozenSets::hskLevels()));
         }
 
-        // R22: Intensity must be integer 1-5 or null (Not Applicable).
-        // Intensity is a TWO-STAGE editorial decision:
-        //   Stage 1: Does intensity apply? (NO → Not Applicable, stored as null. STOP.)
+        // R22: Intensity must be integer 0-5. Null is a BLOCKER for any submitted enrichment.
+        //   0    = Not Applicable (explicit editorial decision — word has no strength gradient)
+        //   1-5  = Graded intensity
+        //   null = Not yet enriched/assessed (pending) — a SUBMITTED sense must NEVER be null
+        //
+        // Two-stage editorial decision:
+        //   Stage 1: Does intensity apply? (NO → 0. STOP.)
         //   Stage 2 (only if Stage 1 = YES): Grade 1-5 on the strength scale.
-        // Default-1 was the systemic gap surfaced 2026-04-19: 5,599 senses sat at
-        // intensity=1 because the old single-stage framing ("1-5 or null") made null
-        // feel like an empty field to skip past. The two-stage framing in the 師父 prompt
-        // + template + ledger entry 13 makes Not Applicable an explicit first-class choice.
-        // This rule is only the mechanical range check; the real discipline is editorial.
+        //
+        // Policy: every submitted sense must have intensity 0-5. null fails validation.
+        // The 2,353 currently-null senses in the DB are technical debt (predate the 0-vs-null
+        // distinction); they are NOT re-submitted through this validator. New submissions
+        // and re-imports must pass null → 0 (or 1-5) decisions before validation accepts.
+        //
+        // Background: surfaced 2026-04-19. 5,599 senses sat at intensity=1 because the
+        // earlier "1-5 or null" framing made null feel like an empty field, so enrichers
+        // reflexively wrote 1 as the unconscious default. The 0/null distinction + the
+        // two-stage framing + the null-is-a-blocker policy make Not Applicable a first-class
+        // editorial choice the enricher cannot skip.
         $intensity = $sense['intensity'] ?? null;
-        if ($intensity !== null) {
-            if (! is_int($intensity)) {
-                $blockers[] = self::issue('R22', $label, "intensity must be integer 1-5 or null, got " . var_export($intensity, true));
-            } elseif ($intensity < self::INTENSITY_MIN || $intensity > self::INTENSITY_MAX) {
-                $blockers[] = self::issue('R22', $label, "intensity {$intensity} out of range (must be " . self::INTENSITY_MIN . "-" . self::INTENSITY_MAX . " or null)");
-            }
+        if ($intensity === null) {
+            $blockers[] = self::issue('R22', $label, "intensity is null — every enriched sense must have 0 (Not Applicable) or 1-5. null is not allowed in submitted enrichments.");
+        } elseif (! is_int($intensity)) {
+            $blockers[] = self::issue('R22', $label, "intensity must be integer 0-5, got " . var_export($intensity, true));
+        } elseif ($intensity < self::INTENSITY_MIN || $intensity > self::INTENSITY_MAX) {
+            $blockers[] = self::issue('R22', $label, "intensity {$intensity} out of range (must be 0-5; 0 = Not Applicable, 1-5 = graded)");
         }
 
         // R23: Relation keys must be valid (synonym_close / synonym_related / antonym / contrast)

@@ -413,25 +413,58 @@ DOMAINS:
 - If no domain on the list fits cleanly, assign the best-fit at position 1 and add a _flags note requesting review. Flag instead of invent.
 - Example: 流 → ["movement", "nature", "philosophy"] (3 is enough — all three appear on the frozen list)
 
-INTENSITY — TWO-STAGE DECISION, NEVER A DEFAULT:
-Intensity is an explicit editorial decision made in two stages. **Not Applicable is a first-class choice with the same dignity as picking 3.** It is NOT a blank field, NOT a default, NOT "I'll skip this."
+INTENSITY — WHAT IT IS AND HOW TO GRADE IT:
 
-This field was neglected across thousands of prior senses (5,599 senses sat at default 1 without explicit consideration) because prior framing made null feel like an empty field. The two-stage framing below makes the Not Applicable choice visible and named.
+Intensity grades the STRENGTH OF THE QUALITY the word denotes — how much of the thing is present in what the word describes. Not how loudly the speaker is expressing. The internal semantic content.
+
+- 喜歡 denotes mild positive inclination; the inclination itself is mild.
+- 愛 denotes a committed emotional bond; the bond itself is moderate-to-strong.
+- 痴迷 denotes extreme fixation; the fixation itself is extreme.
+- 暗 denotes moderate lack of light; 漆黑 denotes extreme lack of light.
+- 很 intensifies by a moderate amount; 極其 intensifies by an extreme amount.
+
+The flower icons 🌸→🌺 map to this: how fully the quality has bloomed into its strength.
+
+STORAGE VALUES — DISTINCT STATES:
+  0    = Not Applicable (explicit editorial decision — the word has no strength gradient)
+  1-5  = Graded intensity on the strength scale below
+  null = Not yet enriched/assessed (pending — an unfinished sense)
+
+**Every sense you enrich MUST have 0 or 1-5. NEVER null.** null is a validator BLOCKER — your enrichment will fail import. null means "unfinished," and a finished enrichment is never null. Choose 0 (Not Applicable) or grade 1-5.
+
+TWO-STAGE EDITORIAL DECISION:
 
 STAGE 1 — Does intensity apply to this sense?
-Ask: does this sense scale on strength, force, or degree?
-- NO → **Not Applicable** (stored as null). Add a _flags note naming the reason ("concrete noun" / "function word" / "measure word" / "non-degree adverb"). Stage 1 complete — do not grade.
+Ask: does the word denote a quality that has a strength gradient?
+- NO → **intensity: 0** (Not Applicable). Add a _flags note naming the reason ("concrete noun" / "function word" / "measure word" / "non-degree adverb"). Stage 1 complete.
 - YES → continue to Stage 2.
 
-STAGE 2 (only reached when Stage 1 = YES) — Grade 1-5:
-The 5-level scale (flower icons 🌸→🌺):
-- 1 (subtle) — genuinely mild-intensity words (喜歡, 有點, 說)
-- 2 (mild) — everyday baseline expressions (愛好, 比較, 推)
-- 3 (moderate) — clear presence without emphasis (愛, 很, 好, 喊, 熱情)
-- 4 (strong) — pronounced emotional/evaluative force (熱愛, 非常, 優秀, 吼)
-- 5 (extreme) — heavy-weight / idiomatic / formal extremity (痴迷, 極其, 完美, 咆哮, 深惡痛絕)
+STAGE 2 (only if Stage 1 = YES) — Grade 1-5:
 
-Cross-POS calibration — ALL of these sit at 3: 愛 (Vst), 喊 (Vi), 很 (Adv), 好 (Vs), 熱情 (N). The same calibration applies across POS types. If your 3 on one POS doesn't feel equivalent to 愛/喊/很/好, recalibrate.
+CANONICAL FAMILY (positive attachment, Vst) — read this progression; feel the gradient:
+- 1 — 心動 / 有好感: first stirring, pre-like (there's something here)
+- 2 — 喜歡: like — baseline positive affection, clearly present
+- 3 — 愛好: established fondness — sustained preference
+- 4 — 愛: love — committed emotional bond
+- 5 — 熱愛: passionate love — pronounced, enthusiastic
+
+SECONDARY FAMILY (pure intensity, Adv) — these words ARE intensity by nature:
+- 1 — 有點 (a bit)
+- 2 — 比較 (comparatively)
+- 3 — 很 (very)
+- 4 — 非常 (extremely)
+- 5 — 極其 (utterly)
+
+CROSS-POS CALIBRATION — ALL of these sit at level 3 (moderate):
+愛好 (Vst), 很 (Adv), 好 (Vs), 熱情 (N), 喊 (V).
+Level 3 is "present, clear, not extreme" across every POS. If your 3 on one POS doesn't feel equivalent to 愛好/很/好/熱情/喊, recalibrate.
+
+VALENCE-SHIFT PATTERN (important observation):
+Chinese vocabulary often exhibits valence shift at extreme intensity. Words that would be level 5 in a positive family often cross into negative-dominant or context-dependent connotation:
+- 痴迷 would be intensity 5 on the love gradient — but its connotation is negative-dominant (obsessive, pathological). Used naturally for 痴迷於賭博.
+- 狂熱 at intensity 5 — connotation context-dependent (fanatic enthusiasm, often critical).
+
+**Intensity and connotation are independent fields. Grade them separately.** When grading a level-5 word, ask: is the strength of the quality the same direction as the connotation, or has extreme force pushed the word into a different valence? Note the pattern.
 
 STAGE 1 = YES (grade 1-5) applies to:
 - Emotional / evaluative stative verbs (愛 / 討厭 / 好 / 差)
@@ -441,7 +474,7 @@ STAGE 1 = YES (grade 1-5) applies to:
 - Evaluative adjectives (不錯 / 好 / 優秀 / 完美)
 - Stative nouns with emotional weight (恐懼 / 恐慌)
 
-STAGE 1 = NO (Not Applicable — null) applies to:
+STAGE 1 = NO → intensity: 0 applies to:
 - Concrete nouns with no gradient (桌子, 書, 水, 學生)
 - Function words (和, 的, 了, 嗎, 誰, 什麼)
 - Measure words (個, 條, 支)
@@ -450,25 +483,28 @@ STAGE 1 = NO (Not Applicable — null) applies to:
 - Most Ptc, Conj, Prep, Det, M, Num, Prn senses
 - Vaux (modals) and Vcomp (complement morphemes)
 
-Rule of thumb for Stage 1: if you cannot say "this is a strong version of X" or "a mild version of X," the answer is NO — Not Applicable.
+Rule of thumb for Stage 1: if you cannot say "this is a strong version of X" or "a mild version of X," the answer is NO — intensity: 0.
 
-Default-1 is the systemic trap. Intensity 1 means "genuinely mild" (有點, 喜歡, 說 tone) — NOT "I didn't think about it." If you choose 1 in Stage 2, your _flags should briefly note WHY: "mild-range action verb" or "subtle expression at L4 calibration."
+Default-1 is the systemic trap. Intensity 1 means "genuinely at the first-stirring level" (心動, 有點) — NOT "I didn't think about it." If you choose 1 in Stage 2, your _flags should briefly note WHY: "first-stirring positive affinity" or "subtle-degree modifier."
 
 Checklist:
-  STAGE 1: Does this sense scale on a strength gradient? If NO → Not Applicable (null) + _flags note, STOP.
+  STAGE 1: Does this sense denote a quality with a strength gradient? If NO → intensity: 0 + _flags note, STOP.
   STAGE 2 (only if Stage 1 = YES):
-    - At L4 calibration, is it subtle (1) / mild (2) / moderate (3) / strong (4) / extreme (5)?
-    - Would my chosen level match equivalent-force words in other POS (愛/喊/很/好 at 3)?
-    - If I picked 1, did I really consider the scale or did I default?
+    - At L4 calibration, is it first-stirring (1) / baseline-present (2) / moderate (3) / pronounced (4) / extreme (5)?
+    - Would my chosen level match equivalent-force words in other POS (愛好/很/好/熱情/喊 at 3)?
+    - If extreme (5): is this word also valence-shifted? (Grade intensity and connotation independently.)
+    - If 1, did I really consider the scale or did I default?
 
 Examples of the right move:
-- 喜歡 Vst → intensity 1 (Stage 1 YES, Stage 2 = 1, genuinely mild-positive)
-- 愛 Vst → intensity 3 (Stage 1 YES, Stage 2 = 3, moderate emotional force)
-- 熱愛 Vst → intensity 4 (Stage 1 YES, Stage 2 = 4, pronounced passion)
-- 痴迷 Vst → intensity 5 (Stage 1 YES, Stage 2 = 5, obsessive extreme)
-- 桌子 N → Not Applicable / null (Stage 1 NO, concrete noun)
-- 已經 Adv → Not Applicable / null (Stage 1 NO, temporal not degree)
-- 個 M → Not Applicable / null (Stage 1 NO, measure word)
+- 心動 Vst → intensity 1 (Stage 1 YES, first stirring)
+- 喜歡 Vst → intensity 2 (Stage 1 YES, baseline positive affection)
+- 愛好 Vst → intensity 3 (Stage 1 YES, established fondness)
+- 愛 Vst → intensity 4 (Stage 1 YES, committed bond)
+- 熱愛 Vst → intensity 5 (Stage 1 YES, passionate love — pure positive)
+- 桌子 N → intensity 0 (Stage 1 NO, concrete noun with no gradient)
+- 已經 Adv → intensity 0 (Stage 1 NO, temporal not degree)
+- 個 M → intensity 0 (Stage 1 NO, measure word)
+- 和 Conj → intensity 0 (Stage 1 NO, function word)
 
 FORMULAS (bilingual):
 - Provide formula_en AND formula_zh for every sense
