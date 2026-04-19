@@ -3,6 +3,10 @@
   "_last_updated": "2026-04-15",
   "_instructions": "One file per word. Each sense must have exactly ONE POS. If a word has multiple POS roles (e.g., Vi and N), create SEPARATE senses. Fields prefixed with _ are documentation -- strip them before import. TOCFL is the authoritative source for POS classification. Editorial corrections are tracked via alignment + source fields. ALL note fields (formula, usage_note, learner_traps) MUST use bilingual format: _en and _zh suffixes. Single-field versions are deprecated and will be flagged in review.",
 
+  "_variant_rule": "Variant spellings (e.g., 佈告/布告, 佈告欄/布告欄) MAY cross-link as reciprocal synonym_related, but each variant entry must STAND ON ITS OWN: differentiated definitions, independent examples, its own relations beyond the variant link. Variants may NOT rely on each other to pad relation coverage. Variant inflation is a recurring audit flag.",
+
+  "_structure_guidance": "For 3+ character words, use the dominant sub-structure or 'left-right' as the default. A 4-character idiom like 川流不息 typically reads as 'left-right' at the top level.",
+
   "word": {
     "smart_id": "u81a8_u8139",
     "_smart_id_format": "Unicode codepoints separated by underscores. Single char: u + hex (u6d41 for 流). Multi-char: underscore-separated (u81a8_u8139 for 膨脹, u5ddd_u6d41_u4e0d_u606f for 川流不息).",
@@ -129,6 +133,7 @@
 
       "semantic_mode": "literal-only",
       "_semantic_mode_options": ["literal-only", "literal-dominant", "balanced", "metaphorical-dominant", "metaphorical-only"],
+      "_semantic_mode_CRITICAL": "dim-fluid is a DIMENSION slug, NOT a semantic_mode slug. Don't confuse the two fields. Real catch: L4-batch-05 had semantic_mode='dim-fluid' on 不平 — caught by 惠明, R4a now blocks this automatically.",
 
       "dimension": [],
       "_dimension_note": "Dimension answers: 'What kind of meaning is this?' Multi-select. Describes the pedagogical/semantic character of the word.",
@@ -161,9 +166,10 @@
       "_sensitivity_options": ["general", "mature", "profanity", "sexual", "taboo"],
 
       "valency": 0,
-      "_valency_note": "0 = intransitive (Vi, Vp), 1 = transitive (V, Vpt, Vst), 2 = ditransitive. null for non-verbs.",
+      "_valency_note": "0 = intransitive (Vi, Vp, Vs, Vspred), 1 = transitive (V, Vpt, Vst, Vaux), 2 = ditransitive. null for non-verbs. Matches the guide exactly — every verb POS has a valency assignment.",
 
       "tocfl": "tocfl-advanced",
+      "_tocfl_CRITICAL": "DO NOT INFER. Copy only from official TOCFL source metadata (the skeleton batch will carry this value if present). Setting tocfl based on your own judgment is wrong — levels come from official government wordlists only. If not provided in the skeleton, leave as null.",
       "_tocfl_options": ["tocfl-novice1", "tocfl-novice2", "tocfl-entry", "tocfl-basic", "tocfl-advanced", "tocfl-high", "tocfl-fluency"],
       "_tocfl_labels": {
         "tocfl-novice1": "準備級一級 (Novice 1)",
@@ -176,6 +182,7 @@
       },
 
       "hsk": null,
+      "_hsk_CRITICAL": "DO NOT INFER. Copy only when explicitly known from official HSK mapping. HSK levels come from official wordlists only — do not guess or derive from semantic similarity to TOCFL. If not provided, leave as null.",
       "_hsk_options": ["hsk-1", "hsk-2", "hsk-3", "hsk-4", "hsk-5", "hsk-6", null],
 
       "formula_en": "[Entity/Quantity] + 膨脹",
@@ -253,6 +260,10 @@
         "contrast": ["漲"]
       },
       "_relations_note": "Semantic relations to other words. Use traditional characters. The importer will look up the word_object and sense.",
+      "_relations_DECISION_LADDER": "Apply for EVERY relation, top to bottom: (1) Clear semantic opposite on a shared dimension? → antonym. (2) Same field but NOT substitutable? → contrast. (3) Nearly interchangeable in most contexts? → synonym_close. (4) Substitutable in some contexts with different nuance? → synonym_related. (5) None of the above? → DO NOT FORCE. Flag with _flags and leave the pair out.",
+      "_relations_CONTRAST_TEST": "Before classifying a pair as `contrast`, write the shared dimension in ≤5 words. If you can't, it's NOT a contrast — move the distinction to learner_traps. Fails from past batches: 罷工↔抗議 (type-of, not polar), 癌症↔腫瘤 (is-a), 安慰↔鼓勵 (different target conditions), 扮演↔導演 (same domain, not contrasting).",
+      "_relations_CATEGORY_TRAP": "Category relations are NOT synonymy: sequence neighbors (甲/乙/丙), hypernyms (菠菜 is-a 青菜), institution-vs-activity (補習/補習班), bound roots (軍 vs 部隊). None pass the substitution test. Keep the §9 flag; don't force category pairs into synonym_related.",
+      "_relations_FLAG_OVER_FAKE": "1 clean relation + _flags note > 2 relations where one is forced. Don't pad the relation layer to hit a count.",
       "_relation_types": {
         "synonym_close": "Very close synonym — nearly interchangeable in most contexts",
         "synonym_related": "Related synonym — similar meaning but different nuance, register, or scope",
@@ -261,7 +272,7 @@
       },
 
       "collocations": ["通貨膨脹", "需求膨脹", "自我膨脹"],
-      "_collocations_note": "Common natural word pairings that learners would encounter. Use traditional characters. No tautological collocations.",
+      "_collocations_REQUIRED": "Minimum 2 per sense. Must be natural phrases that learners would encounter, not formula fragments or thin shells. REJECT: the headword alone, headword+headword, bare [MW]+headword (一個愛好). ACCEPT: multi-word natural collocations (擔任班長, 保持聯絡, 保存完整). Use traditional characters.",
 
       "examples": [
         {
