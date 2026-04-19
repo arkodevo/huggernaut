@@ -248,11 +248,15 @@ class StructuralValidator
             $blockers[] = self::issue('R21', $label, "unknown hsk level '{$hsk}' — valid: " . implode(', ', FrozenSets::hskLevels()));
         }
 
-        // R22: Intensity must be integer 1-5 or null.
-        // Intensity is a graded semantic force (flower/lotus icons 🌸→🌺). Default-1 without
-        // consideration is the systemic gap we surfaced on 2026-04-19: 5,599 senses sat at
-        // intensity=1 because no layer required explicit consideration. Range check is the
-        // minimum guard; real discipline lives in the enrichment guide + 師父 prompt.
+        // R22: Intensity must be integer 1-5 or null (Not Applicable).
+        // Intensity is a TWO-STAGE editorial decision:
+        //   Stage 1: Does intensity apply? (NO → Not Applicable, stored as null. STOP.)
+        //   Stage 2 (only if Stage 1 = YES): Grade 1-5 on the strength scale.
+        // Default-1 was the systemic gap surfaced 2026-04-19: 5,599 senses sat at
+        // intensity=1 because the old single-stage framing ("1-5 or null") made null
+        // feel like an empty field to skip past. The two-stage framing in the 師父 prompt
+        // + template + ledger entry 13 makes Not Applicable an explicit first-class choice.
+        // This rule is only the mechanical range check; the real discipline is editorial.
         $intensity = $sense['intensity'] ?? null;
         if ($intensity !== null) {
             if (! is_int($intensity)) {

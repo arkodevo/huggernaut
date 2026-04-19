@@ -413,9 +413,17 @@ DOMAINS:
 - If no domain on the list fits cleanly, assign the best-fit at position 1 and add a _flags note requesting review. Flag instead of invent.
 - Example: 流 → ["movement", "nature", "philosophy"] (3 is enough — all three appear on the frozen list)
 
-INTENSITY (1-5 or null) — DO NOT DEFAULT:
-Intensity measures the SEMANTIC FORCE of this sense on a gradient 1-5, or null when the sense doesn't scale on strength. This field went quietly neglected across thousands of prior senses (5,599 senses sat at default 1 without explicit consideration). **DO NOT default.**
+INTENSITY — TWO-STAGE DECISION, NEVER A DEFAULT:
+Intensity is an explicit editorial decision made in two stages. **Not Applicable is a first-class choice with the same dignity as picking 3.** It is NOT a blank field, NOT a default, NOT "I'll skip this."
 
+This field was neglected across thousands of prior senses (5,599 senses sat at default 1 without explicit consideration) because prior framing made null feel like an empty field. The two-stage framing below makes the Not Applicable choice visible and named.
+
+STAGE 1 — Does intensity apply to this sense?
+Ask: does this sense scale on strength, force, or degree?
+- NO → **Not Applicable** (stored as null). Add a _flags note naming the reason ("concrete noun" / "function word" / "measure word" / "non-degree adverb"). Stage 1 complete — do not grade.
+- YES → continue to Stage 2.
+
+STAGE 2 (only reached when Stage 1 = YES) — Grade 1-5:
 The 5-level scale (flower icons 🌸→🌺):
 - 1 (subtle) — genuinely mild-intensity words (喜歡, 有點, 說)
 - 2 (mild) — everyday baseline expressions (愛好, 比較, 推)
@@ -425,7 +433,7 @@ The 5-level scale (flower icons 🌸→🌺):
 
 Cross-POS calibration — ALL of these sit at 3: 愛 (Vst), 喊 (Vi), 很 (Adv), 好 (Vs), 熱情 (N). The same calibration applies across POS types. If your 3 on one POS doesn't feel equivalent to 愛/喊/很/好, recalibrate.
 
-When to grade (integer 1-5):
+STAGE 1 = YES (grade 1-5) applies to:
 - Emotional / evaluative stative verbs (愛 / 討厭 / 好 / 差)
 - Action verbs with intensity scale (說→喊→吼→咆哮)
 - Degree adverbs (有點 / 很 / 非常 / 極其)
@@ -433,32 +441,34 @@ When to grade (integer 1-5):
 - Evaluative adjectives (不錯 / 好 / 優秀 / 完美)
 - Stative nouns with emotional weight (恐懼 / 恐慌)
 
-When to use NULL:
+STAGE 1 = NO (Not Applicable — null) applies to:
 - Concrete nouns with no gradient (桌子, 書, 水, 學生)
 - Function words (和, 的, 了, 嗎, 誰, 什麼)
 - Measure words (個, 條, 支)
 - Determiners / numerals (這, 那, 一, 第三)
 - Temporal / aspectual / grammatical adverbs (已經, 正在) — these don't encode degree
 - Most Ptc, Conj, Prep, Det, M, Num, Prn senses
+- Vaux (modals) and Vcomp (complement morphemes)
 
-Rule of thumb: if you cannot say "this is a strong version of X" or "a mild version of X," use null.
+Rule of thumb for Stage 1: if you cannot say "this is a strong version of X" or "a mild version of X," the answer is NO — Not Applicable.
 
-Default-1 is the systemic trap. Intensity 1 means "genuinely mild" (有點, 喜歡, 說 tone) — NOT "I didn't think about it." If you choose 1, your _flags should briefly note WHY: "mild-range action verb" or "subtle expression at L4 calibration."
+Default-1 is the systemic trap. Intensity 1 means "genuinely mild" (有點, 喜歡, 說 tone) — NOT "I didn't think about it." If you choose 1 in Stage 2, your _flags should briefly note WHY: "mild-range action verb" or "subtle expression at L4 calibration."
 
-Checklist before assigning intensity:
-1. Does this sense scale on a strength gradient? If no → null.
-2. At L4 calibration, is it subtle (1) / mild (2) / moderate (3) / strong (4) / extreme (5)?
-3. Would my chosen level match equivalent-force words in other POS (愛 / 喊 / 很 / 好 at 3)?
-4. If I picked 1, did I really consider the scale or did I default?
+Checklist:
+  STAGE 1: Does this sense scale on a strength gradient? If NO → Not Applicable (null) + _flags note, STOP.
+  STAGE 2 (only if Stage 1 = YES):
+    - At L4 calibration, is it subtle (1) / mild (2) / moderate (3) / strong (4) / extreme (5)?
+    - Would my chosen level match equivalent-force words in other POS (愛/喊/很/好 at 3)?
+    - If I picked 1, did I really consider the scale or did I default?
 
 Examples of the right move:
-- 喜歡 Vst → intensity 1 (genuinely mild-positive)
-- 愛 Vst → intensity 3 (moderate emotional force)
-- 熱愛 Vst → intensity 4 (pronounced passion)
-- 痴迷 Vst → intensity 5 (obsessive extreme)
-- 桌子 N → intensity null (concrete, no gradient)
-- 已經 Adv → intensity null (temporal, not degree)
-- 個 M → intensity null (measure word)
+- 喜歡 Vst → intensity 1 (Stage 1 YES, Stage 2 = 1, genuinely mild-positive)
+- 愛 Vst → intensity 3 (Stage 1 YES, Stage 2 = 3, moderate emotional force)
+- 熱愛 Vst → intensity 4 (Stage 1 YES, Stage 2 = 4, pronounced passion)
+- 痴迷 Vst → intensity 5 (Stage 1 YES, Stage 2 = 5, obsessive extreme)
+- 桌子 N → Not Applicable / null (Stage 1 NO, concrete noun)
+- 已經 Adv → Not Applicable / null (Stage 1 NO, temporal not degree)
+- 個 M → Not Applicable / null (Stage 1 NO, measure word)
 
 FORMULAS (bilingual):
 - Provide formula_en AND formula_zh for every sense
