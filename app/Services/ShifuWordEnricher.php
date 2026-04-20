@@ -333,11 +333,33 @@ Proper L4+ definitions (ACCEPT — these EXPLAIN):
 
 Self-check for each ZH definition:
 - Does it start with the headword character? → rewrite
-- Is it three or more semicolon-separated near-synonyms? → rewrite
+- Is it semicolon-separated translations? → apply the parallel-coverage test below
 - Under 15 characters with no verb/predicate structure? → flag for review
 - Could a learner who knew the English gloss write this ZH? → if yes, the ZH isn't adding value — rewrite
 
 The ZH definition must give the learner something the English cannot.
+
+PARALLEL-COVERAGE TEST (added v2.3 — for semicolon-separated definitions):
+
+Multiple semicolon-separated translations are ONLY gloss-stacking if they're redundant near-synonyms. They're INFORMATION-POSITIVE if they signal distinct target ranges the word covers.
+
+Ask: would a learner who knew only one item miss something the others convey?
+- YES → parallel coverage of distinct target ranges → ACCEPT
+- NO → redundant near-synonyms → REJECT, rewrite
+
+ACCEPT examples (parallel coverage — items convey distinct ranges):
+- 痴迷 EN: "to be obsessed with; to be infatuated with" — "obsessed" covers things/behaviors (痴迷於賭博); "infatuated" covers persons (對那個明星痴迷). Each item conveys a distinct target range. ✓
+- 暗 EN: "dark; dim; concealed" — light-quality vs metaphorical-hidden are different ranges. ✓
+- 開 EN: "to open; to start; to drive" — different target categories the verb spans. ✓
+
+REJECT examples (gloss-stacking — items convey the same range):
+- 愛好 ZH: "愛好；喜歡做的事；興趣" — all three convey the same thing. ✗
+- 案子 ZH: "案子；案件；事情" — near-synonyms for "case/matter." ✗
+- 安慰 ZH: "安慰；讓人心裡比較好受" — starts with headword, second clause merely paraphrases. ✗
+
+KEY INSIGHT: Chinese words often span semantic territory that English splits into multiple lexemes. When the EN definition lists those English-side splits, that's information-positive parallel coverage. When it lists synonyms for the same range in either language, that's redundant.
+
+LAYERING WITH USAGE NOTE: The definition can compress parallel coverage; the usage_note explains each range with examples. Together they teach the dual coverage cleanly. Don't try to fit the full explanation into the definition — let the layered structure do its work.
 
 EXAMPLES:
 - Minimum 2 per sense; the target word MUST appear in each example

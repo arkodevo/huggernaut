@@ -83,11 +83,11 @@ class LessonsLedger
         [
             'id'          => 'gloss-stacking-definition',
             'category'    => 'definition_quality',
-            'title'       => 'ZH definition as semicolon-separated synonym list',
-            'seen_in'     => ['L4-batch-01 rev1 (愛好 N, 案子, 安慰)', 'L4-batch-02 rev1 (same pattern)'],
-            'description' => 'A ZH definition that is just three near-synonyms separated by semicolons, adding no context, mechanism, or boundary.',
-            'example'     => '愛好 N: "愛好；喜歡做的事；興趣" — starts with the headword, lists synonyms, no explanation.',
-            'correct'     => 'L4+ definitions must explain. Add duration, mechanism, target, register, or boundary. A learner should get something the English gloss alone cannot give.',
+            'title'       => 'Definition as redundant semicolon-separated synonyms (NOT to be confused with parallel coverage)',
+            'seen_in'     => ['L4-batch-01 rev1 (愛好 N, 案子, 安慰)', 'L4-batch-02 rev1 (same pattern)', 'v2.3 refinement after 痴迷 first-pass enrichment review (2026-04-19)'],
+            'description' => 'A definition that is just near-synonyms separated by semicolons, adding no context, mechanism, or boundary. Important refinement (v2.3): semicolon-separated translations are NOT always gloss-stacking. They can be parallel coverage of distinct target ranges the word spans (痴迷 EN: "obsessed with [things]; infatuated with [persons]" is parallel coverage, NOT gloss-stacking). Apply the parallel-coverage test: would a learner who knew only one item miss something the others convey? YES → parallel coverage, ACCEPT. NO → redundant near-synonyms, REJECT.',
+            'example'     => 'REJECT (gloss-stacking): 愛好 N: "愛好；喜歡做的事；興趣" — three near-synonyms, no information added. · 案子 ZH: "案子；案件；事情" — same pattern. · 安慰 ZH: "安慰；讓人心裡比較好受" — starts with headword, paraphrases. ACCEPT (parallel coverage): 痴迷 EN: "obsessed with; infatuated with" — items cover distinct target ranges (things vs persons). · 暗 EN: "dark; dim; concealed" — light-quality vs metaphorical-hidden, distinct ranges.',
+            'correct'     => 'L4+ definitions must EXPLAIN, not just list. Add duration, mechanism, target, register, or boundary. Parallel-coverage test (v2.3): if multiple items signal distinct target ranges, that\'s information-positive — ACCEPT. If items are interchangeable near-synonyms, that\'s redundant — REJECT and rewrite. Layered structure: definitions can compress parallel coverage; usage_note explains each range with examples; learner_traps warn about misuse. Don\'t try to fit the full explanation into the definition — let the layered structure do its work.',
         ],
         [
             'id'          => 'engineered-standalone-examples',
