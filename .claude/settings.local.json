@@ -378,7 +378,10 @@
       "Bash(php -r ' *)",
       "Bash(grep -n 'use App\\\\\\\\Models\\\\|function shape\\\\|function.*Example\\\\|$ex->' app/Http/Controllers/CommunityController.php)",
       "Bash(grep -n 'use App\\\\\\\\Models\\\\|$ex->' app/Http/Controllers/MyWritingsController.php)",
-      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -c \"SELECT u.id, u.name, u.email FROM users u WHERE u.name ILIKE '%shifu%' OR u.email ILIKE '%shifu%';\")"
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -c \"SELECT u.id, u.name, u.email FROM users u WHERE u.name ILIKE '%shifu%' OR u.email ILIKE '%shifu%';\")",
+      "Bash(php -l app/Models/UserSavedExampleTranslation.php)",
+      "Bash(php -l database/migrations/2026_04_20_000109_create_user_saved_example_translations_table.php)",
+      "Bash(php -l database/migrations/2026_04_20_000110_drop_english_text_from_user_saved_examples.php)"
     ]
   }
 }
