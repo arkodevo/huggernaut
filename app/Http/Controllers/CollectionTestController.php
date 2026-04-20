@@ -356,9 +356,10 @@ class CollectionTestController extends Controller
             ->map(fn ($d) => $dimMap[$d->slug] ?? $d->slug)
             ->values()->all();
 
-        // Channel
-        $channelMap = ['channel-balanced' => 'balanced', 'fluid' => 'balanced', 'spoken-only' => 'spoken-only', 'spoken-dominant' => 'spoken-dominant', 'written-dominant' => 'written-dominant', 'written-only' => 'written-only'];
-        $channel = $channelMap[$sense->channel?->slug ?? 'channel-balanced'] ?? 'balanced';
+        // Channel — slug is the canonical value post-rename (2026-04-20).
+        // `fluid` kept only for legacy data imported before the rename.
+        $channelMap = ['balanced' => 'balanced', 'fluid' => 'balanced', 'spoken-only' => 'spoken-only', 'spoken-dominant' => 'spoken-dominant', 'written-dominant' => 'written-dominant', 'written-only' => 'written-only'];
+        $channel = $channelMap[$sense->channel?->slug ?? 'balanced'] ?? 'balanced';
 
         // Connotation
         $connotation = $sense->connotation?->slug ?? 'neutral';

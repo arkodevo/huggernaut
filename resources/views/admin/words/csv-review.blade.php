@@ -114,7 +114,7 @@ var csvTotal = CSV_WORDS.length;
 // ── Emoji maps ────────────────────────────────────────────────────
 var registerIcons    = {literary:'🦋',formal:'🐝',standard:'🐞',colloquial:'🪲',informal:'🦗',slang:'🕷️'};
 var connotationIcons = {positive:'☀️','positive-dominant':'🌤️',neutral:'⛅','negative-dominant':'🌥️',negative:'⛈️','context-dependent':'🌦️'};
-var channelIcons     = {'spoken-only':'🦎','spoken-dominant':'🐍','channel-balanced':'🦜','written-dominant':'🦚','written-only':'🐉'};
+var channelIcons     = {'spoken-only':'🦎','spoken-dominant':'🐍','balanced':'🦜','written-dominant':'🦚','written-only':'🐉'};
 var dimensionIcons   = {abstract:'🐙',concrete:'🐢',internal:'🐟',external:'🦂','dim-fluid':'🦀',aspectual:'🐡',grammatical:'🪼',spatial:'🐚',pragmatic:'🦑',temporal:'🐠'};
 var intensityIcons   = {1:'🌸',2:'🌼',3:'🪷',4:'🌻',5:'🌺'};
 var intensityLabels  = {1:'Faint',2:'Mild',3:'Moderate',4:'Strong',5:'Blazing'};

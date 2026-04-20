@@ -258,7 +258,7 @@
                         @php
                             $registerIcons    = ['literary'=>'🦋','formal'=>'🐝','standard'=>'🐞','colloquial'=>'🪲','informal'=>'🦗','slang'=>'🕷️'];
                             $connotationIcons = ['positive'=>'☀️','positive-dominant'=>'🌤️','neutral'=>'⛅','negative-dominant'=>'🌥️','negative'=>'⛈️','context-dependent'=>'🌦️'];
-                            $channelIcons     = ['spoken-only'=>'🦎','spoken-dominant'=>'🐍','channel-balanced'=>'🦜','written-dominant'=>'🦚','written-only'=>'🐉'];
+                            $channelIcons     = ['spoken-only'=>'🦎','spoken-dominant'=>'🐍','balanced'=>'🦜','written-dominant'=>'🦚','written-only'=>'🐉'];
                             $dimensionIcons   = ['abstract'=>'🐙','concrete'=>'🐢','internal'=>'🐟','external'=>'🦂','dim-fluid'=>'🦀','aspectual'=>'🐡','grammatical'=>'🪼','spatial'=>'🐚','pragmatic'=>'🦑','temporal'=>'🐠'];
                             $intensityIcons   = [1=>'🌸',2=>'🌼',3=>'🪷',4=>'🌻',5=>'🌺'];
                             $intensityLabels  = [1=>'Faint',2=>'Mild',3=>'Moderate',4=>'Strong',5=>'Blazing'];

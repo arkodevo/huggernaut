@@ -60,7 +60,7 @@ class LessonsLedger
             'seen_in'     => ['L3-batch-12', 'L4-batch-01 rev1'],
             'description' => 'Inventing `-preferred` or similar suffix when the frozen set uses `-dominant`.',
             'example'     => '`written-preferred` / `spoken-preferred` — neither exists; the DB has `written-dominant` / `spoken-dominant`.',
-            'correct'     => 'Channel is a 5-slug set: channel-balanced, written-dominant, spoken-dominant, written-only, spoken-only. Nothing else.',
+            'correct'     => 'Channel is a 5-slug set: balanced, written-dominant, spoken-dominant, written-only, spoken-only. Nothing else.',
         ],
         [
             'id'          => 'type-of-as-contrast',

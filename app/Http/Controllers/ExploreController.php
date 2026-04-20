@@ -23,9 +23,11 @@ class ExploreController extends Controller
 {
     // ── Slug mapping tables ───────────────────────────────────────────────────
 
-    // DB channel slugs → demo JS channel values
+    // DB channel slugs → demo JS channel values. After the 2026-04-20 rename
+    // the DB slug IS `balanced`; the map is now effectively identity, kept
+    // for the legacy fallbacks (`fluid` from pre-rename imports).
     private const CHANNEL_MAP = [
-        'channel-balanced' => 'balanced',
+        'balanced'         => 'balanced',
         'fluid'            => 'balanced',         // legacy fallback
         'spoken-only'      => 'spoken-only',
         'spoken-dominant'  => 'spoken-dominant',
@@ -308,7 +310,7 @@ class ExploreController extends Controller
             ->map(fn ($d) => self::DIMENSION_MAP[$d->slug] ?? $d->slug)
             ->values()->all();
 
-        $channelSlug = $primary->channel?->slug ?? 'channel-balanced';
+        $channelSlug = $primary->channel?->slug ?? 'balanced';
         $channel     = self::CHANNEL_MAP[$channelSlug] ?? $channelSlug;
 
         $tocflSlug  = $primary->tocflLevel?->slug;
@@ -365,7 +367,7 @@ class ExploreController extends Controller
                 'notes' => $notes,
                 'register'    => self::REGISTER_MAP[$registerDes?->slug ?? 'standard'] ?? 'neutral',
                 'connotation' => $s->connotation?->slug ?? 'neutral',
-                'channel'     => self::CHANNEL_MAP[$s->channel?->slug ?? 'channel-balanced'] ?? ($s->channel?->slug ?? 'channel-balanced'),
+                'channel'     => self::CHANNEL_MAP[$s->channel?->slug ?? 'balanced'] ?? ($s->channel?->slug ?? 'balanced'),
                 'dimension'   => $dimensionDes->map(fn ($d) => self::DIMENSION_MAP[$d->slug] ?? $d->slug)->values()->all(),
                 'intensity'   => $s->intensity ?? 2,
                 'tocfl'       => $s->tocflLevel?->slug ? (self::TOCFL_SLUG_MAP[$s->tocflLevel->slug] ?? null) : null,
@@ -484,7 +486,7 @@ class ExploreController extends Controller
             ->map(fn ($d) => self::DIMENSION_MAP[$d->slug] ?? $d->slug)
             ->values()->all();
 
-        $channelSlug = $primary->channel?->slug ?? 'channel-balanced';
+        $channelSlug = $primary->channel?->slug ?? 'balanced';
         $channel     = self::CHANNEL_MAP[$channelSlug] ?? $channelSlug;
 
         $tocflSlug  = $primary->tocflLevel?->slug;

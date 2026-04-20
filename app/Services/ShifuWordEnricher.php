@@ -244,7 +244,7 @@ Respond with ONLY valid JSON matching this exact structure (no markdown, no comm
       "domains": ["language", "education"],
       "register": ["standard"],
       "connotation": "neutral",
-      "channel": "channel-balanced",
+      "channel": "balanced",
       "dimension": ["abstract", "internal"],
       "intensity": 1,
       "sensitivity": "general",

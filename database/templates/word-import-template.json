@@ -112,9 +112,9 @@
       "connotation": "neutral",
       "_connotation_options": ["positive", "positive-dominant", "neutral", "context-dependent", "negative-dominant", "negative"],
 
-      "channel": "channel-balanced",
+      "channel": "balanced",
       "_channel_note": "Channel answers: 'Where is this word used?' Describes the spoken vs. written distribution spectrum.",
-      "_channel_options": ["spoken-only", "spoken-dominant", "channel-balanced", "written-dominant", "written-only"],
+      "_channel_options": ["spoken-only", "spoken-dominant", "balanced", "written-dominant", "written-only"],
       "_channel_rule": "Do NOT use 'fluid' here. 'fluid' belongs in dimension (as dim-fluid). Channel is strictly about usage distribution: spoken vs. written.",
 
       "_semantic_mode_RETIRED": "semantic_mode retired 2026-04-20. Dimension covers the literal/figurative axis via proper sense splitting + dimension tags. 4,574 of 4,634 senses had silently defaulted to literal-only; field was dead.",
