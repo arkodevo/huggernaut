@@ -228,15 +228,27 @@ class FlowClusterSeeder extends Seeder
 
         // ── word_sense_example ────────────────────────────────────────────────
 
-        WordSenseExample::create([
+        $example = WordSenseExample::create([
             'word_sense_id' => $sense->id,
             'definition_id' => $definition->id,
             'chinese_text'  => $senseData['example']['cn'],
-            'english_text'  => $senseData['example']['en'],
             'source'        => 'default',
             'is_public'     => true,
             'is_suppressed' => false,
         ]);
+
+        if (! empty($senseData['example']['en'])) {
+            $enLangId = \DB::table('languages')->where('code', 'en')->value('id');
+            if ($enLangId) {
+                \DB::table('word_sense_example_translations')->insert([
+                    'word_sense_example_id' => $example->id,
+                    'language_id'           => $enLangId,
+                    'translation_text'      => $senseData['example']['en'],
+                    'created_at'            => now(),
+                    'updated_at'            => now(),
+                ]);
+            }
+        }
 
         return $sense;
     }

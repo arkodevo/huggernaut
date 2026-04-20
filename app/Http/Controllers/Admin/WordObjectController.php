@@ -92,7 +92,7 @@ class WordObjectController extends Controller
             'senses.connotation',
             'senses.domains',
             'senses.designations.attribute',  // register, dimension (multi-select)
-            'senses.examples' => fn ($q) => $q->where('is_suppressed', false)->orderBy('id'),
+            'senses.examples' => fn ($q) => $q->where('is_suppressed', false)->orderBy('id')->with('translations'),
         ]);
 
         // Pre-load Traditional Chinese definitions (language_id=2) keyed by sense ID.
@@ -174,9 +174,9 @@ class WordObjectController extends Controller
                         $primaryDomain,
                         $secondaryDomains,
                         $ex1?->chinese_text ?? '',
-                        $ex1?->english_text ?? '',
+                        $ex1?->englishTranslation ?? '',
                         $ex2?->chinese_text ?? '',
-                        $ex2?->english_text ?? '',
+                        $ex2?->englishTranslation ?? '',
                         $word->status,
                     ]);
                 }
@@ -396,11 +396,10 @@ class WordObjectController extends Controller
                 'definitions' => fn ($q) => $q->orderBy('sort_order')->with(['posLabel', 'language']),
                 'channel.labels',
                 'connotation.labels',
-                'semanticMode.labels',
                 'sensitivity.labels',
                 'designations.attribute',
                 'domains' => fn ($q) => $q->with(['labels' => fn ($q) => $q->where('language_id', 1)]),
-                'examples' => fn ($q) => $q->orderBy('id'),
+                'examples' => fn ($q) => $q->orderBy('id')->with('translations'),
                 'senseRelations' => fn ($q) => $q->with([
                     'relationType.labels' => fn ($q) => $q->where('language_id', 1),
                 ]),

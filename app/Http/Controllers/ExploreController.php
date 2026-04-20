@@ -390,7 +390,7 @@ class ExploreController extends Controller
                 $trans = $exTranslations->get($e->id, collect())->pluck('translation_text', 'language_id');
                 return [
                     'cn'           => $e->chinese_text,
-                    'en'           => $trans->get(1) ?? $e->english_text,
+                    'en'           => $trans->get(1),
                     'translations' => $trans->all(),
                 ];
             })
@@ -676,7 +676,7 @@ class ExploreController extends Controller
                 return [
                     'id'           => $e->id,
                     'cn'           => $e->chinese_text,
-                    'en'           => $translations->get(1) ?? $e->english_text,  // legacy fallback
+                    'en'           => $translations->get(1),
                     'translations' => $translations->all(),
                     'source'       => $e->source,
                     'theme'        => $e->theme,

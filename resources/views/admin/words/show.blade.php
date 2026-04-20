@@ -262,7 +262,7 @@
                             $dimensionIcons   = ['abstract'=>'🐙','concrete'=>'🐢','internal'=>'🐟','external'=>'🦂','dim-fluid'=>'🦀','aspectual'=>'🐡','grammatical'=>'🪼','spatial'=>'🐚','pragmatic'=>'🦑','temporal'=>'🐠'];
                             $intensityIcons   = [1=>'🌸',2=>'🌼',3=>'🪷',4=>'🌻',5=>'🌺'];
                             $intensityLabels  = [1=>'Faint',2=>'Mild',3=>'Moderate',4=>'Strong',5=>'Blazing'];
-                            $hasCards = $sense->channel || $sense->connotation || $sense->semanticMode || $sense->sensitivity
+                            $hasCards = $sense->channel || $sense->connotation || $sense->sensitivity
                                      || $registers->isNotEmpty() || $dimensions->isNotEmpty() || $sense->intensity;
                         @endphp
                         @if ($hasCards)
@@ -321,15 +321,6 @@
                                         <div class="card-attr-value">
                                             <span class="attr-icon">{{ $intensityIcons[$sense->intensity] ?? '' }}</span>
                                             <span class="attr-label">{{ $intensityLabels[$sense->intensity] ?? $sense->intensity }}</span>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                @if ($sense->semanticMode)
-                                    <div class="card-attr attr-semantic-mode">
-                                        <div class="card-attr-header">Semantic Mode</div>
-                                        <div class="card-attr-value">
-                                            <span class="attr-label">{{ $sense->semanticMode->labels->first()?->label ?? ucfirst($sense->semanticMode->slug) }}</span>
                                         </div>
                                     </div>
                                 @endif
@@ -449,8 +440,8 @@
                                     @foreach ($sense->examples as $ex)
                                         <li class="text-sm border-l-2 {{ $ex->is_suppressed ? 'border-red-200 opacity-60' : 'border-gray-200' }} pl-3">
                                             <p class="cn text-gray-800">{{ $ex->chinese_text }}</p>
-                                            @if ($ex->english_text)
-                                                <p class="text-gray-500 text-xs mt-0.5">{{ $ex->english_text }}</p>
+                                            @if ($ex->englishTranslation)
+                                                <p class="text-gray-500 text-xs mt-0.5">{{ $ex->englishTranslation }}</p>
                                             @endif
                                             <div class="flex gap-2 mt-0.5">
                                                 <span class="text-xs text-gray-400">{{ $ex->source }}</span>

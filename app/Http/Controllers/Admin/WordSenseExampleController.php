@@ -27,10 +27,7 @@ class WordSenseExampleController extends Controller
         $data['word_sense_id'] = $sense->id;
         $data['is_suppressed'] = $request->boolean('is_suppressed');
 
-        // Keep english_text in sync with EN translation for legacy compatibility
-        $enId = Language::where('code', 'en')->value('id');
         $translations = $data['translations'] ?? [];
-        $data['english_text'] = trim($translations[$enId] ?? '') ?: null;
         unset($data['translations']);
 
         $example = WordSenseExample::create($data);
@@ -56,10 +53,6 @@ class WordSenseExampleController extends Controller
         unset($data['translations']);
 
         $data['is_suppressed'] = $request->boolean('is_suppressed');
-
-        // Keep english_text in sync with EN translation for legacy compatibility
-        $enId = Language::where('code', 'en')->value('id');
-        $data['english_text'] = trim($translations[$enId] ?? '') ?: null;
 
         $example->update($data);
 

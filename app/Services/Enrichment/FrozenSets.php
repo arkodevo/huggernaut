@@ -31,7 +31,7 @@ class FrozenSets
         'connotation'   => 'connotations',
         'dimension'     => 'dimensions',
         'register'      => 'registers',
-        'semantic-mode' => 'semantic_modes',
+        // 'semantic-mode' retired 2026-04-20 — dimension covers the axis.
         'sensitivity'   => 'sensitivities',
         'tocfl-level'   => 'tocfl_levels',
         'hsk-level'     => 'hsk_levels',
@@ -45,7 +45,6 @@ class FrozenSets
     public static function connotations(): array   { return self::forCategory('connotation'); }
     public static function dimensions(): array     { return self::forCategory('dimension'); }
     public static function registers(): array      { return self::forCategory('register'); }
-    public static function semanticModes(): array  { return self::forCategory('semantic-mode'); }
     public static function sensitivities(): array  { return self::forCategory('sensitivity'); }
     public static function tocflLevels(): array    { return self::forCategory('tocfl-level'); }
     public static function hskLevels(): array      { return self::forCategory('hsk-level'); }

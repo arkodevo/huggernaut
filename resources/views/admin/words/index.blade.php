@@ -434,8 +434,13 @@
                             @include('admin.partials.status-badge', ['status' => $word->status])
                         </td>
 
-                        {{-- View --}}
-                        <td class="px-5 py-3 text-right">
+                        {{-- View + Enrich --}}
+                        <td class="px-5 py-3 text-right whitespace-nowrap">
+                            <a href="{{ route('admin.words.enrich-single', ['word' => $word->traditional]) }}"
+                               class="text-purple-600 hover:text-purple-800 text-xs font-medium mr-3"
+                               title="Run 師父 enrichment preview for this word">
+                                師父 ✨
+                            </a>
                             <a href="{{ route('admin.words.show', $word) }}"
                                class="text-indigo-600 hover:text-indigo-800 text-xs font-medium">
                                 View →

@@ -16,7 +16,6 @@ class WordSenseExample extends Model
         'word_sense_id',
         'definition_id',
         'chinese_text',
-        'english_text',
         'source',
         'user_id',
         'ai_verified',
@@ -54,6 +53,38 @@ class WordSenseExample extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(WordSenseExampleTranslation::class);
+    }
+
+    /**
+     * English translation text — canonical accessor.
+     * Reads from the normalized word_sense_example_translations table.
+     * Use this everywhere instead of the retired $english_text column.
+     *
+     * For multi-language display, use $example->translationFor($langId)
+     * or iterate $example->translations directly.
+     */
+    public function getEnglishTranslationAttribute(): ?string
+    {
+        return $this->translationFor('en');
+    }
+
+    public function translationFor(string|int $langCodeOrId): ?string
+    {
+        $langId = is_int($langCodeOrId)
+            ? $langCodeOrId
+            : \App\Models\Language::where('code', $langCodeOrId)->value('id');
+
+        if (! $langId) return null;
+
+        // If translations already loaded, use the in-memory collection —
+        // avoids an N+1 explosion on list views.
+        if ($this->relationLoaded('translations')) {
+            return $this->translations->firstWhere('language_id', $langId)?->translation_text;
+        }
+
+        return $this->translations()
+            ->where('language_id', $langId)
+            ->value('translation_text');
     }
 
     public function grammarPatterns(): BelongsToMany

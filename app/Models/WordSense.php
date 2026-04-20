@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 // The primary lexical unit. 行 = 5 word_senses across 2 pronunciations.
 //
-// Single-select spectrum FKs (channel, connotation, semantic_mode, sensitivity,
+// Single-select spectrum FKs (channel, connotation, sensitivity,
 // tocfl_level, hsk_level) are direct FKs to designations for query efficiency.
+// semantic_mode retired 2026-04-20 — dimension covers the literal/figurative axis.
 //
 // Multi-select attributes (register, dimension) live in word_sense_designations pivot.
 // Domains live in word_sense_domains pivot (many-to-many, ordered by sort_order, max 4).
@@ -21,7 +22,6 @@ class WordSense extends Model
         'pronunciation_id',
         'channel_id',
         'connotation_id',
-        'semantic_mode_id',
         'sensitivity_id',
         'intensity',
         'valency',
@@ -61,11 +61,6 @@ class WordSense extends Model
     public function connotation(): BelongsTo
     {
         return $this->belongsTo(Designation::class, 'connotation_id');
-    }
-
-    public function semanticMode(): BelongsTo
-    {
-        return $this->belongsTo(Designation::class, 'semantic_mode_id');
     }
 
     public function sensitivity(): BelongsTo

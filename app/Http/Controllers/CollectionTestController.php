@@ -419,7 +419,7 @@ class CollectionTestController extends Controller
                 $trans = $exTrans->get($ex->id, collect())->pluck('translation_text', 'language_id');
                 return [
                     'cn'           => $ex->chinese_text,
-                    'en'           => $trans->get(1) ?? $ex->english_text,
+                    'en'           => $trans->get(1),
                     'translations' => $trans->all(),
                 ];
             })->values()->all();

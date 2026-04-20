@@ -34,7 +34,8 @@ class DisputationController extends Controller
                     ->with('posLabel'),
                 'examples' => fn ($q) => $q
                     ->where('is_suppressed', false)
-                    ->orderBy('id'),
+                    ->orderBy('id')
+                    ->with('translations'),
                 'channel',
                 'connotation',
                 'tocflLevel',
@@ -126,7 +127,7 @@ class DisputationController extends Controller
             'id'      => $ex->id,
             'key'     => 'example:' . $ex->id,
             'chinese' => $ex->chinese_text ?? '',
-            'english' => $ex->english_text ?? '',
+            'english' => $ex->englishTranslation ?? '',
         ])->values()->all();
 
         // Attributes: each set single-select designation becomes a dispute target.

@@ -117,11 +117,9 @@
       "_channel_options": ["spoken-only", "spoken-dominant", "channel-balanced", "written-dominant", "written-only"],
       "_channel_rule": "Do NOT use 'fluid' here. 'fluid' belongs in dimension (as dim-fluid). Channel is strictly about usage distribution: spoken vs. written.",
 
-      "semantic_mode": "literal-only",
-      "_semantic_mode_options": ["literal-only", "literal-dominant", "balanced", "metaphorical-dominant", "metaphorical-only"],
-      "_semantic_mode_CRITICAL": "dim-fluid is a DIMENSION slug, NOT a semantic_mode slug. Don't confuse the two fields. Real catch: L4-batch-05 had semantic_mode='dim-fluid' on 不平 — caught by 惠明, R4a now blocks this automatically.",
+      "_semantic_mode_RETIRED": "semantic_mode retired 2026-04-20. Dimension covers the literal/figurative axis via proper sense splitting + dimension tags. 4,574 of 4,634 senses had silently defaulted to literal-only; field was dead.",
 
-      "dimension": [],
+      "dimension": ["internal", "abstract"],
       "_dimension_note": "Dimension answers: 'What kind of meaning is this?' Multi-select. Describes the pedagogical/semantic character of the word.",
       "_dimension_options": ["internal", "external", "abstract", "concrete", "dim-fluid", "temporal", "aspectual", "grammatical", "spatial", "pragmatic"],
       "_dimension_definitions": {

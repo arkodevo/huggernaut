@@ -188,6 +188,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('words/csv-import/enrich', [CsvImportController::class, 'enrichWord'])->name('words.csv-import.enrich');
     Route::post('words/csv-import/save-word', [CsvImportController::class, 'saveWord'])->name('words.csv-import.save-word');
     Route::get('words/csv-import/next', [CsvImportController::class, 'processNext'])->name('words.csv-import.next');
+
+    // Single-word 師父 enrichment entry point — reuses csv-review flow for one word.
+    // Used by the "Enrich with 師父" link on the admin/words/index search rows.
+    Route::get('words/enrich-single', [CsvImportController::class, 'enrichSingle'])->name('words.enrich-single');
     Route::get('words/create', [WordObjectController::class, 'create'])->name('words.create');
     Route::post('words', [WordObjectController::class, 'store'])->name('words.store');
     Route::get('words/{word}', [WordObjectController::class, 'show'])->name('words.show');

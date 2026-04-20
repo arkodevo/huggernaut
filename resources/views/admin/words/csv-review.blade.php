@@ -200,7 +200,11 @@ function csvRenderWord(idx, result) {
     // Per-sense dropdown
     html += '<select class="csv-sense-decision rounded-lg border border-gray-300 px-2 py-1 text-xs" id="csvSenseDecision-' + idx + '-' + si + '" style="min-width:160px">';
     if (isExistingSense) {
-      html += '<option value="enrich" selected>🔄 Enrich (preserve source)</option>';
+      // For an existing sense, the source (tocfl/editorial) + TOCFL/HSK
+      // level are preserved by the save path. The choice here is what
+      // status the enrichment lands at.
+      html += '<option value="enrich-publish" selected>✅ Enrich + Publish</option>';
+      html += '<option value="enrich-draft">📝 Enrich + Save as Draft</option>';
       html += '<option value="reject">❌ Keep as-is</option>';
     } else if (isNewSense) {
       html += '<option value="draft" selected>📝 Add as Draft</option>';
@@ -244,7 +248,7 @@ function csvRenderWord(idx, result) {
         html += '<div class="card-attr attr-intensity"><div class="card-attr-header">Intensity</div><div class="card-attr-value"><span class="attr-icon">' + (intensityIcons[sense.intensity]||'') + '</span><span class="attr-label">' + intLabel + '</span></div></div>';
       }
       if (sense.tocfl) html += attrCard('tocfl', sense.tocfl, 'TOCFL', tocflIcons[sense.tocfl]);
-      if (sense.semantic_mode) html += '<div class="card-attr attr-semantic-mode"><div class="card-attr-header">Semantic Mode</div><div class="card-attr-value"><span class="attr-label">' + slugLabel(sense.semantic_mode) + '</span></div></div>';
+      // semantic_mode retired 2026-04-20 — dimension covers the axis.
       html += '</div>';
     }
 

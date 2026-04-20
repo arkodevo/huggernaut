@@ -121,12 +121,9 @@ class StructuralValidator
             $blockers[] = self::issue('R4', $label, "unknown connotation '{$connotation}'");
         }
 
-        // R4a: Semantic mode must be in frozen set (if present)
-        // Gap surfaced by 惠明 on L4-batch-05 rev2 (不平 had 'dim-fluid' — a dimension slug — in semantic_mode field).
-        $semMode = $sense['semantic_mode'] ?? null;
-        if ($semMode !== null && $semMode !== '' && ! in_array($semMode, FrozenSets::semanticModes(), true)) {
-            $blockers[] = self::issue('R4a', $label, "unknown semantic_mode '{$semMode}' — valid: " . implode(', ', FrozenSets::semanticModes()));
-        }
+        // R4a: RETIRED 2026-04-20. semantic_mode retired — dimension covers
+        // the literal/figurative axis via proper sense splitting + dimension tags.
+        // 4,574 of 4,634 senses defaulted to literal-only; field was dead.
 
         // R4b: Sensitivity must be in frozen set (if present)
         $sens = $sense['sensitivity'] ?? null;

@@ -151,40 +151,54 @@
             @endforeach
         </div>
 
-        {{-- ── Notes (i18n formula / usage / traps) ───────────────────────── --}}
-        <div class="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
-            <h2 class="text-lg font-semibold text-gray-800">Notes (per language)</h2>
+        {{-- ── Notes (bilingual, grouped by note type) ──────────────────────
+             Each note type is one collapsible section; each section shows all
+             coverage languages inside. Matches the word-sense form pattern so
+             reviewers see EN + ZH side-by-side per concept (not two separate
+             language silos). --}}
+        <div class="space-y-4">
+            <h2 class="text-lg font-semibold text-gray-800">Notes</h2>
 
-            @foreach ($coverageLangs as $lang)
-                @php $existingNote = $existingNotes->get($lang->id); @endphp
-                <details class="border-l-4 border-indigo-200 pl-4" {{ $loop->first ? 'open' : '' }}>
-                    <summary class="text-sm font-medium text-gray-600 cursor-pointer py-1">
-                        {{ $lang->name }} ({{ $lang->code }})
-                        @if ($existingNote?->formula || $existingNote?->usage_note || $existingNote?->learner_traps)
-                            <span class="text-green-500 text-xs ml-1">✓ has content</span>
-                        @endif
-                    </summary>
-                    <div class="space-y-3 mt-2">
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">Formula</label>
-                            <input type="text" name="notes[{{ $lang->id }}][formula]"
-                                   value="{{ old("notes.{$lang->id}.formula", $existingNote?->formula ?? '') }}"
-                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                        </div>
+            @php
+                $grammarNoteTypes = [
+                    ['field' => 'formula',        'label' => 'Formula',       'input' => 'input',
+                     'border' => 'border-gray-200',  'bg' => 'bg-gray-50',  'title' => 'text-gray-900'],
+                    ['field' => 'usage_note',     'label' => 'Usage Note',    'input' => 'textarea',
+                     'border' => 'border-amber-200', 'bg' => 'bg-amber-50', 'title' => 'text-amber-800'],
+                    ['field' => 'learner_traps',  'label' => 'Learner Traps', 'input' => 'textarea',
+                     'border' => 'border-red-200',   'bg' => 'bg-red-50',   'title' => 'text-red-800'],
+                ];
+            @endphp
 
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">Usage Note</label>
-                            <textarea name="notes[{{ $lang->id }}][usage_note]" rows="3"
-                                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">{{ old("notes.{$lang->id}.usage_note", $existingNote?->usage_note ?? '') }}</textarea>
+            @foreach ($grammarNoteTypes as $nt)
+                <div class="bg-white rounded-xl border {{ $nt['border'] }} overflow-hidden">
+                    <details open>
+                        <summary class="px-5 py-3 {{ $nt['bg'] }} border-b {{ $nt['border'] }} cursor-pointer">
+                            <span class="text-sm font-semibold {{ $nt['title'] }}">{{ $nt['label'] }}</span>
+                            <span class="text-xs text-gray-400 ml-2">{{ $coverageLangs->pluck('code')->implode(' + ') }}</span>
+                        </summary>
+                        <div class="p-5 space-y-3">
+                            @foreach ($coverageLangs as $lang)
+                                @php
+                                    $existingNote = $existingNotes->get($lang->id);
+                                    $oldKey = "notes.{$lang->id}.{$nt['field']}";
+                                    $saved = $existingNote?->{$nt['field']} ?? '';
+                                @endphp
+                                <div>
+                                    <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($lang->code) }} · {{ $lang->name }}</label>
+                                    @if ($nt['input'] === 'input')
+                                        <input type="text" name="notes[{{ $lang->id }}][{{ $nt['field'] }}]"
+                                               value="{{ old($oldKey, $saved) }}"
+                                               class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    @else
+                                        <textarea name="notes[{{ $lang->id }}][{{ $nt['field'] }}]" rows="3"
+                                                  class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{ old($oldKey, $saved) }}</textarea>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
-
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">Learner Traps</label>
-                            <textarea name="notes[{{ $lang->id }}][learner_traps]" rows="3"
-                                      class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">{{ old("notes.{$lang->id}.learner_traps", $existingNote?->learner_traps ?? '') }}</textarea>
-                        </div>
-                    </div>
-                </details>
+                    </details>
+                </div>
             @endforeach
         </div>
 
@@ -478,9 +492,16 @@
                     <h4 class="text-xs font-semibold text-indigo-900 uppercase tracking-wide">Notes (formula · usage · traps)</h4>
                     <button type="button" class="gp-apply-notes text-xs px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-500">Apply all notes</button>
                 </div>
-                ${['en', 'zh'].map(code => {
-                    const n = notes[code] || {};
-                    const label = code === 'en' ? 'English' : '中文';
+                ${Object.entries(notes).map(([code, rawNote]) => {
+                    const n = rawNote || {};
+                    // Render whatever keys 師父 returned — works for en, zh-TW,
+                    // and any future coverage language. Hardcoded ['en','zh']
+                    // was silently dropping 'zh-TW' from the preview.
+                    const langRow = COVERAGE_LANGS.find(l => l.code === code)
+                                 || COVERAGE_LANGS.find(l => l.code.toLowerCase().startsWith(code.toLowerCase()));
+                    const label = code === 'en' ? 'English'
+                                : (code === 'zh-TW' || code === 'zh') ? '中文'
+                                : (langRow?.code ?? code);
                     return `
                     <div class="border-l-2 border-indigo-200 pl-3 mb-3">
                         <p class="text-xs font-medium text-indigo-700 mb-1">${label}</p>

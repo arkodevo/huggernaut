@@ -110,6 +110,50 @@ class CsvImportController extends Controller
         return view('admin.words.csv-review', compact('wordList', 'hasMore', 'remainingCount'));
     }
 
+    // ── Single-word enrichment entry ─────────────────────────────────
+    //
+    // Reuses the csv-review UI for one word. Triggered by the "Enrich with 師父"
+    // link on admin/words/index search rows. Zero new UI — just a one-item
+    // $wordList built the same shape as process() produces, then the same
+    // csv-review.blade.php renders it and the existing JS handles enrich+save.
+
+    public function enrichSingle(Request $request): View|RedirectResponse
+    {
+        $request->validate([
+            'word' => ['required', 'string', 'max:16'],
+        ]);
+
+        $traditional = trim($request->input('word'));
+
+        // Validate CJK characters only
+        if (! preg_match('/^[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}\x{20000}-\x{2a6df}\x{2a700}-\x{2b73f}]+$/u', $traditional)) {
+            return redirect()->route('admin.words.index')
+                ->with('error', 'Word must contain only Chinese characters.');
+        }
+
+        // Clear any batch queue — this is a single-word flow, not a batch.
+        session()->forget('csv_import_queue');
+
+        // Match process()'s wordList shape exactly so the csv-review view renders identically.
+        $existing = WordObject::where('traditional', $traditional)
+            ->select('traditional', 'shifu_reviewed_at', 'status', 'smart_id')
+            ->first();
+
+        $wordList = [[
+            'traditional'    => $traditional,
+            'exists'         => (bool) $existing,
+            'reviewed'       => $existing?->shifu_reviewed_at ? true : false,
+            'reviewed_at'    => $existing?->shifu_reviewed_at,
+            'current_status' => $existing?->status,
+        ]];
+
+        return view('admin.words.csv-review', [
+            'wordList'       => $wordList,
+            'hasMore'        => false,
+            'remainingCount' => 0,
+        ]);
+    }
+
     // ── AJAX: Enrich a single word ───────────────────────────────────
 
     public function enrichWord(Request $request): JsonResponse
@@ -130,7 +174,7 @@ class CsvImportController extends Controller
                 'senses' => fn ($q) => $q->orderBy('id')->with([
                     'pronunciation',
                     'definitions' => fn ($q) => $q->orderBy('sort_order')->with(['posLabel', 'language']),
-                    'channel', 'connotation', 'semanticMode', 'sensitivity',
+                    'channel', 'connotation', 'sensitivity',
                     'tocflLevel', 'hskLevel', 'designations.attribute', 'domains',
                     'examples' => fn ($q) => $q->orderBy('id'),
                 ]),
@@ -230,9 +274,11 @@ class CsvImportController extends Controller
                     'shifu_reviewed_at' => now(),
                 ]);
             } else {
-                // Determine highest status from sense decisions
-                $hasPublish = in_array('publish', $senseDecisions) || in_array('enrich', $senseDecisions);
-                $wordStatus = $hasPublish ? 'published' : $word->status;
+                // Promote the word to published if any sense decision publishes.
+                // Otherwise keep the current word-level status — do not silently
+                // demote a published word to draft.
+                $anyPublish = collect($senseDecisions)->contains(fn ($d) => in_array($d, ['publish', 'enrich-publish'], true));
+                $wordStatus = $anyPublish ? 'published' : $word->status;
 
                 $word->update([
                     'simplified'        => $w['simplified'] ?? $w['traditional'],
@@ -257,16 +303,38 @@ class CsvImportController extends Controller
 
                 $senseKey = ($s['pinyin'] ?? '') . '|' . ($s['pos'] ?? '');
                 $isExistingSense = in_array($senseKey, $existingKeys);
+
+                // Status for NEW senses: 'publish' → published, 'draft' → draft.
+                // For EXISTING senses on enrich, we preserve the sense's current
+                // status unless the user explicitly picks enrich-publish or
+                // enrich-draft. See the enrich branch below.
                 $status = $decision === 'publish' ? 'published' : 'draft';
 
-                if ($isExistingSense && $decision === 'enrich') {
-                    // ENRICH: update enrichment content, preserve source + TOCFL/HSK
+                $isEnrichDecision = in_array($decision, ['enrich', 'enrich-publish', 'enrich-draft'], true);
+
+                if ($isExistingSense && $isEnrichDecision) {
+                    // ENRICH: full content replace for the matched sense.
+                    // We keep the sense row ID + source + TOCFL/HSK, but wipe
+                    // and re-insert all child content (definitions, examples,
+                    // notes, relations, collocations, pivots). This mirrors
+                    // the new-sense path so 師父's enrichment actually lands
+                    // on screen — previously the enrich branch only wrote
+                    // word_senses + word_sense_notes, leaving skeletons.
                     $matchedSense = $existingSenses->first(function ($es) use ($s) {
                         return $es->pronunciation?->pronunciation_text === ($s['pinyin'] ?? '')
                             && ($es->posLabels->first()?->slug ?? '') === ($s['pos'] ?? '');
                     });
 
                     if ($matchedSense) {
+                        // Resolve target status from decision, preserving the
+                        // existing sense's status when the user picked plain
+                        // "enrich" (legacy value, no status choice).
+                        $senseStatus = match ($decision) {
+                            'enrich-publish' => 'published',
+                            'enrich-draft'   => 'draft',
+                            default          => $matchedSense->status, // 'enrich' legacy → preserve
+                        };
+
                         // Canonical on word_senses: prefer Chinese, fall back to English
                         $canonicalFormula = $s['formula_zh'] ?? $s['formula_en'] ?? $matchedSense->formula;
                         $canonicalUsage   = $s['usage_note_zh'] ?? $s['usage_note_en'] ?? $matchedSense->usage_note;
@@ -275,45 +343,23 @@ class CsvImportController extends Controller
                         $matchedSense->update([
                             'channel_id'       => isset($s['channel']) && $s['channel'] ? ($designations[$s['channel']] ?? $matchedSense->channel_id) : $matchedSense->channel_id,
                             'connotation_id'   => isset($s['connotation']) && $s['connotation'] ? ($designations[$s['connotation']] ?? $matchedSense->connotation_id) : $matchedSense->connotation_id,
-                            'semantic_mode_id' => isset($s['semantic_mode']) && $s['semantic_mode'] ? ($designations[$s['semantic_mode']] ?? $matchedSense->semantic_mode_id) : $matchedSense->semantic_mode_id,
                             'sensitivity_id'   => isset($s['sensitivity']) && $s['sensitivity'] ? ($designations[$s['sensitivity']] ?? $matchedSense->sensitivity_id) : $matchedSense->sensitivity_id,
                             'intensity'        => $s['intensity'] ?? $matchedSense->intensity,
                             'valency'          => $s['valency'] ?? $matchedSense->valency,
                             'formula'          => $canonicalFormula,
                             'usage_note'       => $canonicalUsage,
                             'learner_traps'    => $canonicalTraps,
+                            'status'           => $senseStatus,
                             'enriched_by'      => 'shifu',
                             'enriched_at'      => now(),
                             // source, tocfl_level_id, hsk_level_id — NOT touched
                         ]);
 
-                        // Update word_sense_notes (bilingual, normalized)
-                        $noteTypes = NoteType::all()->pluck('id', 'slug');
-                        $noteFieldMap = [
-                            'formula'    => ['en' => $s['formula_en'] ?? null,       'zh' => $s['formula_zh'] ?? null],
-                            'usage-note' => ['en' => $s['usage_note_en'] ?? null,    'zh' => $s['usage_note_zh'] ?? null],
-                            'learner-traps' => ['en' => $s['learner_traps_en'] ?? null, 'zh' => $s['learner_traps_zh'] ?? null],
-                        ];
-
-                        foreach ($noteFieldMap as $slug => $langs) {
-                            $typeId = $noteTypes[$slug] ?? null;
-                            if (! $typeId) continue;
-
-                            foreach ([['id' => $langEn, 'val' => $langs['en']], ['id' => $langZh, 'val' => $langs['zh']]] as $lang) {
-                                if ($lang['val']) {
-                                    DB::table('word_sense_notes')->updateOrInsert(
-                                        ['word_sense_id' => $matchedSense->id, 'language_id' => $lang['id'], 'note_type_id' => $typeId],
-                                        ['content' => $lang['val'], 'updated_at' => now(), 'created_at' => now()]
-                                    );
-                                } else {
-                                    DB::table('word_sense_notes')
-                                        ->where('word_sense_id', $matchedSense->id)
-                                        ->where('language_id', $lang['id'])
-                                        ->where('note_type_id', $typeId)
-                                        ->delete();
-                                }
-                            }
-                        }
+                        $this->writeSenseContent(
+                            $matchedSense, $s, $langEn, $langZh,
+                            $designations, $posLabels, $relationTypes,
+                            replace: true
+                        );
 
                         $enriched++;
                     }
@@ -466,7 +512,6 @@ class CsvImportController extends Controller
 
         $channelId      = isset($s['channel'])       && $s['channel']       ? ($designations[$s['channel']]       ?? null) : null;
         $connotationId  = isset($s['connotation'])   && $s['connotation']   ? ($designations[$s['connotation']]   ?? null) : null;
-        $semanticModeId = isset($s['semantic_mode']) && $s['semantic_mode'] ? ($designations[$s['semantic_mode']] ?? null) : null;
         $sensitivityId  = isset($s['sensitivity'])   && $s['sensitivity']   ? ($designations[$s['sensitivity']]   ?? null) : null;
         $tocflId        = isset($s['tocfl'])          && $s['tocfl']         ? ($designations[$s['tocfl']]         ?? null) : null;
         $hskId          = isset($s['hsk'])            && $s['hsk']           ? ($designations[$s['hsk']]           ?? null) : null;
@@ -481,7 +526,6 @@ class CsvImportController extends Controller
             'pronunciation_id' => $pronunciation->id,
             'channel_id'       => $channelId,
             'connotation_id'   => $connotationId,
-            'semantic_mode_id' => $semanticModeId,
             'sensitivity_id'   => $sensitivityId,
             'intensity'        => $s['intensity'] ?? null,
             'valency'          => $s['valency'] ?? null,
@@ -497,6 +541,44 @@ class CsvImportController extends Controller
             'enriched_at'      => isset($s['enriched_by']) ? now() : null,
         ]);
 
+        $this->writeSenseContent(
+            $sense, $s, $langEn, $langZh,
+            $designations, $posLabels, $relationTypes,
+            replace: false
+        );
+    }
+
+    // ── Private: write all child content for a sense ─────────────────
+    //
+    // Writes definitions, examples, notes, relations, collocations,
+    // domain pivot, multi-select designations (register + dimension),
+    // POS label pivot. Shared between importSense (new) and saveWord
+    // enrich-existing path.
+    //
+    // When $replace=true, wipes all child rows for this sense before
+    // re-inserting. This is what makes the "Enrich with 師父" flow
+    // actually land 師父's output on an existing sense.
+
+    private function writeSenseContent(
+        WordSense $sense, array $s,
+        int $langEn, int $langZh,
+        array $designations, array $posLabels,
+        array $relationTypes, bool $replace
+    ): void {
+        $senseId = $sense->id;
+
+        if ($replace) {
+            // Wipe child rows — fresh slate for 師父's enrichment.
+            DB::table('word_sense_definitions')->where('word_sense_id', $senseId)->delete();
+            DB::table('word_sense_examples')->where('word_sense_id', $senseId)->delete();
+            DB::table('word_sense_notes')->where('word_sense_id', $senseId)->delete();
+            DB::table('word_sense_relations')->where('word_sense_id', $senseId)->delete();
+            DB::table('word_sense_collocations')->where('word_sense_id', $senseId)->delete();
+            DB::table('word_sense_designations')->where('word_sense_id', $senseId)->delete();
+            DB::table('word_sense_domains')->where('word_sense_id', $senseId)->delete();
+            DB::table('word_sense_pos')->where('word_sense_id', $senseId)->delete();
+        }
+
         // Domains (ordered, max 4)
         $domainSync = [];
         foreach (array_slice($s['domains'] ?? [], 0, 4) as $idx => $slug) {
@@ -505,13 +587,17 @@ class CsvImportController extends Controller
         }
         if ($domainSync) $sense->domains()->sync($domainSync);
 
-        // Designations (register + dimension)
+        // Designations — register and dimension are both multi-select.
+        // dimension accepts either an array (preferred, multi) or a
+        // single-string fallback for older pipelines.
         $designationIds = [];
-        foreach ($s['register'] ?? [] as $reg) {
+        foreach ((array) ($s['register'] ?? []) as $reg) {
             $id = $designations[$reg] ?? null;
             if ($id) $designationIds[] = $id;
         }
-        foreach ($s['dimension'] ?? [] as $dim) {
+        $dimInput = $s['dimension'] ?? [];
+        if (is_string($dimInput)) $dimInput = [$dimInput]; // legacy single-value fallback
+        foreach ((array) $dimInput as $dim) {
             $id = $designations[$dim] ?? null;
             if ($id) $designationIds[] = $id;
         }
@@ -522,7 +608,7 @@ class CsvImportController extends Controller
 
         // Definitions (clean — no formula/usage_note on definitions)
         $defEn = WordSenseDefinition::create([
-            'word_sense_id'   => $sense->id,
+            'word_sense_id'   => $senseId,
             'language_id'     => $langEn,
             'pos_id'          => $posId,
             'definition_text' => $s['definitions']['en'] ?? '',
@@ -531,7 +617,7 @@ class CsvImportController extends Controller
 
         if (! empty($s['definitions']['zh-TW'])) {
             WordSenseDefinition::create([
-                'word_sense_id'   => $sense->id,
+                'word_sense_id'   => $senseId,
                 'language_id'     => $langZh,
                 'pos_id'          => $posId,
                 'definition_text' => $s['definitions']['zh-TW'],
@@ -554,7 +640,7 @@ class CsvImportController extends Controller
             foreach ([['id' => $langEn, 'val' => $langs['en']], ['id' => $langZh, 'val' => $langs['zh']]] as $lang) {
                 if ($lang['val']) {
                     DB::table('word_sense_notes')->insert([
-                        'word_sense_id' => $sense->id,
+                        'word_sense_id' => $senseId,
                         'language_id'   => $lang['id'],
                         'note_type_id'  => $typeId,
                         'content'       => $lang['val'],
@@ -569,16 +655,28 @@ class CsvImportController extends Controller
             $sense->posLabels()->attach($posId, ['is_primary' => true]);
         }
 
+        // Examples: Chinese source on word_sense_examples; translations
+        // (incl. English) in the normalized word_sense_example_translations
+        // table keyed by language_id. Single source of truth.
         foreach ($s['examples'] ?? [] as $ex) {
-            WordSenseExample::create([
-                'word_sense_id' => $sense->id,
+            $example = WordSenseExample::create([
+                'word_sense_id' => $senseId,
                 'definition_id' => $defEn->id,
                 'chinese_text'  => $ex['chinese'] ?? '',
-                'english_text'  => $ex['english'] ?? null,
                 'source'        => 'default',
                 'is_public'     => true,
                 'is_suppressed' => false,
             ]);
+
+            if (! empty($ex['english'])) {
+                DB::table('word_sense_example_translations')->insert([
+                    'word_sense_example_id' => $example->id,
+                    'language_id'           => $langEn,
+                    'translation_text'      => $ex['english'],
+                    'created_at'            => now(),
+                    'updated_at'            => now(),
+                ]);
+            }
         }
 
         // Relations — look up target words by traditional character
@@ -598,7 +696,7 @@ class CsvImportController extends Controller
                 if (empty($targetTrad)) continue;
 
                 DB::table('word_sense_relations')->insertOrIgnore([
-                    'word_sense_id'     => $sense->id,
+                    'word_sense_id'     => $senseId,
                     'related_word_text' => $targetTrad,
                     'relation_type_id'  => $typeId,
                     'editorial_note'    => null,
@@ -614,7 +712,7 @@ class CsvImportController extends Controller
             if (empty($collText)) continue;
 
             DB::table('word_sense_collocations')->insertOrIgnore([
-                'word_sense_id'   => $sense->id,
+                'word_sense_id'   => $senseId,
                 'collocation_text' => $collText,
                 'created_at'       => now(),
                 'updated_at'       => now(),

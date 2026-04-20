@@ -119,7 +119,8 @@
                 <textarea name="chinese_text" rows="2" placeholder="Chinese example sentence…" required
                           class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm cn focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
             </div>
-            @foreach ($coverageLangs as $cl)
+            {{-- Translation fields — exclude zh-* (Chinese is the source, not a translation target) --}}
+            @foreach ($translationLangs as $cl)
                 <div>
                     <label class="block text-xs font-semibold text-indigo-500 mb-1">{{ strtoupper($cl->code) }} · {{ $cl->name }}</label>
                     <textarea name="translations[{{ $cl->id }}]" rows="1"

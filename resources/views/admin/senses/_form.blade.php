@@ -2,7 +2,7 @@
     $v = fn(string $field, $default = null) => old($field, $sense?->{$field} ?? $default);
     $selectedDesignations = $sense?->designations->pluck('id')->toArray() ?? [];
     $selectedDomains = $sense?->domains->sortBy('pivot.sort_order')->pluck('id')->toArray() ?? [];
-    $singleSelectAttrs = ['channel', 'connotation', 'semantic-mode', 'sensitivity', 'tocfl-level', 'hsk-level'];
+    $singleSelectAttrs = ['channel', 'connotation', 'sensitivity', 'tocfl-level', 'hsk-level'];
 
     // Build the initial definitions array for Alpine
     $initDefs = ! empty($existingDefs) ? $existingDefs : [[
@@ -96,7 +96,6 @@
                     $fieldMap = [
                         'channel'       => 'channel_id',
                         'connotation'   => 'connotation_id',
-                        'semantic-mode' => 'semantic_mode_id',
                         'sensitivity'   => 'sensitivity_id',
                         'tocfl-level'   => 'tocfl_level_id',
                         'hsk-level'     => 'hsk_level_id',

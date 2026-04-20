@@ -271,7 +271,6 @@ class ImportWordData extends Command
         // Resolve FKs
         $channelId      = isset($s['channel'])     && $s['channel']     ? ($this->designations[$s['channel']]     ?? null) : null;
         $connotationId  = isset($s['connotation']) && $s['connotation'] ? ($this->designations[$s['connotation']] ?? null) : null;
-        $semanticModeId = isset($s['semantic_mode']) ? ($this->designations[$s['semantic_mode']] ?? null) : null;
         $sensitivityId  = isset($s['sensitivity']) ? ($this->designations[$s['sensitivity']] ?? null) : null;
         $tocflId        = isset($s['tocfl']) ? ($this->designations[$s['tocfl']] ?? null) : null;
         $hskId          = isset($s['hsk']) ? ($this->designations[$s['hsk']] ?? null) : null;
@@ -282,7 +281,6 @@ class ImportWordData extends Command
             'pronunciation_id' => $pronunciation->id,
             'channel_id'       => $channelId,
             'connotation_id'   => $connotationId,
-            'semantic_mode_id' => $semanticModeId,
             'sensitivity_id'   => $sensitivityId,
             'intensity'        => $s['intensity'] ?? null,
             'valency'          => $s['valency'] ?? null,
@@ -353,17 +351,27 @@ class ImportWordData extends Command
             $sense->posLabels()->attach($posId, ['is_primary' => true]);
         }
 
-        // Examples
+        // Examples — translations go in word_sense_example_translations.
+        $enLangId = \DB::table('languages')->where('code', 'en')->value('id');
         foreach ($s['examples'] ?? [] as $ex) {
-            WordSenseExample::create([
+            $example = WordSenseExample::create([
                 'word_sense_id' => $sense->id,
                 'definition_id' => $defEn->id,
                 'chinese_text'  => $ex['chinese'],
-                'english_text'  => $ex['english'] ?? null,
                 'source'        => 'default',
                 'is_public'     => true,
                 'is_suppressed' => false,
             ]);
+
+            if (! empty($ex['english']) && $enLangId) {
+                \DB::table('word_sense_example_translations')->insert([
+                    'word_sense_example_id' => $example->id,
+                    'language_id'           => $enLangId,
+                    'translation_text'      => $ex['english'],
+                    'created_at'            => now(),
+                    'updated_at'            => now(),
+                ]);
+            }
         }
 
         // Bilingual notes (word_sense_notes)

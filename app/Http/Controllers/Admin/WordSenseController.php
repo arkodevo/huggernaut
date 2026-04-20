@@ -162,7 +162,6 @@ class WordSenseController extends Controller
             'pronunciation_id'  => ['required', 'exists:word_pronunciations,id'],
             'channel_id'        => ['nullable', 'exists:designations,id'],
             'connotation_id'    => ['nullable', 'exists:designations,id'],
-            'semantic_mode_id'  => ['nullable', 'exists:designations,id'],
             'sensitivity_id'    => ['nullable', 'exists:designations,id'],
             'domains'           => ['nullable', 'array'],
             'domains.*'         => ['nullable', 'exists:designations,id'],
@@ -181,16 +180,16 @@ class WordSenseController extends Controller
             'definitions.*.pos_id'          => ['required', 'exists:pos_labels,id'],
             'definitions.*.definition_text' => ['required', 'string'],
             'definitions.*.sort_order'      => ['nullable', 'integer'],
-            // Per-language notes (formula, usage_note, learner_traps)
+            // Per-language notes, keyed by note_type.slug (hyphenated — canonical)
             'notes'                         => ['nullable', 'array'],
             'notes.*'                       => ['array'],
             'notes.*.formula'               => ['nullable', 'string', 'max:255'],
-            'notes.*.usage_note'            => ['nullable', 'string'],
-            'notes.*.learner_traps'         => ['nullable', 'string'],
+            'notes.*.usage-note'            => ['nullable', 'string'],
+            'notes.*.learner-traps'         => ['nullable', 'string'],
         ]);
 
         $sense = array_intersect_key($validated, array_flip([
-            'pronunciation_id', 'channel_id', 'connotation_id', 'semantic_mode_id',
+            'pronunciation_id', 'channel_id', 'connotation_id',
             'sensitivity_id', 'tocfl_level_id', 'hsk_level_id',
             'intensity', 'valency', 'status',
             'alignment', 'source',
@@ -219,21 +218,18 @@ class WordSenseController extends Controller
 
         $now = now();
 
-        // Map form field names → note_type slugs
-        $fieldToSlug = [
-            'formula'       => 'formula',
-            'usage_note'    => 'usage-note',
-            'learner_traps' => 'learner-traps',
-        ];
-
+        // The form submits notes keyed by note_type.slug (hyphenated —
+        // the canonical identifier). We iterate the active slug set to
+        // avoid writing unknown keys, but otherwise pass through.
         $noteTypes = NoteType::all()->pluck('id', 'slug'); // slug → id
+        $activeSlugs = ['formula', 'usage-note', 'learner-traps'];
 
         foreach ($notes as $langId => $fields) {
-            foreach ($fieldToSlug as $field => $slug) {
+            foreach ($activeSlugs as $slug) {
                 $noteTypeId = $noteTypes[$slug] ?? null;
                 if (! $noteTypeId) continue;
 
-                $content = trim($fields[$field] ?? '') ?: null;
+                $content = trim($fields[$slug] ?? '') ?: null;
 
                 if ($content) {
                     DB::table('word_sense_notes')->updateOrInsert(
@@ -275,10 +271,17 @@ class WordSenseController extends Controller
         }
 
         $canonical = [];
-        foreach ($fieldToSlug as $field => $slug) {
+        // Derive canonical scalar columns on word_senses for legacy reads.
+        // Column name (underscore) ← note slug (hyphen).
+        $slugToColumn = [
+            'formula'        => 'formula',
+            'usage-note'     => 'usage_note',
+            'learner-traps'  => 'learner_traps',
+        ];
+        foreach ($slugToColumn as $slug => $column) {
             $typeId = $noteTypes[$slug] ?? null;
             if (! $typeId) continue;
-            $canonical[$field] = $lookup[$typeId][$zhId] ?? $lookup[$typeId][$enId] ?? null;
+            $canonical[$column] = $lookup[$typeId][$zhId] ?? $lookup[$typeId][$enId] ?? null;
         }
 
         $sense->updateQuietly($canonical);

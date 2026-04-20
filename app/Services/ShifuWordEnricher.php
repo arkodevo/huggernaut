@@ -194,7 +194,6 @@ class ShifuWordEnricher
         $connotations  = implode(', ', FrozenSets::connotations());
         $registers     = implode(', ', FrozenSets::registers());
         $dimensions    = implode(', ', FrozenSets::dimensions());
-        $semanticModes = implode(', ', FrozenSets::semanticModes());
         $sensitivities = implode(', ', FrozenSets::sensitivities());
         $posLabels     = implode(', ', FrozenSets::posLabels());
 
@@ -246,8 +245,7 @@ Respond with ONLY valid JSON matching this exact structure (no markdown, no comm
       "register": ["standard"],
       "connotation": "neutral",
       "channel": "channel-balanced",
-      "semantic_mode": "literal-only",
-      "dimension": [],
+      "dimension": ["abstract", "internal"],
       "intensity": 1,
       "sensitivity": "general",
       "valency": null,
@@ -566,10 +564,52 @@ POS: {$posLabels}
 
 channel: {$channels}
 connotation: {$connotations}
-register: {$registers}
-dimension: {$dimensions}
-semantic_mode: {$semanticModes}
+register (MULTI-SELECT — array, usually 1 value): {$registers}
+dimension (MULTI-SELECT — array, 1–3 values): {$dimensions}
 sensitivity: {$sensitivities}
+
+PINYIN (numeric form only — STRICT):
+  • Always numeric: "mi2lian4", "xing2", "hao3"
+  • NEVER tone marks: NOT "mí liàn", NOT "xíng", NOT "hǎo"
+  • NEVER spaces between syllables in the stored value — concatenate: "mi2lian4" not "mi2 lian4"
+  • Third tone value is 3 (not v or ǎ): 好 → "hao3"
+  • Neutral tone is 5 (not absent): 的 → "de5"
+  • This is the canonical storage format on word_pronunciations.pronunciation_text and must match exactly — the pipeline keys senses by (pinyin, pos), so any drift breaks existing-sense matching.
+
+VALENCY (integer, or null for non-verbs) — NEVER leave null on a verb:
+  • 0 — intransitive: Vi, Vp, Vs, Vspred, Vsattr, Vcomp, Vssep
+    (Vssep like 擔心 is stative-separable with a pseudo-O; still 0)
+  • 1 — transitive: V, Vpt, Vst, Vaux, Vsep, Vpsep
+    (Vsep/Vpsep like 結婚 count the separable O as one argument: 結了婚)
+    (Vaux takes the following VP as its complement — count as 1)
+  • 2 — ditransitive: V that takes indirect + direct object (e.g. 給 — give someone something). Rare.
+  • null — non-verbs ONLY: N, M, Adv, Prep, Conj, Ptc, Det, Prn, Num, IE, Ph, CE, Intj, Aux
+
+Examples: 迷戀 (Vst) → 1 · 跑 (Vi) → 0 · 喜歡 (Vst) → 1 · 擔心 (Vssep) → 0 · 給 (V, ditransitive) → 2 · 桌子 (N) → null.
+
+DIMENSION — use as many as genuinely apply. This is orthogonal to domain
+(domain says "field of use"; dimension says "what kind of thing is this
+concept"). Most senses need 1–2 dimensions; complex concepts may need 3.
+
+  • concrete — physical objects, tangible things (桌子, 水)
+  • abstract — ideas, qualities, states with no physical form (自由, 理論)
+  • internal — psychological, emotional, mental states (迷戀, 擔心, 相信)
+  • external — actions/states affecting the outer world (跑, 建造)
+  • spatial — position, direction, geometry (上, 旁邊, 遠)
+  • temporal — time, duration, sequence (昨天, 漸漸, 早)
+  • aspectual — grammatical aspect: ongoing, completed, habitual (著, 了, 過)
+  • grammatical — structural/function words with no lexical content (的, 吧, 嗎)
+  • pragmatic — speech acts, interjections, discourse particles (唉, 喂, 哇)
+  • dim-fluid — genuinely straddles multiple dimensions without splitting
+    (rare — use when a single sense's reference is inherently mixed)
+
+Examples:
+  迷戀 (infatuated) → ["internal", "abstract"]  — inner state + non-physical
+  桌子 (table)      → ["concrete"]               — physical object
+  跑 (to run)       → ["external", "concrete"]   — outer action on body
+  自由 (freedom)    → ["abstract", "internal"]   — idea + felt experience
+  昨天 (yesterday)  → ["temporal"]               — pure time reference
+  吧 (particle)     → ["grammatical", "pragmatic"] — both structural + speech-act
 tocfl: DO NOT USE — always set to null
 hsk: DO NOT USE — always set to null
 
