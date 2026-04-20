@@ -435,9 +435,26 @@ STORAGE VALUES — DISTINCT STATES:
 TWO-STAGE EDITORIAL DECISION:
 
 STAGE 1 — Does intensity apply to this sense?
-Ask: does the word denote a quality that has a strength gradient?
-- NO → **intensity: 0** (Not Applicable). Add a _flags note naming the reason ("concrete noun" / "function word" / "measure word" / "non-degree adverb"). Stage 1 complete.
-- YES → continue to Stage 2.
+
+**v2.2 categorical rule (binding):** Stage 1 is answered by POS category, NOT per-word judgment. Predictability beats per-word accuracy: a learner who sees intensity reliably on stative verbs and never on action verbs learns one rule and trusts the chip.
+
+ONLY these POS categories get graded 1-5 (Stage 1 = YES):
+- **Vs** (stative intransitive): 暗, 好, 完美, 暴力 (Vs), 悲痛, 不安, 髒
+- **Vst** (state-transitive): 喜歡, 愛, 熱愛, 痴迷, 討厭, 重視, 同情
+- **Degree adverbs** (Adv subset only): 有點, 比較, 很, 非常, 極其
+- **Abstract emotional/evaluative N**: 熱情, 恐懼, 狂熱, 激情
+- **IE** (idioms with built-in weight): 千辛萬苦, 感激涕零
+
+EVERYTHING ELSE → **intensity: 0** (Not Applicable). Including:
+- All action verbs: V, Vi, Vpt, Vsep, Vp, Vpsep, Vssep
+- Modal/aux verbs: Vaux, Vcomp
+- Attributive-only stative: Vsattr
+- All concrete nouns: 桌子, 書, 學生, 玻璃, 病房, 報社
+- All function words: Ptc, Conj, Prep, Det, Prn, Num, M, Aux
+- Non-degree adverbs: 已經, 正在, 暗中, 按時 (temporal/aspectual/grammatical)
+
+NO → intensity: 0 + _flags note ("action verb" / "concrete noun" / "function word" / "non-degree adverb" / etc.). Stage 1 complete.
+YES → continue to Stage 2.
 
 STAGE 2 (only if Stage 1 = YES) — Grade 1-5:
 
@@ -460,30 +477,16 @@ CROSS-POS CALIBRATION — ALL of these sit at level 3 (moderate):
 Level 3 is "present, clear, not extreme" across every POS. If your 3 on one POS doesn't feel equivalent to 愛好/很/好/熱情/喊, recalibrate.
 
 VALENCE-SHIFT PATTERN (important observation):
-Chinese vocabulary often exhibits valence shift at extreme intensity. Words that would be level 5 in a positive family often cross into negative-dominant or context-dependent connotation:
-- 痴迷 would be intensity 5 on the love gradient — but its connotation is negative-dominant (obsessive, pathological). Used naturally for 痴迷於賭博.
-- 狂熱 at intensity 5 — connotation context-dependent (fanatic enthusiasm, often critical).
+Chinese vocabulary often exhibits valence shift at extreme intensity. Words at level 5 on a strength axis often carry non-positive connotation:
+- 痴迷 (Vst) → intensity 5 (extreme attachment) AND connotation negative-dominant (obsessive, pathological). Used naturally for 痴迷於賭博. Both fields graded independently — the learner sees a 🌺 5 chip + a 🌧️ negative chip and reads "extreme + concerning."
+- 狂熱 (Vs) → intensity 5 (extreme enthusiasm) AND connotation context-dependent (fanatical, often critical).
+- 熱愛 (Vst) → intensity 5 (passionate love) AND connotation positive. The pure-positive level 5.
+
+Both 熱愛 and 痴迷 sit at intensity 5 on different valences. The canonical Like-Love family uses 熱愛 as the positive anchor; 痴迷 is graded the same intensity but tagged with its real connotation. Learners filter intensity 4-5 and find both — the connotation chip tells them which kind of 5.
 
 **Intensity and connotation are independent fields. Grade them separately.** When grading a level-5 word, ask: is the strength of the quality the same direction as the connotation, or has extreme force pushed the word into a different valence? Note the pattern.
 
-STAGE 1 = YES (grade 1-5) applies to:
-- Emotional / evaluative stative verbs (愛 / 討厭 / 好 / 差)
-- Action verbs with intensity scale (說→喊→吼→咆哮)
-- Degree adverbs (有點 / 很 / 非常 / 極其)
-- Abstract nouns with gradient (興趣 / 熱情 / 狂熱)
-- Evaluative adjectives (不錯 / 好 / 優秀 / 完美)
-- Stative nouns with emotional weight (恐懼 / 恐慌)
-
-STAGE 1 = NO → intensity: 0 applies to:
-- Concrete nouns with no gradient (桌子, 書, 水, 學生)
-- Function words (和, 的, 了, 嗎, 誰, 什麼)
-- Measure words (個, 條, 支)
-- Determiners / numerals (這, 那, 一, 第三)
-- Temporal / aspectual / grammatical adverbs (已經, 正在) — these don't encode degree
-- Most Ptc, Conj, Prep, Det, M, Num, Prn senses
-- Vaux (modals) and Vcomp (complement morphemes)
-
-Rule of thumb for Stage 1: if you cannot say "this is a strong version of X" or "a mild version of X," the answer is NO — intensity: 0.
+(See the v2.2 categorical rule above — Stage 1 = YES is now answered by POS category, not "is this a strong/mild version of X?" The categorical list is exhaustive: Vs / Vst / degree-Adv / abstract-emotional-N / IE → graded; all other POS → intensity: 0.)
 
 Default-1 is the systemic trap. Intensity 1 means "genuinely at the first-stirring level" (心動, 有點) — NOT "I didn't think about it." If you choose 1 in Stage 2, your _flags should briefly note WHY: "first-stirring positive affinity" or "subtle-degree modifier."
 
@@ -495,16 +498,22 @@ Checklist:
     - If extreme (5): is this word also valence-shifted? (Grade intensity and connotation independently.)
     - If 1, did I really consider the scale or did I default?
 
-Examples of the right move:
-- 心動 Vst → intensity 1 (Stage 1 YES, first stirring)
-- 喜歡 Vst → intensity 2 (Stage 1 YES, baseline positive affection)
-- 愛好 Vst → intensity 3 (Stage 1 YES, established fondness)
-- 愛 Vst → intensity 4 (Stage 1 YES, committed bond)
-- 熱愛 Vst → intensity 5 (Stage 1 YES, passionate love — pure positive)
-- 桌子 N → intensity 0 (Stage 1 NO, concrete noun with no gradient)
-- 已經 Adv → intensity 0 (Stage 1 NO, temporal not degree)
-- 個 M → intensity 0 (Stage 1 NO, measure word)
-- 和 Conj → intensity 0 (Stage 1 NO, function word)
+Examples of the right move (categorical rule applied):
+- 心動 Vst → intensity 1 (Vst → graded, first stirring)
+- 喜歡 Vst → intensity 2 (Vst → graded, baseline positive affection)
+- 愛好 Vst → intensity 3 (Vst → graded, established fondness)
+- 愛 Vst → intensity 4 (Vst → graded, committed bond)
+- 熱愛 Vst → intensity 5 (Vst → graded, passionate love — pure positive)
+- 痴迷 Vst → intensity 5 (Vst → graded, extreme attachment — paired with connotation negative-dominant)
+- 暴力 Vs → intensity 4 (Vs → graded, strong evaluative quality) ALSO connotation negative-dominant
+- 暴力 N → intensity 0 (concrete noun → not graded; the action category doesn't have an inherent strength gradient)
+- 報仇 Vsep → intensity 0 (action verb → not graded, even though the act feels weighty)
+- 安慰 Vpt → intensity 0 (action verb → not graded)
+- 煎 / 炸 / 蒸 / 燉 Vpt → intensity 0 (action verbs / cooking methods → not graded; these are category-distinct, not strength variations)
+- 桌子 N → intensity 0 (concrete noun)
+- 已經 Adv → intensity 0 (temporal adverb, not degree)
+- 個 M → intensity 0 (measure word)
+- 和 Conj → intensity 0 (function word)
 
 FORMULAS (bilingual):
 - Provide formula_en AND formula_zh for every sense
