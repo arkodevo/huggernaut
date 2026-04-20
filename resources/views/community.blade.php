@@ -401,7 +401,7 @@ details[open] .com-fb-summary::before { content: '▾ '; }
               </div>
               <div class="com-card-body">
                 <div class="ex-sent-cn" data-word="{{ $w['traditional'] }}">{{ $w['chinese_text'] }}</div>
-                <div class="ex-sent-en">{{ $w['english_text'] }}</div>
+                <div class="ex-sent-en">{{ $w['english_translation'] }}</div>
                 @if ($w['ai_feedback'])
                   <details class="saved-item-feedback">
                     <summary class="com-fb-summary">師父 feedback</summary>

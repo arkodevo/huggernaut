@@ -1018,11 +1018,12 @@ class ExploreController extends Controller
             'defaultWritingsPublic'    => (bool) ($user->default_writings_public ?? true),
             'defaultDisputesAnonymous' => (bool) ($user->default_disputes_anonymous ?? false),
             'savedExamples'  => $user->savedExamples()
-                ->select('id', 'word_sense_id', 'chinese_text', 'english_text', 'original_chinese_text', 'ai_verified', 'ai_feedback', 'source_type', 'assessed_level', 'assessed_mastery', 'mastery_guidance', 'is_public', 'created_at')
-                ->with(['grammarPatterns:id,slug'])
+                ->select('id', 'word_sense_id', 'chinese_text', 'original_chinese_text', 'ai_verified', 'ai_feedback', 'source_type', 'assessed_level', 'assessed_mastery', 'mastery_guidance', 'is_public', 'created_at')
+                ->with(['grammarPatterns:id,slug', 'translations'])
                 ->get()
                 ->map(function ($ex) {
                     $arr = $ex->toArray();
+                    $arr['english_translation'] = $ex->englishTranslation;
                     $arr['grammar_patterns'] = $ex->grammarPatterns->map(fn ($gp) => [
                         'slug'   => $gp->slug,
                         'status' => $gp->pivot->status,

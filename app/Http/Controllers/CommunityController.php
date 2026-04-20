@@ -107,6 +107,7 @@ class CommunityController extends Controller
         $paginated = UserSavedExample::where('is_public', true)
             ->with([
                 'user',
+                'translations',
                 'wordSense' => fn ($q) => $q->with([
                     'wordObject',
                     'pronunciation',
@@ -135,15 +136,15 @@ class CommunityController extends Controller
                 'pinyin'           => $ws?->pronunciation?->pronunciation_text ?? '',
                 'posAbbr'          => ExploreController::POS_DISPLAY_ABBR[$def?->posLabel?->slug ?? '']
                                       ?? ($def?->posLabel?->slug ?? ''),
-                'chinese_text'     => $ex->chinese_text,
-                'english_text'     => $ex->english_text,
-                'ai_verified'      => (bool) $ex->ai_verified,
-                'ai_feedback'      => $ex->ai_feedback,
-                'source_type'      => $ex->source_type ?? 'learner',
-                'assessed_level'   => $ex->assessed_level,
-                'assessed_mastery' => $ex->assessed_mastery,
-                'mastery_guidance' => $ex->mastery_guidance,
-                'created_at'       => $ex->created_at->format('M j, Y'),
+                'chinese_text'        => $ex->chinese_text,
+                'english_translation' => $ex->englishTranslation,
+                'ai_verified'         => (bool) $ex->ai_verified,
+                'ai_feedback'         => $ex->ai_feedback,
+                'source_type'         => $ex->source_type ?? 'learner',
+                'assessed_level'      => $ex->assessed_level,
+                'assessed_mastery'    => $ex->assessed_mastery,
+                'mastery_guidance'    => $ex->mastery_guidance,
+                'created_at'          => $ex->created_at->format('M j, Y'),
             ];
         });
     }
@@ -281,6 +282,7 @@ class CommunityController extends Controller
         $items = $query
             ->with([
                 'user',
+                'translations',
                 'wordSense' => fn ($q) => $q->with([
                     'pronunciation',
                     'wordObject',
@@ -316,6 +318,7 @@ class CommunityController extends Controller
             ->whereHas('wordSense', fn ($q) => $q->where('word_object_id', $wordObjectId))
             ->with([
                 'user',
+                'translations',
                 'wordSense' => fn ($q) => $q->with([
                     'pronunciation',
                     'wordObject',
@@ -498,7 +501,7 @@ class CommunityController extends Controller
         return [
             'id'               => $ex->id,
             'cn'               => $ex->chinese_text,
-            'en'               => $ex->english_text,
+            'en'               => $ex->englishTranslation,
             'author'           => $u?->chinese_name ?: ($u?->name ?: 'Anonymous'),
             'authorId'         => $u?->id,
             'isMine'           => $isMine,

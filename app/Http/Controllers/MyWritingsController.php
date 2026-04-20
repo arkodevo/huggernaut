@@ -16,6 +16,7 @@ class MyWritingsController extends Controller
 
         $writings = UserSavedExample::where('user_id', $user->id)
             ->with([
+                'translations',
                 'wordSense' => fn ($q) => $q->with([
                     'wordObject',
                     'pronunciation',
@@ -39,9 +40,9 @@ class MyWritingsController extends Controller
                 'pinyin'       => $ws?->pronunciation?->pronunciation_text ?? '',
                 'pos'          => ExploreController::POS_FULL_NAMES[$def?->posLabel?->slug ?? ''] ?? '',
                 'posAbbr'      => ExploreController::POS_DISPLAY_ABBR[$def?->posLabel?->slug ?? ''] ?? ($def?->posLabel?->slug ?? ''),
-                'chinese_text' => $ex->chinese_text,
-                'english_text' => $ex->english_text,
-                'ai_verified'  => $ex->ai_verified,
+                'chinese_text'        => $ex->chinese_text,
+                'english_translation' => $ex->englishTranslation,
+                'ai_verified'         => $ex->ai_verified,
                 'ai_feedback'  => $ex->ai_feedback,
                 'source_type'      => $ex->source_type ?? 'learner',
                 'assessed_level'   => $ex->assessed_level,

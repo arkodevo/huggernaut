@@ -246,7 +246,7 @@
 
     <div class="ex-sentences mwr-list" id="mwrList">
       @foreach($writings as $w)
-        <div class="ex-sent saved-writing" id="mwr-card-{{ $w['id'] }}" data-search="{{ mb_strtolower($w['chinese_text'] . ' ' . $w['english_text'] . ' ' . $w['traditional']) }}" data-id="{{ $w['id'] }}" data-word="{{ $w['traditional'] }}">
+        <div class="ex-sent saved-writing" id="mwr-card-{{ $w['id'] }}" data-search="{{ mb_strtolower($w['chinese_text'] . ' ' . ($w['english_translation'] ?? '') . ' ' . $w['traditional']) }}" data-id="{{ $w['id'] }}" data-word="{{ $w['traditional'] }}">
           <div class="mwr-card-top">
             <a href="/lexicon/{{ $w['smartId'] }}" class="mwr-word-link">{{ $w['traditional'] }}</a>
             <div class="mwr-card-meta-col">
@@ -297,7 +297,7 @@
           </div>
           <div class="mwr-card-body">
             <div class="ex-sent-cn" data-word="{{ $w['traditional'] }}">{{ $w['chinese_text'] }}</div>
-            <div class="ex-sent-en">{{ $w['english_text'] }}</div>
+            <div class="ex-sent-en">{{ $w['english_translation'] }}</div>
             @if($w['ai_feedback'])
               <details class="saved-item-feedback">
                 <summary>師父 feedback</summary>

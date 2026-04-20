@@ -243,10 +243,10 @@ class WorkshopController extends Controller
     public function saveExample(Request $request): JsonResponse
     {
         $request->validate([
-            'word_sense_id'    => ['required', 'integer', 'exists:word_senses,id'],
-            'word_object_id'   => ['nullable', 'integer', 'exists:word_objects,id'],
-            'chinese_text'     => ['required', 'string', 'max:2000'],
-            'english_text'     => ['required', 'string', 'max:2000'],
+            'word_sense_id'       => ['required', 'integer', 'exists:word_senses,id'],
+            'word_object_id'      => ['nullable', 'integer', 'exists:word_objects,id'],
+            'chinese_text'        => ['required', 'string', 'max:2000'],
+            'english_translation' => ['required', 'string', 'max:2000'],
             'ai_verified'      => ['boolean'],
             'ai_feedback'      => ['nullable', 'string', 'max:5000'],
             'original_chinese_text' => ['nullable', 'string', 'max:2000'],
@@ -273,7 +273,6 @@ class WorkshopController extends Controller
             'word_sense_id'    => $request->input('word_sense_id'),
             'word_object_id'   => $request->input('word_object_id'),
             'chinese_text'     => $request->input('chinese_text'),
-            'english_text'     => $request->input('english_text'),
             'original_chinese_text' => $request->input('original_chinese_text'),
             'ai_verified'      => $request->boolean('ai_verified', false),
             'ai_feedback'      => $request->input('ai_feedback'),
@@ -283,6 +282,22 @@ class WorkshopController extends Controller
             'mastery_guidance' => $request->input('mastery_guidance'),
             'is_public'        => $isPublic,
         ]);
+
+        // English translation lives in user_saved_example_translations,
+        // keyed by language_id — multilingual-native, single source of truth.
+        $englishTranslation = trim((string) $request->input('english_translation'));
+        if ($englishTranslation !== '') {
+            $enLangId = \App\Models\Language::where('code', 'en')->value('id');
+            if ($enLangId) {
+                \DB::table('user_saved_example_translations')->insert([
+                    'user_saved_example_id' => $example->id,
+                    'language_id'           => $enLangId,
+                    'translation_text'      => $englishTranslation,
+                    'created_at'            => now(),
+                    'updated_at'            => now(),
+                ]);
+            }
+        }
 
         // ── Attach identified grammar patterns ──
         $patternPayload = $request->input('grammar_patterns', []);
