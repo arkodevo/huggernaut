@@ -381,7 +381,29 @@
       "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -c \"SELECT u.id, u.name, u.email FROM users u WHERE u.name ILIKE '%shifu%' OR u.email ILIKE '%shifu%';\")",
       "Bash(php -l app/Models/UserSavedExampleTranslation.php)",
       "Bash(php -l database/migrations/2026_04_20_000109_create_user_saved_example_translations_table.php)",
-      "Bash(php -l database/migrations/2026_04_20_000110_drop_english_text_from_user_saved_examples.php)"
+      "Bash(php -l database/migrations/2026_04_20_000110_drop_english_text_from_user_saved_examples.php)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -c \"SELECT id, slug FROM designations WHERE attribute_id=\\(SELECT id FROM attributes WHERE slug='channel'\\) ORDER BY sort_order;\")",
+      "Bash(php -l database/migrations/2026_04_20_000111_rename_channel_balanced_slug.php)",
+      "Bash(php -l database/migrations/2026_04_20_000112_repair_dimension_labels.php)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -c \"SELECT d.slug, MAX\\(CASE WHEN l.code='en' THEN dl.label END\\) AS en, MAX\\(CASE WHEN l.code='zh-TW' THEN dl.label END\\) AS zh FROM designations d JOIN attributes a ON a.id=d.attribute_id LEFT JOIN designation_labels dl ON dl.designation_id=d.id LEFT JOIN languages l ON l.id=dl.language_id WHERE a.slug='dimension' GROUP BY d.id, d.slug, d.sort_order ORDER BY d.sort_order;\")",
+      "Bash(php -l app/Services/Enrichment/LessonsLedger.php)",
+      "Bash(grep -E \"\\\\.\\(php|js|py|sql|jsonl|json\\)$\")",
+      "Bash(mkdir -p \"/Users/chuluoyi/Documents/華語/enrichment-archive/L4\")",
+      "Bash(mv /tmp/batch_0*.jsonl \"/Users/chuluoyi/Documents/華語/enrichment-archive/L4/\")",
+      "Bash(php -l app/Console/Commands/EnrichSkeleton.php)",
+      "Bash(sort -k6,7)",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -c ' *)",
+      "Bash(php -l app/Console/Commands/ImportWordData.php echo \"---\")",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -t -c \"SELECT slug FROM designations WHERE attribute_id=\\(SELECT id FROM attributes WHERE slug='domain'\\) ORDER BY slug;\")",
+      "Bash(grep -v '^$')",
+      "Bash(awk '{print $NF, $6, $7, $8}')",
+      "Bash(awk 'BEGIN{printf \"%-8s %-10s %-8s %-4s %-20s %-16s %-4s %-4s\\\\n\", \"WORD\", \"PINYIN\", \"POS\", \"INT\", \"DIMENSION\", \"REL\\(c/r/a/x\\)\", \"EX\", \"COL\"; print \"--------------------------------------------------------------------------------\"} {printf \"%-8s %-10s %-8s %-4s %-20s %-16s %-4s %-4s\\\\n\", $1, $2, $3, $4, $5, $6, $7, $8}')",
+      "Bash(grep -v 'retired\\\\|pivot retired\\\\|local variable\\\\|$posLabels\\\\|PosLabel::\\\\|posLabels\": \\\\|FrozenSets\\\\|PosGroup')",
+      "Bash(php -l app/Console/Commands/TocflImportPos.php)",
+      "Bash(php -l app/Console/Commands/TocflCreateMissingWords.php)",
+      "Bash(php -l app/Console/Commands/TocflVerifySenses.php)",
+      "Bash(php -l app/Models/PosLabel.php)",
+      "Bash(php -l database/seeders/FlowClusterSeeder.php)"
     ]
   }
 }

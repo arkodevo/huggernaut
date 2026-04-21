@@ -222,7 +222,7 @@ class ImportWordData extends Command
                     ->delete();
                 DB::table('word_sense_designations')->whereIn('word_sense_id', $existingSenseIds)->delete();
                 DB::table('word_sense_domains')->whereIn('word_sense_id', $existingSenseIds)->delete();
-                DB::table('word_sense_pos')->whereIn('word_sense_id', $existingSenseIds)->delete();
+                // word_sense_pos pivot retired 2026-04-21 — POS stored on definitions.
                 DB::table('word_sense_notes')->whereIn('word_sense_id', $existingSenseIds)->delete();
                 WordSense::whereIn('id', $existingSenseIds)->delete();
             }
@@ -351,10 +351,9 @@ class ImportWordData extends Command
             ]);
         }
 
-        // POS index
-        if ($posId) {
-            $sense->posLabels()->attach($posId, ['is_primary' => true]);
-        }
+        // POS is stored on word_sense_definitions.pos_id (written above).
+        // The word_sense_pos pivot was retired 2026-04-21 after drifting on
+        // 882 senses and propagating wrong POS into every batch skeleton.
 
         // Examples — translations go in word_sense_example_translations.
         $enLangId = \DB::table('languages')->where('code', 'en')->value('id');

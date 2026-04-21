@@ -10,7 +10,6 @@ use App\Models\WordObject;
 use App\Models\WordPronunciation;
 use App\Models\WordSense;
 use App\Models\WordSenseDefinition;
-use App\Models\WordSensePos;
 
 class TocflBand1Seeder extends Seeder
 {
@@ -182,10 +181,7 @@ class TocflBand1Seeder extends Seeder
                 ['definition_text' => $defEn, 'sort_order' => 1]
             );
 
-            // Maintain POS filter-index pivot
-            WordSensePos::firstOrCreate(
-                ['word_sense_id' => $sense->id, 'pos_id' => $posId]
-            );
+            // word_sense_pos pivot retired 2026-04-21 — POS on definitions only.
         }
 
         $this->command->info('TOCFL Band 1: 100 words seeded.');

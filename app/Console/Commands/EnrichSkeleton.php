@@ -176,11 +176,18 @@ class EnrichSkeleton extends Command
     {
         $senseIds = $senseRows->pluck('sense_id')->map(fn ($v) => (int) $v)->all();
 
+        // POS comes from word_sense_definitions.pos_id — the authoritative
+        // source (v1.5 spec: POS + definition are inseparable). The previous
+        // read from word_sense_pos pivot was a critical bug — the pivot had
+        // drifted from the source on 882 senses, propagating wrong POS into
+        // every batch skeleton that used this tool. Pivot is being dropped
+        // entirely in the same commit as this fix.
         $posBySense = [];
-        foreach (DB::table('word_sense_pos')
+        foreach (DB::table('word_sense_definitions')
                     ->whereIn('word_sense_id', $senseIds)
+                    ->where('language_id', $this->langEn)
                     ->orderBy('word_sense_id')
-                    ->orderByDesc('is_primary')
+                    ->orderBy('sort_order')
                     ->get() as $row) {
             if (! isset($posBySense[$row->word_sense_id])) {
                 $posBySense[$row->word_sense_id] = $this->posSlugById[$row->pos_id] ?? null;

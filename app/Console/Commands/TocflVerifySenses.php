@@ -183,7 +183,7 @@ class TocflVerifySenses extends Command
                 DB::table('word_sense_examples')->whereIn('word_sense_id', $chunk)->delete();
                 DB::table('word_sense_designations')->whereIn('word_sense_id', $chunk)->delete();
                 DB::table('word_sense_domains')->whereIn('word_sense_id', $chunk)->delete();
-                DB::table('word_sense_pos')->whereIn('word_sense_id', $chunk)->delete();
+                // word_sense_pos pivot retired 2026-04-21.
                 DB::table('word_sense_collocations')->whereIn('word_sense_id', $chunk)->delete();
                 DB::table('word_sense_relations')
                     ->whereIn('word_sense_id', $chunk)

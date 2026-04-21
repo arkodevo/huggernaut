@@ -120,16 +120,6 @@ class WordSense extends Model
             ->withTimestamps();
     }
 
-    // ── POS index ─────────────────────────────────────────────────────────────
-
-    public function posLabels(): BelongsToMany
-    {
-        return $this->belongsToMany(PosLabel::class, 'word_sense_pos', 'word_sense_id', 'pos_id')
-            ->using(WordSensePos::class)
-            ->withPivot('is_primary')
-            ->withTimestamps();
-    }
-
     // ── Collocations (text-based) ────────────────────────────────────────────
 
     public function collocations(): HasMany

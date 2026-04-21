@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PosLabel extends Model
@@ -41,11 +40,7 @@ class PosLabel extends Model
         return $this->hasMany(WordSenseDefinition::class, 'pos_id');
     }
 
-    public function wordSenses(): BelongsToMany
-    {
-        return $this->belongsToMany(WordSense::class, 'word_sense_pos', 'pos_id', 'word_sense_id')
-            ->using(WordSensePos::class)
-            ->withPivot('is_primary')
-            ->withTimestamps();
-    }
+    // wordSenses() relation retired 2026-04-21 — the word_sense_pos pivot
+    // it depended on was dropped. To enumerate senses by POS, query
+    // word_sense_definitions.pos_id and group by word_sense_id.
 }

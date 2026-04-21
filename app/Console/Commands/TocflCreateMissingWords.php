@@ -21,8 +21,7 @@ use Illuminate\Support\Facades\DB;
  *   2. Creates word_pronunciation (Pinyin, numeric-tone, is_primary=true)
  *   3. For each (pos, level) sense:
  *        - Creates word_sense (source=tocfl, status=draft, tocfl_level_id, pronunciation_id)
- *        - Creates word_sense_definition (EN placeholder, pos_id)
- *        - Inserts word_sense_pos index row
+ *        - Creates word_sense_definition (EN placeholder, pos_id — the authoritative POS store)
  *
  * Skips any traditional that already exists in word_objects (safety guard).
  */
@@ -127,12 +126,7 @@ class TocflCreateMissingWords extends Command
                             'sort_order'      => 0,
                         ]);
 
-                        // POS index
-                        DB::table('word_sense_pos')->insertOrIgnore([
-                            'word_sense_id' => $sense->id,
-                            'pos_id'        => $posId,
-                            'is_primary'    => true,
-                        ]);
+                        // word_sense_pos pivot retired 2026-04-21 — POS on definitions only.
                     }
 
                     $created++;

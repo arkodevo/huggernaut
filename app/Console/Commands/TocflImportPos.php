@@ -193,12 +193,8 @@ class TocflImportPos extends Command
             'sort_order'      => 0,
         ]);
 
-        // Also update the word_sense_pos index
-        DB::table('word_sense_pos')->insertOrIgnore([
-            'word_sense_id' => $sense->id,
-            'pos_id'        => $posId,
-            'is_primary'    => true,
-        ]);
+        // word_sense_pos pivot retired 2026-04-21 — POS now lives only
+        // on word_sense_definitions.pos_id (written above).
     }
 
     // ── Lookups ───────────────────────────────────────────────────────────────

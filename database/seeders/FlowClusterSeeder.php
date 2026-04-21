@@ -220,11 +220,8 @@ class FlowClusterSeeder extends Seeder
             'sort_order'      => $sortOrder,
         ]);
 
-        // ── word_sense_pos index ──────────────────────────────────────────────
-
-        if ($posId) {
-            $sense->posLabels()->attach($posId, ['is_primary' => true]);
-        }
+        // POS on word_sense_definitions.pos_id (written above).
+        // word_sense_pos pivot retired 2026-04-21.
 
         // ── word_sense_example ────────────────────────────────────────────────
 

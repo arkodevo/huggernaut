@@ -127,7 +127,7 @@ class WordSenseController extends Controller
             $sense->examples()->delete();
             DB::table('word_sense_designations')->where('word_sense_id', $sense->id)->delete();
             DB::table('word_sense_domains')->where('word_sense_id', $sense->id)->delete();
-            DB::table('word_sense_pos')->where('word_sense_id', $sense->id)->delete();
+            // word_sense_pos pivot retired 2026-04-21 — POS stored on definitions.
             DB::table('word_sense_collocations')->where('word_sense_id', $sense->id)->delete();
             DB::table('word_sense_relations')
                 ->where('word_sense_id', $sense->id)

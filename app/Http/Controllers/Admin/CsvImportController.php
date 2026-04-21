@@ -209,8 +209,11 @@ class CsvImportController extends Controller
         if ($existingWord) {
             foreach ($existingWord->senses as $sense) {
                 $pron = $sense->pronunciation?->pronunciation_text ?? '';
-                $pos = $sense->definitions->where('language_id', 1)->first()?->posLabel?->slug
-                    ?? $sense->posLabels->first()?->slug ?? '';
+                // POS from definitions.pos_id — the authoritative source.
+                // The posLabels() fallback used the retired word_sense_pos
+                // pivot; dropped 2026-04-21 after the pivot was found to
+                // drift on 882 senses and propagate wrong POS into batches.
+                $pos = $sense->definitions->where('language_id', 1)->first()?->posLabel?->slug ?? '';
                 $existingKeys[] = $pron . '|' . $pos;
             }
         }
@@ -288,8 +291,11 @@ class CsvImportController extends Controller
                 ]);
             }
 
-            // Load existing senses for matching
-            $existingSenses = $isNew ? collect() : $word->senses()->with(['pronunciation', 'posLabels'])->get();
+            // Load existing senses for matching. POS read via definitions,
+            // not the retired word_sense_pos pivot.
+            $existingSenses = $isNew ? collect() : $word->senses()
+                ->with(['pronunciation', 'definitions.posLabel'])
+                ->get();
 
             $created = $enriched = $rejected = 0;
 
@@ -320,9 +326,13 @@ class CsvImportController extends Controller
                     // the new-sense path so 師父's enrichment actually lands
                     // on screen — previously the enrich branch only wrote
                     // word_senses + word_sense_notes, leaving skeletons.
+                    // Match by pinyin + POS. POS from definitions (language_id=1
+                    // = English as canonical) — the authoritative source since
+                    // the word_sense_pos pivot was retired 2026-04-21.
                     $matchedSense = $existingSenses->first(function ($es) use ($s) {
+                        $posSlug = $es->definitions->where('language_id', 1)->first()?->posLabel?->slug ?? '';
                         return $es->pronunciation?->pronunciation_text === ($s['pinyin'] ?? '')
-                            && ($es->posLabels->first()?->slug ?? '') === ($s['pos'] ?? '');
+                            && $posSlug === ($s['pos'] ?? '');
                     });
 
                     if ($matchedSense) {
@@ -576,7 +586,9 @@ class CsvImportController extends Controller
             DB::table('word_sense_collocations')->where('word_sense_id', $senseId)->delete();
             DB::table('word_sense_designations')->where('word_sense_id', $senseId)->delete();
             DB::table('word_sense_domains')->where('word_sense_id', $senseId)->delete();
-            DB::table('word_sense_pos')->where('word_sense_id', $senseId)->delete();
+            // word_sense_pos pivot retired 2026-04-21 — POS lives only on
+            // word_sense_definitions.pos_id, which is wiped and re-written
+            // below with fresh POS from the import payload.
         }
 
         // Domains (ordered, max 4)
@@ -651,9 +663,9 @@ class CsvImportController extends Controller
             }
         }
 
-        if ($posId) {
-            $sense->posLabels()->attach($posId, ['is_primary' => true]);
-        }
+        // POS is stored on word_sense_definitions.pos_id (written above,
+        // once per language). The word_sense_pos pivot was retired
+        // 2026-04-21 after drifting on 882 senses.
 
         // Examples: Chinese source on word_sense_examples; translations
         // (incl. English) in the normalized word_sense_example_translations
