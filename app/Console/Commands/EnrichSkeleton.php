@@ -43,6 +43,7 @@ class EnrichSkeleton extends Command
         {--csv= : Format B — path to input CSV (columns: traditional,simplified?,pinyin?,pos?,tocfl?,hsk?,note?)}
         {--batch-size=27 : Words per output file (default 27)}
         {--cowork-dir= : Override default ~/Downloads/cowork/}
+        {--enriched-by=chengyan : Enricher attribution stamped on each skeleton sense. Default chengyan — our cowork enricher (2026-04-15 onward). Override only if someone else is filling this batch.}
         {--dry-run : Show what would be produced without writing files}
     ';
 
@@ -295,6 +296,7 @@ class EnrichSkeleton extends Command
                 'pos'           => $posBySense[$sid] ?? null,
                 'source'        => $row->source ?: 'tocfl',
                 'alignment'     => $row->alignment ?: 'partial',
+                'enriched_by'   => $this->option('enriched-by') ?: 'chengyan',
                 'definitions'   => [
                     'en'    => $defsBySense[$sid]['en']   ?? null,
                     'zh-TW' => $defsBySense[$sid]['zh-TW'] ?? null,
@@ -473,6 +475,7 @@ class EnrichSkeleton extends Command
                     'pos'           => $posHint ?: null,
                     'source'        => 'editorial',
                     'alignment'     => 'partial',
+                    'enriched_by'   => $this->option('enriched-by') ?: 'chengyan',
                     'definitions'   => ['en' => null, 'zh-TW' => null],
                     'domains'       => [],
                     'register'      => [],

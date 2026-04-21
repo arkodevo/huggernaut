@@ -20,9 +20,10 @@ class ImportWordData extends Command
         {file : Path to JSONL file}
         {--dry-run : Validate only, do not import}
         {--upsert : Update existing entries with richer data (default: skip existing)}
-        {--status=published : Status for new entries (draft|review|published)}';
+        {--status=published : Status for new entries (draft|review|published)}
+        {--enriched-by= : Override enriched_by for every sense in this import. If omitted, reads from each senses\'s enriched_by field in the JSON (written by enrich:skeleton).}';
 
-    protected $description = 'Import word data from Huiming template JSONL format';
+    protected $description = 'Import word data from v2.3 skeleton JSONL format (enricher attribution read from the file, not hardcoded)';
 
     private const PINYIN_SYSTEM_ID = 1;
 
@@ -290,7 +291,11 @@ class ImportWordData extends Command
             'tocfl_level_id'   => $tocflId,
             'hsk_level_id'     => $hskId,
             'status'           => $status,
-            'enriched_by'      => 'huiming',
+            // Enricher attribution: CLI flag wins, then per-sense field from
+            // the JSON (written by enrich:skeleton), then null. NEVER
+            // hardcoded — that was a silent-attribution bug that mislabeled
+            // 388 Chengyan-era senses as Huiming before 2026-04-21.
+            'enriched_by'      => $this->option('enriched-by') ?: ($s['enriched_by'] ?? null),
             'enriched_at'      => now(),
         ]);
 
