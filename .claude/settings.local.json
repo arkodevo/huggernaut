@@ -554,7 +554,8 @@
       "Bash(/Applications/MAMP/Library/bin/mysql80/bin/mysql -h 127.0.0.1 -P 3306 -u root -proot wcaccp_wca -e \"SHOW COLUMNS FROM app_patients;\")",
       "Bash(curl -sL \"http://localhost/\")",
       "Bash(curl -sL \"https://www.workingclassacupuncture8888.org/appointments/\")",
-      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -h 127.0.0.1 -c \"\\\\d user_saved_examples\")"
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/psql -U huggernaut -d huggernaut -h 127.0.0.1 -c \"\\\\d user_saved_examples\")",
+      "Bash(/opt/homebrew/Cellar/postgresql@18/18.3/bin/pg_dump -F c -Z 9 -U huggernaut -h 127.0.0.1 -d huggernaut -f database/backups/huggernaut_pre-user-example-audio-20260502.dump)"
     ]
   }
 }

@@ -40,6 +40,20 @@ class UserSavedExample extends Model
         ];
     }
 
+    // Invariant: an unverified writing is never public. Enforced at the model
+    // layer so any code path (controller, importer, future seeder, queued job)
+    // that tries to persist ai_verified=false with is_public=true gets clamped.
+    // The controller and frontend are aligned on this rule today; this hook
+    // is defense in depth for tomorrow.
+    protected static function booted(): void
+    {
+        static::saving(function (UserSavedExample $example) {
+            if (! $example->ai_verified) {
+                $example->is_public = false;
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

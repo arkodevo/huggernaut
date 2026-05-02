@@ -246,7 +246,10 @@ class WorkshopController extends Controller
             'word_sense_id'       => ['required', 'integer', 'exists:word_senses,id'],
             'word_object_id'      => ['nullable', 'integer', 'exists:word_objects,id'],
             'chinese_text'        => ['required', 'string', 'max:2000'],
-            'english_translation' => ['required', 'string', 'max:2000'],
+            // Drafts (Save Anyway path, ai_verified=false) carry no 师父-polished
+            // translation, so english_translation is optional here. The insert
+            // guard at line ~289 already skips translation creation when empty.
+            'english_translation' => ['nullable', 'string', 'max:2000'],
             'ai_verified'      => ['boolean'],
             'ai_feedback'      => ['nullable', 'string', 'max:5000'],
             'original_chinese_text' => ['nullable', 'string', 'max:2000'],
