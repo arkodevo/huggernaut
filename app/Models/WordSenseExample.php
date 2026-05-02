@@ -23,6 +23,7 @@ class WordSenseExample extends Model
         'is_suppressed',
         'theme',
         'has_audio',
+        'audio_text_hash',
     ];
 
     protected function casts(): array

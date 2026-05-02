@@ -3,16 +3,16 @@
  *
  * Output: /Users/chuluoyi/Documents/華語/planning/流動_Enrichment_Quality_Guide_vX.Y.docx
  *
- * Run:  NODE_PATH=/opt/homebrew/lib/node_modules node database/scripts/gen_enrichment_guide.js
+ * Run:  NODE_PATH=/opt/homebrew/lib/node_modules node database/scripts/gen_enrichment_guide.cjs
  *
  * (Global `docx` package required — `npm install -g docx` if missing.)
+ *
+ * The `.cjs` extension is required because the project package.json declares
+ * "type": "module"; this generator uses CommonJS `require()`.
  *
  * Version-bump protocol: bump the title, changelog, output filename, and
  * memory companion (project_enrichment_guide_v2.md) in lockstep. Prior
  * version .docx files are preserved — 絡一 curates version history.
- *
- * Moved from /tmp/gen_guide_v2.js on 2026-04-21 into the permanent
- * database/scripts/ home.
  */
 
 const {
@@ -170,12 +170,12 @@ content.push(
     spacing: { before: 2400, after: 240 },
   }),
   new Paragraph({
-    children: [new TextRun({ text: 'Enrichment Quality Guide v2.3', font: FONT, size: 44, bold: true, color: '1F4E79' })],
+    children: [new TextRun({ text: 'Enrichment Quality Guide v2.9', font: FONT, size: 44, bold: true, color: '1F4E79' })],
     alignment: AlignmentType.CENTER,
     spacing: { after: 600 },
   }),
   new Paragraph({
-    children: [new TextRun({ text: '光流 + 惠明 + 絡一 — 2026-04-19', font: FONT, size: 26, color: GRAY })],
+    children: [new TextRun({ text: '光流 + 惠明 + 絡一 — 2026-04-26', font: FONT, size: 26, color: GRAY })],
     alignment: AlignmentType.CENTER,
     spacing: { after: 720 },
   }),
@@ -209,8 +209,32 @@ content.push(simpleTable(
       'Intensity categorical rule (binding): Stage 1 answered by POS category, not per-word judgment. ONLY Vs / Vst / degree-Adv / abstract-emotional-N / IE get graded 1-5; all action verbs, Vaux/Vcomp, Vsattr, concrete nouns, function words, non-degree adverbs default to intensity: 0. Predictability beats per-word accuracy.',
     ],
     [
-      { text: 'v2.3', bold: true, shade: 'FFF2CC' },
-      { text: 'semantic_mode RETIRED — column + FK dropped on word_senses; attribute + 5 designations removed. 4,574 of 4,634 tagged senses (98.6%) silently defaulted to literal-only; the field was dead. The literal/figurative axis is now captured by (a) proper sense splitting when uses diverge, and (b) dimension tagging (concrete vs abstract/internal). Dimension expanded with explicit MULTI-SELECT guidance + per-slug table + 6 worked examples (迷戀 → [internal, abstract]; 跑 → [external, concrete]; 吧 → [grammatical, pragmatic]). Validator R4a retired. "Enrich with 師父" admin save path fixed: enrich-existing decision now does full content-replace (definitions, examples, notes, relations, collocations, pivots) via shared writeSenseContent helper, not just attribute scalars + notes.', shade: 'FFF2CC' },
+      'v2.3',
+      'semantic_mode RETIRED — column + FK dropped on word_senses; attribute + 5 designations removed. 4,574 of 4,634 tagged senses (98.6%) silently defaulted to literal-only; the field was dead. The literal/figurative axis is now captured by (a) proper sense splitting when uses diverge, and (b) dimension tagging (concrete vs abstract/internal). Dimension expanded with explicit MULTI-SELECT guidance + per-slug table + 6 worked examples. Validator R4a retired (23 → 22 active rules). "Enrich with 師父" admin save path fixed: full content-replace via shared writeSenseContent helper.',
+    ],
+    [
+      'v2.4',
+      'Sibling-senses discipline made symmetric across enrichment surfaces. Cowork (澄言) already received _sibling_senses in the skeleton JSON; console (師父) now receives an equivalent EXISTING SENSES block in the user message. New §7.1 Sibling senses documents the three editorial uses (don\'t propose duplicates, spot missing foundational senses, reference siblings in usage notes). Lessons ledger entry #14: overwriting foundational senses during higher-band enrichment (the 家 case driving the 86-sense remediation of 2026-04-22).',
+    ],
+    [
+      'v2.5',
+      'Philosophical lens for POS — Chinese grammar encodes ontology. New §0a codifies three keys: (1) state-as-inhabited for psychological dispositions (忍/愛/信/知/教 jiao4), (2) substrate concepts that take multiple grammatical shapes (氣/心/性/道), (3) relational causality foregrounding the other-as-cause (你吸引我 vs "I am attracted to you"). Master-perspective meta-rule: when master classifies in a way that diverges from English-trained intuition, investigate the framework before disputing. Practical implication: embed the worldview in usage_note_en and learner_traps_en — the notes are where the worldview reaches the learner. Lessons ledger #15: dispute-bias caught 2026-04-26 — 11 of 11 active L3 disputes failed lens recheck (忍/氣 Det/教/嚇/請假/扔/躺/提高/受得了/算了/起 N/人人); the bias was complete and consistent across 光流 + 惠明 + 澄言. Companion: POS Reference Guide v2.2 + project_state_verb_lens.md. No validator changes.',
+    ],
+    [
+      'v2.6',
+      'Two corrigenda flagged by 澄言 + 惠明: (1) §3.2 channel slug fix — channel-balanced renamed to balanced in migration 000111 (2026-04-20); template v2.4 uses balanced. The guide now matches DB + template. (2) §2.1 cross-reference bumped — POS Reference Guide is now v2.3. Plus §6 doctrinal alignment: potential complements (V+得/不+結) are NOT resultative complements — they sit Vst (capacity-state). The 受得了 / 忍得了 / 等不了 cohort closes the structural gap that produced the CE-sibling dispute. See POS Reference Guide v2.3 §6.2 for the diagnostic.',
+    ],
+    [
+      'v2.7',
+      'NEW §2.3a — Disputed-POS Justification REQUIRED. Every editorial-dispute sense MUST include a justification paragraph in usage_note_en AND usage_note_zh citing POS Guide section, diagnostic test that fails for master, what master may have captured, lens cross-reference IF applicable. Format: "*Editorial dispute on POS:* ..." as second paragraph of usage_note_en. Origin: lens-disputes batch (5 of 11 disputes had been retired on lens-coherence alone).',
+    ],
+    [
+      'v2.8',
+      'NEW §0b — The lens explains ontology, not grammar (companion to §0a master-perspective). EXPANDED §5.1 — Definitions hold meaning, not metalanguage (no source-language characters in EN, no POS jargon, no structural breakdown). Lessons ledger #16 (lens-coherence-without-structural-diagnostic) and #17 (definitions-as-metalanguage) added.',
+    ],
+    [
+      { text: 'v2.9', bold: true, shade: 'FFF2CC' },
+      { text: 'POS slug ontology cross-referenced from POS Guide v2.4. CE = Complement Expression (V+得/不+結 family — 受得了, 想不到, 找得到, 看不出, 怪不得); currently the cohort sits at Vst per §6.2 (capacity-state semantics is the working classification). IE = Idiomatic Expression — BROAD scope including chengyu (成語), colloquial fixed phrases (慣用語), set discourse phrases (算了, 沒關係), and proverbs. No separate Chengyu/CY slug. The previous DB labeling (CE = Chengyu) was a slug-meaning error caught 2026-04-26. NEW lessons ledger #18 — Slug-meaning verification discipline: before classifying with a non-obvious POS slug (CE, IE, Vcomp, Vsattr, Vspred, Vp, Vpt, Vst, Vsep family), read the POS Guide section on that class and confirm the word fits the actual DB-authoritative meaning, not the abbreviation\'s English-natural reading. Cross-language false-friend abbreviations are explicitly named as traps.', shade: 'FFF2CC' },
     ],
   ],
   [1560, 7800]
@@ -224,6 +248,84 @@ content.push(para('Quality wins over completeness. Flag wins over fake.', { bold
 content.push(para('Every field in the schema is an editorial decision, not a field to fill. If you cannot make a confident decision, flag it — don\'t invent, don\'t stretch, don\'t settle for a weak second edge to hit a count. A sense with one clean relation and a principled _flags note is worth more than three relations where two are weak.'));
 content.push(para('The pipeline runs visibly: 澄言 enriches → 光流 runs the structural validator + reviews batch-level metrics → 惠明 runs the editorial audit → 絡一 adjudicates. Reviewer disagreements are signal, not noise. If you aren\'t sure, surface the uncertainty.'));
 content.push(runs({ text: 'Your output feeds learners. ', bold: true }, 'A learner filtering for "mild-intensity positive emotions" expects the data to be right. 5,599 senses sat at default intensity=1 because no layer forced the decision — 我們不要再做一次.'));
+
+// 0a. Philosophical lens (NEW v2.5)
+content.push(h1('0a. Philosophical Lens — Chinese Grammar Encodes Ontology (NEW v2.5)'));
+content.push(runs({ text: 'Master classifications often encode how Chinese conceptualizes reality, not just syntactic role. ', bold: true }, 'When TOCFL master classifies a word in a way that diverges from English-trained intuition, the divergence is usually the language being more philosophically faithful than the structural test we ran. Three keys, all the same principle:'));
+
+content.push(h2('Key 1 — State as active inaction (psychological/cognitive dispositions)'));
+content.push(para('Chinese rigorously preserves an action/state distinction English casually elides. Words like 忍 (endure), 愛 (love), 信 (believe), 知 (know), 喜歡 (like), 怕 (fear), 想 (think/want), 懂 (understand) name SUSTAINED MODES OF BEING ONE INHABITS, not discrete acts one performs. Endurance is "an active form of inaction" — held condition, sustained containment. The Vs/Vst classification embeds this. The English bias treats endure/love/know as actions; the Chinese category names them as states.'));
+content.push(para('Refinement: the bias isn\'t purely English-imposed. English has its own stative-verb cluster — be, remain, abide, endure, bear, know, believe, love. The bias is more accurately MODERN VERB-DEFAULTISM: we read verbs as actional unless forced to notice otherwise. Chinese pedagogy preserves the distinction more rigorously than English casual usage does.'));
+
+content.push(h2('Key 2 — Substrate concepts that resist boxing'));
+content.push(para('Some Chinese words name foundational concepts — substrate, movement, vitality, atmosphere, relational field — that no single grammatical shape contains. 氣 is the canonical case:'));
+content.push(bullet('as N: air, gas, breath, mood (天氣, 空氣, 氣味, 生氣)'));
+content.push(bullet('as Det in TOCFL\'s sense: category-determining suffix in compound formation (氧氣, 氮氣, 蒸氣, 廢氣, 香氣, 怒氣)'));
+content.push(bullet('as Vst editorially: to be angry at someone (我氣他)'));
+content.push(para('That 氣 takes multiple POS isn\'t sloppiness — it\'s the right kind of fidelity. The grammar follows the ontology: 氣 is conceptually foundational in Daoist and broader Chinese frameworks (substrate, vitality, energetic constitution, relational field), and resists the noun-boxing English would impose. Same is likely true of 心, 性, 神, 道 — culturally saturated words whose grammar reflects their irreducibility.'));
+
+content.push(h2('Key 3 — Relational causality (who is foregrounded as cause)'));
+content.push(para('Chinese often grammatically foregrounds the other / world / situation as the source of an experience that arises in the I, where English re-centers the I as experiencer-agent.'));
+content.push(simpleTable(
+  ['English (self-centered)', 'Chinese (relational)'],
+  [
+    ['"I am attracted to you"', '你吸引我 (you attract me)'],
+    ['"I am moved by that"', '那感動了我 (that moved me)'],
+    ['"I got scared by you"', '你嚇到我 (you startled me)'],
+    ['"I am made sad by him"', '他讓我難過 (he makes me sad)'],
+  ],
+  [4500, 4500]
+));
+content.push(para('The grammatical convention carries a metaphysical claim: psychological experience isn\'t authored by the self — it arises from encounter between self and world, and the speaker honors that arising by naming what caused it. Causative-stative verbs (吸引, 感動, 嚇, 讓+state) grammatically foreground the other-as-cause.'));
+
+content.push(h2('The Master-Perspective Meta-Rule'));
+content.push(runs({ text: 'When master classifies in a way that diverges from English-trained intuition, the first response is investigation, not dispute. ', bold: true }, 'Ask:'));
+content.push(numItem('What kind of reality is the language treating this word as expressing? (state / process / action / condition / substrate / field / relation / force)', 'meta_rule'));
+content.push(numItem('What does the master family-consistency say? Does the POS appear with consistent label across the word\'s compound family? Family-uniform classifications are strong signals.', 'meta_rule'));
+content.push(numItem('Is our editorial position rooted in actual Chinese-grammar reasoning, or in English-linguistics-trained intuition translated to a mechanical test (很-test, 在-test, separability, resultative-complement applied without ontological context)?', 'meta_rule'));
+content.push(runs('The structural diagnostic tests are calibrated for clear cases. On philosophically saturated words, fixed expressions, and substrate concepts, they can give false negatives. ', { text: 'When tests conflict with master family-consistency or framework reasoning, family wins. ', bold: true }, 'The disputed-POS workflow exists for cases where investigation finds no framework reason AND we have a Chinese-grammar-rooted alternative analysis. Otherwise, default is trust.'));
+
+content.push(h2('Failure mode this prevents (caught 2026-04-26)'));
+content.push(runs({ text: 'Stacked English-trained reads. ', bold: true }, 'When 光流 + 惠明 + 澄言 converge on the same POS dispute, we may be stacking three intuitions rooted in the same lens bias — sanrenxing without cross-framework safety. The check is the framework investigation, not another reviewer. '));
+content.push(runs({ text: 'Concrete lesson: ', bold: true }, '11 of 11 disputes from L3 batches 01-02 failed lens recheck on 2026-04-26 (忍/氣 Det/教/嚇/請假/扔/躺/提高/受得了/算了/起 N/人人). All three reviewers agreed and were uniformly wrong. The bias was complete.'));
+
+content.push(h2('Practical implication for usage_note and learner_traps'));
+content.push(runs({ text: 'Embed the lens in usage_note_en and learner_traps_en ', bold: true }, 'when the word\'s POS reflects one of the three keys. English-speaking learners benefit from explicit framing of why the word\'s syntax differs from their default expectation. The notes are where the worldview reaches the learner.'));
+content.push(para('Examples of lens-embedded notes:', { bold: true }));
+content.push(bullet('忍 Vs: "Endurance in Chinese is a state inhabited, not an action performed. 忍 names the held condition of being-able-to-bear — the cultivated capacity that sits alongside 愛, 信, 知 as a sustained mode of being. Approach as you would 愛: not as something you do but as something you are. 修養 (self-cultivation) is the framework."'));
+content.push(bullet('氣 N (and across senses): "氣 is one of Chinese\'s foundational concepts — substrate, breath-energy, atmosphere, mood, vitality. Different senses surface in different grammatical roles because no single role contains it: noun (天氣), category-determining suffix in compounds (氧氣, 怒氣), stative verb (我氣他). The classical/Daoist meaning runs underneath them all."'));
+content.push(bullet('吸引 Vst (relational-causation family): "Chinese often foregrounds the cause of an experience rather than the self experiencing it. Where English says \'I am attracted to you\' (centering the I), Chinese says 你吸引我 (centering the source). Read 吸引 as \'X exerts attractive force on Y\'. Same pattern: 感動, 嚇, 讓+state."'));
+content.push(bullet('教 jiao4 Vst (doctrinal-mode reading): "教 has two readings distinguished by tone: jiao1 (action of teaching) is V; jiao4 (doctrinal-teaching as inhabited mode) is Vst. The 4th-tone reading captures teaching as a sustained way of being — the 教 of 道教/佛教 (religious teaching). Approach as parallel to 信 (believe) and 修 (cultivate) — held disposition, not discrete act."'));
+content.push(runs({ text: 'See ', italics: true }, { text: 'project_state_verb_lens.md ', italics: true, bold: true }, { text: 'for the full philosophical-lens framework.', italics: true }));
+
+content.push(pageBreak());
+
+// 0b. Lens explains ontology, not grammar (NEW v2.8)
+content.push(h1('0b. The Lens Explains Ontology, Not Grammar (NEW v2.8)'));
+content.push(runs({ text: 'Companion to §0a — opposite humility.', bold: true }));
+content.push(para('§0a guards against disputing master from English-trained bias. §0b guards against accepting master from lens-coherence bias. Same humility, both directions.'));
+content.push(runs({ text: 'The rule: ', bold: true }, 'once the lens framing reads coherent, the structural diagnostic must STILL be re-run independently. If the diagnostic comes back negative on master, the lens cannot save the classification — but the lens insight may still be valid as semantics. The editorial sense disputes the POS while keeping the worldview framing in usage_note_en.'));
+
+content.push(h2('Failure mode this prevents'));
+content.push(runs('Once the philosophical framing reads coherent — "yes, 嚇 names a relational-causality flash-state, this fits Key 3" — the temptation is to lock in master\'s POS without re-running the structural diagnostic. ', { text: 'That\'s the failure mode. ', bold: true }, 'Lens-coherence is NOT structural evidence.'));
+
+content.push(h2('Concrete lesson (caught 2026-04-26)'));
+content.push(para('11 of 11 disputes were retired on lens-coherence in the rev1 of the lens-disputes batch. 惠明\'s cross-provider audit caught that 5 of those 11 still failed structural diagnostics. The rev2 resharpened three as firm disputes:'));
+content.push(bullet('扔 — §6.1 base/compound symmetry: base verbs whose compounds are Vpt entries cannot themselves be Vpt'));
+content.push(bullet('躺 — 把-test: ✗把我的手錶躺在桌子上 confirms intransitivity; 躺 cannot be V'));
+content.push(bullet('嚇 — predicative-only test: ✗很嚇 alone; takes direct object (你嚇我); cannot be Vspred'));
+content.push(para('In all three, Key 3 (relational causality) and Key 1 (state-as-inhabited) DID accurately describe the semantics. The lens explained the ontology. It did not pick the POS.'));
+
+content.push(h2('When a structural diagnostic fails'));
+content.push(numItem('Keep the lens framing in usage_note_en — it is genuine semantic insight (e.g. Chinese foregrounds source over experiencer for 嚇).', 'lens_grammar'));
+numItem('Mark the master sense alignment="disputed".', 'lens_grammar');
+content.push(numItem('Mark the master sense alignment="disputed".', 'lens_grammar'));
+content.push(numItem('Add an editorial sibling with the structurally-correct POS.', 'lens_grammar'));
+content.push(numItem('Write the §2.3a dispute justification: cite the failing diagnostic, acknowledge what the lens captures, name why the structural test still wins.', 'lens_grammar'));
+
+content.push(runs({ text: 'Cross-provider review is essential when the lens is doing heavy lifting. ', bold: true }, '光流 + 澄言 + 絡一 (Anthropic-tied) converged on 11/11 lens disputes. 惠明 (OpenAI) caught the 5 overreaches. Without the cross-provider check, we would have shipped overreach. Same-provider reviewers can stack the same lens bias.'));
+
+content.push(pageBreak());
 
 // 1. Before you start
 content.push(h1('1. Before You Start'));
@@ -244,7 +346,7 @@ content.push(quoteBlock('For every sense, ask: "Is every value I wrote an explic
 // 2. Structural fields
 content.push(h1('2. Structural Fields'));
 content.push(h2('2.1 POS classification'));
-content.push(para('Use the POS Reference Guide v2.1 as authoritative. The verb grid:'));
+content.push(para('Use the POS Reference Guide v2.4 as authoritative. The verb grid:'));
 content.push(simpleTable(
   ['', 'Transitive', 'Intransitive', 'Separable'],
   [
@@ -276,6 +378,14 @@ content.push(bullet('Creating Adv senses for Vs-used-adverbially-with-地 (寂�
 content.push(bullet('Mis-tagging 放下 as Vsep — it\'s Vpt (下 is a resultative complement, not the O in V-O)'));
 content.push(bullet('Separable verbs 唱歌, 走路, 打電話 are Vsep, NOT Vp or Vi'));
 
+content.push(h3('Slug-meaning verification (NEW v2.9)'));
+content.push(runs({ text: 'Before classifying with a non-obvious POS slug', bold: true }, ' (CE, IE, Vcomp, Vsattr, Vspred, Vp, Vpt, Vst, Vsep family), ', { text: 'read the POS Guide section on that class and confirm the word fits the actual DB-authoritative meaning, not the abbreviation\'s English-natural reading.', bold: true }));
+content.push(runs({ text: 'False-friend abbreviation traps:', bold: true, color: 'C00000' }));
+content.push(bullet('CE = Complement Expression (V+得/不+結 family — 受得了, 想不到). NOT chengyu — chengyu sits in IE.'));
+content.push(bullet('IE = Idiomatic Expression — BROAD, includes chengyu (成語), colloquial fixed phrases (慣用語), set discourse phrases (算了, 沒關係), proverbs.'));
+content.push(bullet('Vcomp = Verbal Complement morpheme (完, 到, 見, 上, 掉) standing alone. NOT V+complement compounds — those are Vpt per §6.1.'));
+content.push(runs({ text: 'Lessons ledger #18: ', bold: true }, 'Caught 2026-04-26 — the slug "CE" was DB-labeled "Chengyu" while reading naturally as "Complement Expression" to English-trained reviewers. The false friend invited slug invention. Resolution: re-labeled CE to mean Complement Expression; folded chengyu into IE; current cohort (受得了 family) stays at Vst per §6.2 (capacity-state captures the working semantics; CE is reserved for any future structural classification need).'));
+
 content.push(h2('2.2 Structure (word-level)'));
 content.push(runs('Must be one of: ', { text: 'single | left-right | top-bottom | enclosing', bold: true }, '. For 3+ char words, use the dominant structure or left-right as default.'));
 
@@ -290,6 +400,30 @@ content.push(numItem('Mark the original TOCFL sense as alignment: "disputed" (ke
 content.push(numItem('Create a new editorial sense with your corrected POS, marked alignment: "partial" and source: "editorial".', 'disputed_workflow'));
 content.push(numItem('Both senses stay visible for learners — the disputed one shows the official classification, the partial one shows your editorial correction.', 'disputed_workflow'));
 content.push(para('This preserves transparency: learners can see both the official TOCFL call and the editorial judgment.'));
+
+content.push(h3('Dispute Justification — REQUIRED (NEW v2.7)'));
+content.push(runs({ text: 'Every editorial-dispute sense MUST include a justification paragraph in usage_note_en AND usage_note_zh. ', bold: true, color: 'C00000' }, 'Disputes without justification are rejected by audit and held back from import. The justification is the audit trail: it lets future reviewers (and learners who toggle the disputed-pair view) understand why the editorial classification differs from master.'));
+
+content.push(runs({ text: 'The justification paragraph must:', bold: true }));
+content.push(numItem('Cite the specific POS Reference Guide section that justifies the dispute (§6.1 V→Vpt promotion, §7 Stative sub-class diagnostics, §8 Separable Verbs, etc.).', 'dispute_just'));
+content.push(numItem('Show the diagnostic test that fails for the master classification — quote the test result. Examples: 把-test result for V/Vi distinction; 很-test result for Vs adjectival; predicative-only test for Vspred.', 'dispute_just'));
+content.push(numItem('Acknowledge what the master classification may have been capturing (often a real semantic insight or family-consistency signal) — and explain why structural evidence still requires the dispute.', 'dispute_just'));
+content.push(numItem('Cross-reference the philosophical lens (Key 1/2/3, project_state_verb_lens.md) IF applicable — but the lens cannot carry the dispute alone. Structural evidence is required.', 'dispute_just'));
+
+content.push(runs({ text: 'Format: ', bold: true }, 'the dispute justification is typically the SECOND paragraph of usage_note_en (after the primary semantic explanation). Lead with the marker '), runs({ text: '*Editorial dispute on POS:* ', bold: true, italics: true }, 'so future audits can locate it programmatically.'));
+
+content.push(h3('Worked example — dispute with justification (扔 Vpt → V)'));
+content.push(quoteBlock('扔 is a transitive action verb meaning "to throw / toss / discard." Common in everyday speech, especially for casual disposal (扔垃圾, 扔球). More common in northern Mandarin; in Taiwan 丟 is the standard daily word.'));
+content.push(quoteBlock('*Editorial dispute on POS:* We dispute the master Vpt classification. Per POS Reference Guide v2.3 §6.1, the V→Vpt promotion pattern is: base action verb (V) + complement → Vpt as a separate lexicon entry. 扔 (base) productively forms exactly this pattern: 扔到 / 扔掉 / 扔下 / 扔出去 — these are the Vpt entries, parallel to 閉(V)→閉上(Vpt), 關(V)→關上(Vpt), 打(V)→打敗(Vpt). Classifying base 扔 as Vpt would require treating it as exceptional to §6.1 — neither argued nor demonstrated. The simpler reading: 扔 (base) = V; 扔到/扔掉/扔下 = Vpt (separate entries by complement-promotion).'));
+
+content.push(h3('Why justification matters'));
+content.push(para('Without justification, disputes look arbitrary. Future Claude / 澄言 / 惠明 / learners cannot tell whether a dispute is principled or whim. The justification:'));
+content.push(bullet('Forces the enricher to re-run the diagnostic before committing to a dispute (catches lens-coherence-without-structural-evidence failure mode)'));
+content.push(bullet('Provides the audit trail for cross-provider review'));
+content.push(bullet('Teaches the structural reasoning to learners who toggle the disputed-pair view'));
+content.push(bullet('Makes the dispute auditable across batches — common diagnostic patterns surface repeatedly'));
+
+content.push(runs({ text: 'Lesson 2026-04-26: ', bold: true }, 'in the lens-recheck batch, 5 of 11 disputes were retired on lens-coherence alone — when 絡一 ran structural diagnostics later (§6.1 base/compound symmetry on 扔, 把-test on 躺, predicative-only test on 嚇), three were resharpened as firm disputes. The lens explained ontology beautifully but did not adjudicate grammar. Justification-required disputes prevent this failure mode by forcing the diagnostic step into every dispute decision.'));
 
 content.push(h2('2.4 Source (sense level)'));
 content.push(runs('Must be one of: ', { text: 'tocfl | editorial', bold: true }, '.'));
@@ -339,7 +473,7 @@ content.push(h2('3.2 Channel — frozen 5'));
 content.push(simpleTable(
   ['Slug', 'Meaning'],
   [
-    ['channel-balanced', 'Default — used in both speech and writing'],
+    ['balanced', 'Default — used in both speech and writing (renamed from channel-balanced in migration 000111, 2026-04-20)'],
     ['spoken-dominant', 'Primarily spoken, rare in writing'],
     ['written-dominant', 'Primarily written, rare in speech'],
     ['spoken-only', 'Effectively only spoken'],
@@ -560,11 +694,38 @@ content.push(pageBreak());
 // 5. Content Quality
 content.push(h1('5. Content Quality'));
 
-content.push(h2('5.1 Definitions'));
+content.push(h2('5.1 Definitions — meaning only, no metalanguage (HARDENED v2.8)'));
+content.push(runs({ text: 'The definition is for what the word ', bold: true }, { text: 'means', bold: true, italics: true }, { text: ' to a learner, not what it ', bold: true }, { text: 'is grammatically', bold: true, italics: true }, { text: ' to a linguist. Metalanguage belongs in formula, usage_note, or learner_traps — never in the definition.', bold: true }));
 content.push(bullet('EN + ZH-TW required for every sense.'));
-content.push(bullet('ZH must be pure Chinese — no English words.'));
-content.push(bullet('No POS information in definitions.'));
+content.push(bullet('Definitions are LPL-only. No source-language characters in the EN definition (✗ "受+得+了"). No English words in the ZH definition.'));
+content.push(bullet('No POS jargon in any definition: ✗ "distributive nominal", "complement expression", "discourse marker", "transitive process", "bound attributive modifier", "fused transitive verb", "intransitive action verb", "category-determining modifier", "lexicalised compound", etc.'));
+content.push(bullet('No structural breakdown: ✗ "受+得+了", "V-O compound: 請+假", "(動賓結構：請＋假)".'));
+content.push(bullet('No lens-framing in the definition: lens insights belong in usage_note. ✗ "(the sustained disposition of being in the teaching relation)", "(the inhabited disposition of having-decided-to-stop-pursuing)", "(the source exerts startle-force on the experiencer)".'));
 content.push(bullet('Do not capitalize first word of EN definitions.'));
+
+content.push(h3('5.1.1 What metalanguage looks like (REJECT examples — caught 2026-04-26)'));
+content.push(simpleTable(
+  ['Sense', 'Definition with metalanguage (REJECT)', 'Cleaned (ACCEPT)'],
+  [
+    ['人人 N', 'everyone; each and every person (distributive nominal)', 'everyone; each and every person'],
+    ['受得了 CE (deleted)', 'to be able to bear; to be able to endure (complement expression: 受+得+了)', '— sense was deleted; had Chinese characters in EN definition (hard rule violation)'],
+    ['教 jiao4 Vst', 'to teach; to instruct (the sustained disposition of being in the teaching relation)', 'to teach; to instruct'],
+    ['氣 Det', 'relating to ... (category-determining modifier in compounds)', 'relating to breath-energy, gas, or atmospheric quality'],
+    ['算了 IE', 'forget it; never mind; drop it (discourse marker expressing pragmatic resignation or dismissal)', 'forget it; never mind; drop it'],
+    ['請假 Vsep', 'to ask for leave; to request time off (separable verb — V-O compound with 請 + 假)', 'to ask for leave; to request time off'],
+    ['躺 Vi', 'to lie down; to recline (intransitive action verb)', 'to lie down; to recline; to be in a lying position'],
+  ],
+  [1300, 4400, 3500]
+));
+
+content.push(h3('5.1.2 Self-check before submitting'));
+content.push(numItem('Does the EN definition contain any Chinese character (including tone-marked pinyin)? → rewrite without it.', 'def_meta_check'));
+content.push(numItem('Does any definition (EN or ZH) contain a POS class name (V, Vst, Vpt, Det, IE, etc.) or POS jargon ("nominal", "expression", "marker", "modifier", "transitive", "intransitive", etc.)? → move to usage_note.', 'def_meta_check'));
+content.push(numItem('Does the definition tell the learner what the word IS grammatically rather than what it MEANS? → rewrite as meaning.', 'def_meta_check'));
+content.push(numItem('Is there a parenthetical that compresses lens-framing into the definition? → expand it in usage_note_en, drop from definition.', 'def_meta_check'));
+content.push(numItem('Does the definition contain a structural breakdown (X+Y+Z) of the word\'s morphemes? → move to formula.', 'def_meta_check'));
+
+content.push(runs({ text: 'Why this matters: ', bold: true }, 'a strong second paragraph in usage_note (per §2.3a) does not excuse a weak first paragraph (the definition itself). The basics layer of the audit verifies definition quality independent of usage_note quality. Caught 2026-04-26: 13 of 16 senses in the lens-disputes batch shipped with parenthetical metalanguage in EN definitions; 8 of 16 had similar issues in ZH. The deleted CE sibling for 受得了 had Chinese characters in the EN definition — the loudest violation of the rule. All cleaned post-import.'));
 
 content.push(h3('5.1a Definition depth at L4+ (critical)'));
 content.push(runs('At TOCFL Level 4 and higher, definitions must ', { text: 'EXPLAIN', bold: true }, ', not just gloss-stack. A learner at this level needs context the English gloss alone can\'t give: target, mechanism, duration, register, boundary condition, or usage frame.'));
@@ -736,7 +897,29 @@ content.push(pageBreak());
 
 // 7. Sense architecture
 content.push(h1('7. Sense Architecture'));
-content.push(h2('7.1 Six sense-split triggers'));
+
+content.push(h2('7.1 Sibling senses — read before you enrich'));
+content.push(para('Every enrichment surface shows you the word\'s existing sense family:'));
+content.push(bullet('Cowork (澄言): _sibling_senses read-only block on each word entry in the skeleton JSON, written by enrich:skeleton.'));
+content.push(bullet('Console (師父): EXISTING SENSES block appended to the enrichment user message, built by CsvImportController::buildSiblingsForShifu and consumed by ShifuWordEnricher.'));
+content.push(para('Same field shape either way — pinyin, pos, definition_en, tocfl, hsk, source, alignment, status, enriched_by — and the same contract: read-only. The importer preserves siblings regardless of what you submit; you do not edit them.'));
+content.push(runs({ text: 'Why this exists: ', bold: true }, 'pre-2026-04-22, a wipe-and-recreate upsert in the importer erased 86 foundational L1–L4 senses when high-band batches enriched a different POS of the same word. Canonical example: 家 had a L1 Noun sense (home/household) and a L5 Measure-word sense; enriching the L5 M silently deleted the L1 N. The importer is fixed — it now matches by (pinyin, pos) and preserves unmatched existing senses. The guide codifies the editorial discipline that makes siblings useful on top of that fix.'));
+
+content.push(h3('Three uses for sibling context'));
+content.push(numItem('Don\'t propose duplicate sense splits. If a sibling already covers a (pinyin, POS) combination exactly, your batch is enriching something else — don\'t recreate the sibling.', 'sibling_uses'));
+content.push(numItem('Spot missing foundational senses. If you\'re enriching a high-band sense and the siblings list is empty (or shows only other high-band senses) for a word common usage would expect to have a foundational L1–L4 meaning, add a _flags note: "expected foundational sense absent — possible prior wipe". Helps 絡一 identify legacy damage.', 'sibling_uses'));
+content.push(numItem('Reference siblings in usage notes. When a sibling exists, distinguish your sense from it. Example — enriching 家 M at L5 with sibling 家 N L1 present: usage_note_zh "一家商店／一家醫院 — distinguishes the measure-word use for businesses and institutions from 家\'s L1 noun sense (home, household)." The bridge helps learners.', 'sibling_uses'));
+
+content.push(h3('The siblings rule for adding a new POS sense'));
+content.push(runs({ text: 'A new POS sense is a legitimate editorial addition ONLY when absent from BOTH the current batch AND the sibling list. ', bold: true }, 'If 家 M is in your batch and siblings show 家 N L1, you are enriching the M — you are NOT inventing a new N. When in doubt, flag.'));
+
+content.push(h3('Import-time contract — what the importer actually does'));
+content.push(bullet('Incoming senses matched to existing by (pinyin, pos) → updated in place; seed fields (tocfl/hsk/source/alignment) preserved.'));
+content.push(bullet('Unmatched incoming → created as editorial additions (source="editorial", alignment="partial", no band stamps).'));
+content.push(bullet('Unmatched existing on the word → preserved; logged at runtime as "⊙ preserved existing sense: pinyin|POS".'));
+content.push(bullet('Siblings you see in the skeleton or Shifu block remain in the DB after your batch lands. You cannot overwrite them by omission.'));
+
+content.push(h2('7.2 Six sense-split triggers'));
 content.push(runs('Create a ', { text: 'separate sense ', bold: true }, 'whenever ANY of these is true:'));
 content.push(numItem('Different POS — 愛好 is both N (hobby) and Vst (to love/be keen on). Two senses. 保障 is both Vpt and N. Two senses.', 'split_triggers'));
 content.push(numItem('Different pinyin/reading — 行 (xíng) = to walk/OK, 行 (háng) = row/profession. Two senses.', 'split_triggers'));
@@ -746,7 +929,7 @@ content.push(numItem('The usage_note or learner_traps starts saying "also used a
 content.push(numItem('Distinct syntactic behavior — 拜拜 can be Vi (farewell "bye-bye") or Vsep (to worship at a temple, 拜拜神明). Two senses.', 'split_triggers'));
 content.push(runs({ text: 'If in doubt, split. ', bold: true }, 'A sense can always be merged later; a compressed entry often ships to learners before anyone notices the conflation.'));
 
-content.push(h2('7.2 Variant pairs'));
+content.push(h2('7.3 Variant pairs'));
 content.push(para('Orthographic variants (e.g., 佈告 / 布告, 佈告欄 / 布告欄) are legitimate as separate entries linked with reciprocal synonym_related. But each variant entry must stand on its own — differentiated definitions, independent examples, and its own relations. Don\'t let the variant cross-links pad the graph; that\'s variant-inflation, which 惠明 flags at audit.'));
 
 // 8. Lessons ledger
@@ -768,6 +951,11 @@ content.push(simpleTable(
     ['11', 'Reviewer process', 'Reviewer-prescribed slug maps applied without DB verification'],
     ['12', 'Relation typing', 'Category / sequence / hypernym forced into synonym_related (甲/乙/丁 for 丙)'],
     ['13', 'Definition quality', 'Intensity defaulted to 1; Not Applicable not used; null left on enriched senses'],
+    ['14', 'Sense architecture', 'Overwriting foundational senses during higher-band enrichment (the 家 N/M case) — pre-2026-04-22 wipe-and-recreate upsert bug; importer fixed; discipline codified in §7.1'],
+    ['15', 'POS dispute / framework bias', 'Disputing master classifications based on English-shaped intuition (action-default, pre-noun Det reading, gradable Vs reading) without investigating master\'s framework reason. Surfaced 2026-04-26: 11 of 11 active L3 disputes failed lens recheck (忍, 氣 Det, 教 jiao4, 嚇 Vspred, 請假, 扔, 躺, 提高, 受得了, 算了, 起 N, 人人). When master diverges from intuition, investigate the framework FIRST (§0a master-perspective meta-rule). Dispute only with Chinese-grammar-rooted alternative analysis. The bias was consistent across 光流 + 惠明 + 澄言 — three reviewers stacking the same lens.'],
+    ['16', 'POS dispute / lens-coherence bias', 'Retiring disputes on lens-coherence alone, without re-running the structural diagnostic. Companion to #15 (opposite humility). Surfaced 2026-04-26: of the 11 disputes retired in lens-disputes rev1, 惠明\'s cross-provider audit caught 5 still failing structural tests (扔/躺/嚇 confirmed wrong; 請假/算了 contested). Rev2 resharpened three: 扔 by §6.1 base/compound symmetry, 躺 by 把-test, 嚇 by predicative-only test. The lens explained the ontology but did not pick the POS. Rule: once the lens framing reads coherent, re-run the structural diagnostic INDEPENDENTLY. If it fails, dispute the master, keep lens framing in usage_note (§0b).'],
+    ['17', 'Definition quality / metalanguage in definitions', 'Parenthetical metalanguage compressed into the definition space — POS jargon ("distributive nominal", "discourse marker", "complement expression", "transitive process", "bound attributive modifier"), structural breakdown ("受+得+了", "V-O compound: 請+假"), lens-framing ("(the sustained disposition of being in the teaching relation)"), or — most loudly — Chinese characters in an EN definition. Caught 2026-04-26 in the lens-disputes batch: 13 of 16 senses had EN-definition metalanguage; 8 of 16 had ZH metalanguage; the deleted CE sibling for 受得了 had Chinese characters in the EN definition (hard rule violation). Rule: definitions hold meaning, not metalanguage. Metalanguage belongs in formula (morphology), usage_note (framing), or learner_traps (warnings). A strong §2.3a second paragraph does not excuse a weak first paragraph.'],
+    ['18', 'Slug invention / false-friend abbreviation', 'Using a non-obvious POS slug according to the abbreviation\'s English-natural reading rather than the DB-authoritative meaning. Caught 2026-04-26: slug "CE" was DB-labeled "Chengyu" while reading naturally as "Complement Expression" to English-trained reviewers. Chengyan classified 受得了 as CE expecting Complement Expression; the DB had it as Chengyu — slug invention by abbreviation false-friend. Multiple audit cycles missed the mismatch. Resolution: re-labeled CE to mean Complement Expression (its natural English reading); folded chengyu into IE as a sub-type. Rule: before classifying with CE/IE/Vcomp/Vsattr/Vspred/Vp/Vpt/Vst/Vsep family, read the POS Guide section to confirm the slug means what you think it means. The DB is authoritative; the abbreviation is a memory aid, not the meaning.'],
   ],
   [600, 2200, 6200]
 ));
@@ -791,6 +979,8 @@ content.push(bullet('☐ All 6 bilingual note fields filled'));
 content.push(bullet('☐ EN + ZH-TW definitions both present, ZH is pure Chinese'));
 
 content.push(h2('Editorial (manual)'));
+content.push(bullet('☐ Master-perspective check — before disputing master\'s POS, investigated the framework (§0a) and have a Chinese-grammar-rooted alternative analysis (not just an English-default reading)'));
+content.push(bullet('☐ Sibling senses reviewed — no duplicate (pinyin, POS) splits proposed; foundational-sense absence flagged if suspicious'));
 content.push(bullet('☐ Intensity — every sense has an explicit 0 or 1-5 decision (not a default-1)'));
 content.push(bullet('☐ Domains — 1-4 assigned, position 1 is the most relevant'));
 content.push(bullet('☐ Relations — every edge passes the decision ladder; no padding'));
@@ -811,11 +1001,14 @@ content.push(simpleTable(
   ['Resource', 'Location'],
   [
     ['Frozen slug sets', 'App\\Services\\Enrichment\\FrozenSets.php — live from DB'],
-    ['Validator (23 rules)', 'App\\Services\\Enrichment\\Validators\\StructuralValidator.php'],
-    ['Lessons ledger (13 entries)', 'App\\Services\\Enrichment\\LessonsLedger.php'],
-    ['師父 enrichment prompt', 'App\\Services\\ShifuWordEnricher.php'],
+    ['Validator (22 active rules)', 'App\\Services\\Enrichment\\Validators\\StructuralValidator.php'],
+    ['Lessons ledger (15 entries)', 'App\\Services\\Enrichment\\LessonsLedger.php'],
+    ['師父 enrichment prompt + sibling block', 'App\\Services\\ShifuWordEnricher.php (buildSystemPrompt + buildUserMessage)'],
+    ['Cowork sibling block', 'App\\Console\\Commands\\EnrichSkeleton.php (attachSiblingSenses)'],
+    ['Importer preservation contract', 'App\\Console\\Commands\\ImportWordData.php (updateExistingSense / preserved log)'],
     ['Import template (v2.3)', 'database/templates/word-import-template.json'],
-    ['POS Reference v2.1', 'project_pos_reference_v2.1.md (memory)'],
+    ['POS Reference v2.2', 'project_pos_reference_v2.1.md (memory; file path retained for stability)'],
+    ['Philosophical lens framework', 'project_state_verb_lens.md (memory)'],
     ['Intensity Specification', 'project_intensity_specification.md (memory)'],
     ['This guide', 'project_enrichment_guide_v2.md (memory)'],
   ],
@@ -826,7 +1019,7 @@ content.push(runs({ text: 'Run the dry-run before submission. Always.', bold: tr
 // Build doc
 const doc = new Document({
   creator: '光流 (Claude)',
-  title: '流動 Living Lexicon — Enrichment Quality Guide v2.3',
+  title: '流動 Living Lexicon — Enrichment Quality Guide v2.9',
   styles: {
     default: { document: { run: { font: FONT, size: 22 } } },
     paragraphStyles: [
@@ -869,7 +1062,7 @@ const doc = new Document({
     },
     headers: {
       default: new Header({ children: [new Paragraph({
-        children: [new TextRun({ text: '流動 Living Lexicon — Enrichment Quality Guide v2.3', font: FONT, size: 18, color: GRAY })],
+        children: [new TextRun({ text: '流動 Living Lexicon — Enrichment Quality Guide v2.9', font: FONT, size: 18, color: GRAY })],
         alignment: AlignmentType.RIGHT,
       })] })
     },
@@ -887,7 +1080,7 @@ const doc = new Document({
 });
 
 Packer.toBuffer(doc).then(buffer => {
-  const outPath = '/Users/chuluoyi/Documents/華語/planning/流動_Enrichment_Quality_Guide_v2.3.docx';
+  const outPath = '/Users/chuluoyi/Documents/華語/planning/流動_Enrichment_Quality_Guide_v2.9.docx';
   fs.writeFileSync(outPath, buffer);
   console.log('Wrote ' + outPath + ' (' + buffer.length + ' bytes)');
 });

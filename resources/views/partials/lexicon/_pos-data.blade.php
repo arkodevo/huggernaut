@@ -19,6 +19,7 @@ const POS_RENAME = {
   'Verbal Complement':                    'Verb - complement',
   'Auxiliary':                            'Auxiliary',
   'Interjection':                         'Interjection',
+  'Complement Expression':                'Complement Expression',
 };
 
 // DB full name → intricate abbreviation
@@ -52,7 +53,7 @@ const POS_ABBR = {
   'Interjection':                         'Intj',
   'Idiomatic Expression':                 'IE',
   'Phrase':                               'Ph',
-  'Chengyu':                              'CE',
+  'Complement Expression':                'CE',
 };
 
 // DB full name → consolidated abbreviation
@@ -119,7 +120,6 @@ const POS_ZH = {
   'Interjection':                         '感嘆詞',
   'Idiomatic Expression':                 '慣用語',
   'Phrase':                               '片語',
-  'Chengyu':                              '成語',
 };
 
 // Returns the display name for a raw DB POS label (always intricate — for the cycle chip's data-full)

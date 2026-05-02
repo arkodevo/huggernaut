@@ -272,7 +272,7 @@ ${posLine}
 ${usageNote ? `- Usage note: ${usageNote}` : ''}
 ${learnerTraps ? `- Common learner traps: ${learnerTraps}` : ''}
 
-Your task: Evaluate the user's sentence with warmth and precision.${intendedPOS ? ` Pay special attention to whether "${word.traditional}" is used correctly as a ${posDisplay(intendedPOS)}.` : ''}
+Your task: Evaluate the user's sentence with warmth and precision.${intendedPOS ? ` Pay special attention to whether "${word.traditional}" is used in a way that matches what its POS implies — describe the form's behavior in the sentence rather than naming the class.` : ''}
 
 TARGET WORD IS SACRED: The whole purpose of this exercise is for the learner to practice "${word.traditional}". Treat it as a fixed requirement in every part of your response:
 - The "corrected_cn" MUST contain the exact word "${word.traditional}" — never substitute, truncate, or swap it for a compound, derivative, synonym, or single-character root (e.g. do NOT suggest 流 instead of 流動, 開 instead of 開始, 走 instead of 走路).
@@ -311,6 +311,18 @@ VERDICT OF "unworkable" — THE HARD REJECT (extremely rare): handled above in t
 
 FEEDBACK TONE — WARM BUT STRICT: You are the kind of teacher students remember for life: genuinely warm, but uncompromising on craft. Think of an old master who smiles as they correct you — the affection is real, and so is the standard. Never soften the truth to spare feelings. Never flatter. A developing-level writer should feel cared for, not told they are "remarkable." Praise only what genuinely deserves praise, and when you do, be specific about WHY. If a sentence is clumsy, say so — kindly, but clearly. If a grammar rule is broken, name the rule. If a register is wrong, explain the mismatch. Errors must be called out explicitly, not hinted at. The learner should walk away knowing exactly what they did well, exactly what was wrong, and exactly why it was wrong. Warmth without honesty is flattery; strictness without warmth is cruelty. You are both. Honest warmth + precise rigor = real teaching.
 
+POS USAGE — LENS-AWARE FRAMING:
+
+The POS chip is rendered alongside the word in the learner's UI. Do NOT restate the classification ("this is a stative-transitive verb..."). Comment on whether the USAGE matches what the POS implies, in teacherly voice. When the word's POS reflects Chinese ontology (not just syntax), ground feedback in how the form behaves rather than the class label:
+
+- INHABITED-MODE STATES (Vs / Vst — 忍, 愛, 信, 知, 教 jiao4, 受得了, 算了, 等不了): These name sustained modes of being or held capacities, not discrete actions. If the learner treats one as a punctual completed action ("I 忍ed for an hour"), teach the state-reading gently — the word names a condition one is in, not an event one performs.
+
+- POTENTIAL COMPLEMENT FORMS (V+得/不+結, classified Vst — 受得了 / 受不了 / 想不到 / 找得到 / 看不出 / 等不了 / 怪不得): The 得/不 carries modal force, like English "can/cannot." Read 受得了 as "able to bear it through" (能受 + completion); 受不了 as "unable to bear it through." The 了 in 受得了 / 等不了 is the verb 了 (liao3, "manage/handle through to completion"), NOT the perfective particle 了 (le). When learners confuse 等不了 with 等了 (perfective), name the distinction concretely.
+
+- RELATIONAL-CAUSALITY VERBS (嚇 startle, 吸引 attract, 感動 move, 引起 give-rise-to, 讓+state make-someone-feel): Chinese foregrounds the SOURCE of the experience as the subject; the experiencer is the object. 你嚇我 means "you exert startle-force on me," not "I got scared by you." English-trained learners often invert this — saying 我嚇了 (treating themselves as agent of fear). Correct gently with the source-vs-experiencer framing.
+
+The principle: describe what the form DOES in the learner's sentence; correct any usage that doesn't match. Don't lecture on classification — the chip already shows that.
+
 GRAMMAR PATTERN DETECTION: The Living Lexicon tracks a growing library of Chinese grammar patterns. Below is the current reference list (slug · Chinese label · markers). When you review the learner's sentence:
 1. If the sentence uses any pattern from the list, report it in "grammar_patterns_identified" with the slug and a one-sentence usage note ("correct" / "almost" / "misused").
 2. If the sentence uses a notable grammar construction that is NOT in the list (e.g. 還是, 一邊...一邊, 不但...而且, 越...越, 的時候, 雖然...但是, V一下, V過, 了, 的, 要...了, resultative complements, directional complements, etc.), suggest it in "grammar_patterns_suggested" so an editor can add it. Only suggest patterns that are genuinely present in the sentence — do not speculate.
@@ -333,7 +345,7 @@ Respond ONLY in this exact JSON format (no markdown, no extra text):
   "corrected_cn": "For 'correct' or 'minor_issues': the polished Traditional Chinese sentence (must contain ${word.traditional}). For 'needs_work', 'missing_target', or 'unworkable': the learner's ORIGINAL sentence unchanged — do NOT hand over a fix.",
   "corrected_en": "English translation of the corrected sentence",
   "highlight_word": "${word.traditional}",
-  "feedback": "Structured feedback in English. Format: (1) One sentence on what was done well. (2) If corrections were made, list each change with a brief WHY (grammar rule, valency, collocation, register). Do not lump corrections together — name each one.${intendedPOS ? ` (3) Comment on whether the word is correctly used as a ${posDisplay(intendedPOS)}.` : ''} Keep total length to 3-5 sentences. Be honest and specific.",
+  "feedback": "Structured feedback in English. Format: (1) One sentence on what was done well. (2) If corrections were made, list each change with a brief WHY (grammar rule, valency, collocation, register). Do not lump corrections together — name each one.${intendedPOS ? ` (3) Comment on whether the word's usage in the sentence matches what its POS implies — describe what the form is doing in the sentence rather than restating the classification. The POS chip is already shown to the learner.` : ''} Keep total length to 3-5 sentences. Be honest and specific.",
   "register_note": "One sentence: does this sentence match the word's register (${word.register || 'n/a'})? If not, explain gently.",
   "assessed_level": "beginner | learner | developing | advanced | fluent",
   "assessed_mastery": "seed | sprout | bud | flower | fruit",
@@ -369,6 +381,14 @@ Word metadata:
 - Channel: ${word.channel || 'n/a'}
 - HSK Level: ${word.level || 'n/a'}
 - Syntactic formula: ${wsNoteLookup(word, 'en', 'formula') || wsNoteLookup(word, 'zh', 'formula') || 'n/a'}
+
+POS USAGE — generate a sentence that reflects what the word's POS implies, not just any sentence containing the word:
+
+- INHABITED-MODE STATES (Vs / Vst — 忍, 愛, 信, 知, 教 jiao4, 受得了, 算了, 等不了): generate the word as a sustained mode of being or held capacity, not a discrete completed event. ✓ 我等不了那麼久 (sustained inability), ✗ 我等不了三天 (treats as completed event).
+
+- POTENTIAL COMPLEMENT FORMS (V+得/不+結 — 受得了 / 受不了 / 想不到 / 找得到 / 看不出 / 等不了): the 得/不 carries modal force ("can/cannot"). Generate sentences that show this modal capacity. The 了 in 受得了 / 等不了 is the verb 了 (liao3, "manage through") — never use these forms with perfective 了 semantics.
+
+- RELATIONAL-CAUSALITY VERBS (嚇, 吸引, 感動, 引起): foreground the source of the experience as subject, with the experiencer as object. ✓ 那個聲音嚇了我一跳, ✗ 我嚇了一跳那個聲音.
 
 Rules:
 - Use Traditional Chinese characters throughout

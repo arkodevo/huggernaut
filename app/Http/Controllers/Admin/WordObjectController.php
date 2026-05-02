@@ -369,8 +369,10 @@ class WordObjectController extends Controller
         $data = $request->validate([
             'traditional'  => ['required', 'string', 'max:16'],
             'simplified'   => ['nullable', 'string', 'max:16'],
-            'radical_id'   => ['required', 'exists:radicals,id'],
-            'strokes_trad' => ['required', 'integer', 'min:1', 'max:64'],
+            // radical_id + strokes_trad are nullable in schema (migration 000051)
+            // — editorial fields filled after draft entry. Validation matches.
+            'radical_id'   => ['nullable', 'exists:radicals,id'],
+            'strokes_trad' => ['nullable', 'integer', 'min:1', 'max:64'],
             'strokes_simp' => ['nullable', 'integer', 'min:1', 'max:64'],
             'structure'    => ['nullable', 'in:single,left-right,top-bottom,enclosing'],
             'status'       => ['required', 'in:draft,review,published'],
@@ -421,8 +423,10 @@ class WordObjectController extends Controller
         $data = $request->validate([
             'traditional'  => ['required', 'string', 'max:16'],
             'simplified'   => ['nullable', 'string', 'max:16'],
-            'radical_id'   => ['required', 'exists:radicals,id'],
-            'strokes_trad' => ['required', 'integer', 'min:1', 'max:64'],
+            // radical_id + strokes_trad are nullable in schema (migration 000051)
+            // — editorial fields filled after draft entry. Validation matches.
+            'radical_id'   => ['nullable', 'exists:radicals,id'],
+            'strokes_trad' => ['nullable', 'integer', 'min:1', 'max:64'],
             'strokes_simp' => ['nullable', 'integer', 'min:1', 'max:64'],
             'structure'    => ['nullable', 'in:single,left-right,top-bottom,enclosing'],
             'status'       => ['required', 'in:draft,review,published'],

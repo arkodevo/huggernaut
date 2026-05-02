@@ -329,6 +329,56 @@
         </template>
     </div>
 
+    {{-- Relations --}}
+    @if (! empty($relationTypes ?? null))
+    <div class="space-y-2 border-t border-gray-200 pt-5"
+         x-data="relationRows(@js(($sense?->senseRelations ?? collect())->map(fn ($r) => [
+             'relation_type_id'   => $r->relation_type_id,
+             'related_word_text'  => $r->related_word_text,
+             'editorial_note'     => $r->editorial_note,
+         ])->values()->all()))">
+        <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-gray-700">Relations</h3>
+            <button type="button" @click="addRow()"
+                    class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">+ add relation</button>
+        </div>
+        <p class="text-xs text-gray-500 -mt-1">Each relation pairs a type (synonym_close / synonym_related / antonym / contrast / etc.) with a target word. A target appears in at most ONE relation type per sense — duplicate (type, target) pairs are silently de-duped on save.</p>
+
+        <template x-for="(rel, index) in rels" :key="index">
+            <div class="grid grid-cols-12 gap-2 items-start">
+                <div class="col-span-3">
+                    <label class="block text-xs text-gray-500 mb-1" x-show="index === 0">Type</label>
+                    <select :name="'relations['+index+'][relation_type_id]'" x-model="rel.relation_type_id"
+                            class="block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <option value="">— select —</option>
+                        @foreach ($relationTypes as $rid => $slug)
+                            <option value="{{ $rid }}">{{ $slug }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-3">
+                    <label class="block text-xs text-gray-500 mb-1" x-show="index === 0">Target word</label>
+                    <input :name="'relations['+index+'][related_word_text]'" x-model="rel.related_word_text"
+                           type="text" placeholder="e.g. 等不及"
+                           class="block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm cn focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+                <div class="col-span-5">
+                    <label class="block text-xs text-gray-500 mb-1" x-show="index === 0">Editorial note (optional)</label>
+                    <input :name="'relations['+index+'][editorial_note]'" x-model="rel.editorial_note"
+                           type="text" placeholder="why this pairing, or §9 flag reason"
+                           class="block w-full rounded-lg border border-gray-300 px-2 py-1.5 text-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+                <div class="col-span-1 flex items-end pb-1.5">
+                    <button type="button" @click="removeRow(index)"
+                            class="text-red-400 hover:text-red-600 text-xs">✕</button>
+                </div>
+            </div>
+        </template>
+
+        <p x-show="rels.length === 0" class="text-xs text-gray-400 italic">No relations. Click "+ add relation" to add one.</p>
+    </div>
+    @endif
+
     {{-- Submit --}}
     <div class="flex gap-3">
         <button type="submit"
@@ -352,6 +402,18 @@ function definitionRows(initial) {
         },
         removeRow(index) {
             if (this.defs.length > 1) this.defs.splice(index, 1);
+        },
+    };
+}
+
+function relationRows(initial) {
+    return {
+        rels: Array.isArray(initial) ? initial : [],
+        addRow() {
+            this.rels.push({ relation_type_id: '', related_word_text: '', editorial_note: '' });
+        },
+        removeRow(index) {
+            this.rels.splice(index, 1);
         },
     };
 }

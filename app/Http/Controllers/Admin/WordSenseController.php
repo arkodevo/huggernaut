@@ -65,10 +65,17 @@ class WordSenseController extends Controller
         abort_unless($sense->word_object_id === $word->id, 404);
 
         $word->load('pronunciations.pronunciationSystem');
-        $sense->load('designations', 'definitions.posLabel');
+        $sense->load('designations', 'definitions.posLabel', 'senseRelations.relationType');
         [$attributes, $posLabels, $languages] = $this->formDependencies();
 
-        return view('admin.senses.edit', compact('word', 'sense', 'attributes', 'posLabels', 'languages'));
+        // Relation types for the dropdown (id → human label, sorted by slug)
+        $relationTypes = DB::table('sense_relation_types')
+            ->orderBy('slug')
+            ->get()
+            ->mapWithKeys(fn ($t) => [$t->id => $t->slug])
+            ->all();
+
+        return view('admin.senses.edit', compact('word', 'sense', 'attributes', 'posLabels', 'languages', 'relationTypes'));
     }
 
     public function update(Request $request, WordObject $word, WordSense $sense): RedirectResponse
@@ -112,6 +119,40 @@ class WordSenseController extends Controller
 
         // Delete definitions not in the submitted set
         $sense->definitions()->whereNotIn('id', $keptIds)->delete();
+
+        // Replace relations: delete all, insert the submitted set.
+        // word_sense_relations has no id column (composite PK on
+        // word_sense_id + related_word_text + relation_type_id), so we can't
+        // upsert by id — full replace is the cleanest mode.
+        DB::table('word_sense_relations')->where('word_sense_id', $sense->id)->delete();
+        $rows = [];
+        $now = now();
+        $seenKeys = [];
+        foreach ($data['relations'] as $rel) {
+            $text = trim($rel['related_word_text'] ?? '');
+            $typeId = $rel['relation_type_id'] ?? null;
+            if ($text === '' || ! $typeId) continue;
+            $key = $typeId . '|' . $text;
+            if (isset($seenKeys[$key])) continue; // de-duplicate
+            $seenKeys[$key] = true;
+            $rows[] = [
+                'word_sense_id'     => $sense->id,
+                'relation_type_id'  => (int) $typeId,
+                'related_word_text' => $text,
+                'editorial_note'    => $rel['editorial_note'] ?? null,
+                'created_at'        => $now,
+                'updated_at'        => $now,
+            ];
+        }
+        if ($rows) {
+            DB::table('word_sense_relations')->insert($rows);
+        }
+
+        // Bust lexicon caches so admin saves propagate immediately to the
+        // learner-facing SRP (which renders from these cached collections).
+        // Mirrors the cache-busting in destroy().
+        cache()->forget('lexicon_words');
+        cache()->forget('lexicon_words_slim');
 
         return redirect()->route('admin.words.show', $word)
             ->with('success', 'Sense updated.');
@@ -186,6 +227,11 @@ class WordSenseController extends Controller
             'notes.*.formula'               => ['nullable', 'string', 'max:255'],
             'notes.*.usage-note'            => ['nullable', 'string'],
             'notes.*.learner-traps'         => ['nullable', 'string'],
+            // Relations (replace-mode: full submitted set replaces existing)
+            'relations'                            => ['nullable', 'array'],
+            'relations.*.relation_type_id'         => ['nullable', 'exists:sense_relation_types,id'],
+            'relations.*.related_word_text'        => ['nullable', 'string', 'max:32'],
+            'relations.*.editorial_note'           => ['nullable', 'string'],
         ]);
 
         $sense = array_intersect_key($validated, array_flip([
@@ -201,6 +247,7 @@ class WordSenseController extends Controller
             'domains'      => array_values(array_filter($validated['domains'] ?? [])),
             'definitions'  => $validated['definitions']  ?? [],
             'notes'        => $validated['notes'] ?? [],
+            'relations'    => $validated['relations'] ?? [],
         ];
     }
 

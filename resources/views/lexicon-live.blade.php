@@ -2401,6 +2401,7 @@ WORDS.forEach(w => {
 
 </script>
 @include('partials.lexicon._segmentation')
+@include('partials.lexicon._audio-js')
 <script>
 
 // Populate domain refine select from DOMAIN_GROUPS (optgroup per group)
@@ -2864,6 +2865,7 @@ function srpShowCollectionPicker(wordKey, wordObjectId, anchorBtn) {
   popover.id = 'srpCollectionPicker';
   popover.dataset.wordKey = wordKey;
   popover.innerHTML = html;
+  popover.addEventListener('click', (e) => e.stopPropagation());
 
   // Anchor to the card-hero-actions div, lift parent card above siblings
   const actionsDiv = anchorBtn ? anchorBtn.closest('.card-hero-actions') : null;
@@ -3133,7 +3135,7 @@ function renderSlimCard(w, opts = {}) {
     </div>
     <div class="slim-card-body">
       ${defsHTML}
-      <div class="slim-card-pinyin"><span class="pinyin">${formatPinyin(w.pinyin)}</span> ${levelBadge}</div>
+      <div class="slim-card-pinyin"><span class="pinyin">${formatPinyin(w.pinyin)}</span>${w.pronunciationId ? audioButton('pronunciations', w.pronunciationId, w.hasAudio || {}, w.traditional) : ''} ${levelBadge}</div>
       ${heroActions}
     </div>
   </div>`;

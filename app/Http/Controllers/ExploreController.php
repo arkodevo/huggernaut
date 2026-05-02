@@ -288,6 +288,28 @@ class ExploreController extends Controller
     // come from the first/primary sense. Definitions, examples, and relation
     // proximity buckets are aggregated across all senses.
 
+    /**
+     * Derive a word-level alignment summary from its senses.
+     * Returns the highest-priority alignment present (disputed > partial > full).
+     * The word_objects.alignment column is unused (never set by importer/enricher);
+     * the truth lives on word_senses.alignment per the disputed-POS workflow.
+     * The frontend chip icon reads the word-level value, so we summarize from
+     * the senses to keep the chip meaningful.
+     */
+    private function deriveAlignment($senses): ?string
+    {
+        $priority = ['disputed' => 3, 'partial' => 2, 'full' => 1];
+        $best = null;
+        foreach ($senses as $sense) {
+            $a = $sense->alignment;
+            if (! $a) continue;
+            if (! $best || ($priority[$a] ?? 0) > ($priority[$best] ?? 0)) {
+                $best = $a;
+            }
+        }
+        return $best;
+    }
+
     private function shapeWordObject(WordObject $word): ?array
     {
         $senses = $word->senses;
@@ -456,7 +478,7 @@ class ExploreController extends Controller
                 return $result ?: new \stdClass();
             })(),
             'senseIds'        => $senses->pluck('id')->values()->all(),
-            'alignment'       => $word->alignment,
+            'alignment'       => $this->deriveAlignment($senses),
         ];
     }
 
@@ -522,6 +544,15 @@ class ExploreController extends Controller
                 ->map(fn ($r) => self::REL_PROXIMITY[$r->relationType?->slug ?? ''] ?? null))
             ->filter()->unique()->values()->all();
 
+        // Audio: surface the primary pronunciation's id + has_audio so the
+        // SRP slim card can render a 🔊 button via the shared audioButton()
+        // partial. Falls back to {} when has_audio is missing — partial then
+        // routes to the Web Speech API fallback per slot.
+        $primaryPron = $primary->pronunciation;
+        $primaryHasAudio = is_array($primaryPron?->has_audio)
+            ? $primaryPron->has_audio
+            : (json_decode($primaryPron?->has_audio ?? '{}', true) ?: (object) []);
+
         return [
             'wordObjectId'    => $word->id,
             'smart_id'        => $word->smart_id,
@@ -529,6 +560,8 @@ class ExploreController extends Controller
             'simplified'      => $word->simplified ?? $word->traditional,
             'pinyin'          => $pinyin,
             'pinyinToneless'  => $pinyinToneless,
+            'pronunciationId' => $primaryPron?->id,
+            'hasAudio'        => $primaryHasAudio,
             'definitions'     => $definitions,
             'register'        => $register,
             'connotation'     => $primary->connotation?->slug ?? 'neutral',
@@ -539,7 +572,7 @@ class ExploreController extends Controller
             'level'           => $tocflNum,
             'allDomains'      => $allDomains,
             'relProximity'    => $relProximity,
-            'alignment'       => $word->alignment,
+            'alignment'       => $this->deriveAlignment($senses),
         ];
     }
 
@@ -878,7 +911,7 @@ class ExploreController extends Controller
             ])->values()->all(),
             'senses'          => $shapedSenses,
             'family'          => $allFamily,
-            'alignment'       => $word->alignment,
+            'alignment'       => $this->deriveAlignment($senses),
             'subtlexRank'     => $word->subtlex_rank,
             'subtlexPpm'      => $word->subtlex_ppm ? (float) $word->subtlex_ppm : null,
             'subtlexCd'       => $word->subtlex_cd  ? (float) $word->subtlex_cd  : null,

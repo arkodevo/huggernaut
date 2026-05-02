@@ -2,13 +2,20 @@
 
 namespace App\Console\Commands;
 
-use App\Models\WordObject;
+use App\Models\WordPronunciation;
+use App\Models\WordSenseExample;
+use App\Services\AudioGenerator;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
-use Symfony\Component\Process\Process;
 
+// Bulk / manual audio generation. Iterates pronunciations and example
+// sentences, delegating per-row work to AudioGenerator. The same service
+// powers the queued GenerateRowAudio job, so manual sweeps and live
+// observer-driven dispatches behave identically.
+//
+// Freshness is determined by AudioGenerator::isFresh (hash + has_audio).
+// A massive `--force` sweep ignores the freshness check; a normal sweep
+// only does real work where files are missing or the text has drifted
+// since the audio was last written.
 class GenerateAudio extends Command
 {
     protected $signature = 'audio:generate
@@ -16,22 +23,12 @@ class GenerateAudio extends Command
         {--voice= : Only generate this voice key (tw-f, tw-m, cn-f, cn-m)}
         {--pronunciations-only : Skip example sentences}
         {--examples-only : Skip word pronunciations}
-        {--force : Regenerate files even if has_audio shows them already generated}
+        {--force : Regenerate files even if has_audio + hash agree}
         {--limit= : Cap the number of rows processed per target type (useful for testing)}';
 
-    protected $description = 'Generate neural TTS audio files (TW F/M + CN F/M) via edge-tts for word pronunciations and example sentences';
+    protected $description = 'Generate neural TTS audio (TW F/M + CN F/M) via edge-tts. Hash-aware: skips rows whose audio_text_hash matches the current source text and whose has_audio covers the requested voices.';
 
-    /** Voice key → edge-tts voice ID. Keys double as storage subdirectory names. */
-    private const VOICES = [
-        'tw-f' => 'zh-TW-HsiaoChenNeural',
-        'tw-m' => 'zh-TW-YunJheNeural',
-        'cn-f' => 'zh-CN-XiaoxiaoNeural',
-        'cn-m' => 'zh-CN-YunxiNeural',
-    ];
-
-    private const SLEEP_MS = 100; // polite throttle between edge-tts calls
-
-    public function handle(): int
+    public function handle(AudioGenerator $generator): int
     {
         $targetVoices = $this->resolveTargetVoices();
         if (empty($targetVoices)) {
@@ -41,16 +38,17 @@ class GenerateAudio extends Command
 
         $this->info('Voices: ' . implode(', ', array_keys($targetVoices)));
 
+        $force              = (bool) $this->option('force');
         $pronunciationsOnly = $this->option('pronunciations-only');
         $examplesOnly       = $this->option('examples-only');
 
         $stats = ['pronunciations' => 0, 'examples' => 0, 'errors' => 0];
 
         if (! $examplesOnly) {
-            $stats['pronunciations'] = $this->generatePronunciations($targetVoices, $stats);
+            $stats['pronunciations'] = $this->generatePronunciations($generator, $targetVoices, $force, $stats);
         }
         if (! $pronunciationsOnly) {
-            $stats['examples'] = $this->generateExamples($targetVoices, $stats);
+            $stats['examples'] = $this->generateExamples($generator, $targetVoices, $force, $stats);
         }
 
         $this->info(sprintf(
@@ -63,79 +61,44 @@ class GenerateAudio extends Command
         return $stats['errors'] > 0 ? 1 : 0;
     }
 
+    /** @return array<string,string> */
     private function resolveTargetVoices(): array
     {
         $voiceOpt = $this->option('voice');
         if ($voiceOpt) {
-            if (! isset(self::VOICES[$voiceOpt])) {
-                $this->error("Unknown voice key: {$voiceOpt}. Valid: " . implode(', ', array_keys(self::VOICES)));
+            if (! isset(AudioGenerator::VOICES[$voiceOpt])) {
+                $this->error("Unknown voice key: {$voiceOpt}. Valid: " . implode(', ', array_keys(AudioGenerator::VOICES)));
                 return [];
             }
-            return [$voiceOpt => self::VOICES[$voiceOpt]];
+            return [$voiceOpt => AudioGenerator::VOICES[$voiceOpt]];
         }
-        return self::VOICES;
+        return AudioGenerator::VOICES;
     }
 
-    private function generatePronunciations(array $targetVoices, array &$stats): int
+    /** @param array<string,string> $targetVoices */
+    private function generatePronunciations(AudioGenerator $generator, array $targetVoices, bool $force, array &$stats): int
     {
         $this->info('--- Pronunciations ---');
 
-        $query = DB::table('word_pronunciations')
-            ->select('word_pronunciations.id', 'word_pronunciations.pronunciation_text', 'word_pronunciations.has_audio', 'word_objects.traditional')
-            ->join('word_objects', 'word_objects.id', '=', 'word_pronunciations.word_object_id');
-
+        $query = WordPronunciation::query()->with('wordObject');
         if ($wordSmartId = $this->option('word')) {
-            $query->where('word_objects.smart_id', $wordSmartId);
+            $query->whereHas('wordObject', fn ($q) => $q->where('smart_id', $wordSmartId));
         }
         if ($limit = (int) $this->option('limit')) {
             $query->limit($limit);
         }
 
-        $rows = $query->orderBy('word_pronunciations.id')->get();
+        $rows = $query->orderBy('id')->get();
         $this->info("Scanning {$rows->count()} pronunciations");
 
         $count = 0;
         $bar = $this->output->createProgressBar($rows->count());
         $bar->start();
 
-        foreach ($rows as $row) {
-            $hasAudio = $this->decodeHasAudio($row->has_audio);
-            $needsGeneration = [];
-
-            foreach ($targetVoices as $key => $voice) {
-                if ($this->option('force') || empty($hasAudio[$key])) {
-                    $needsGeneration[$key] = $voice;
-                }
-            }
-
-            if (empty($needsGeneration)) {
-                $bar->advance();
-                continue;
-            }
-
-            // The headword IS the text we synthesize — not the pinyin.
-            // Edge TTS uses its own CJK→phonetics; pinyin numbers would read as literal numbers.
-            $text = $row->traditional;
-            if (! $text) {
-                $bar->advance();
-                continue;
-            }
-
-            foreach ($needsGeneration as $key => $voice) {
-                $outputPath = "audio/pronunciations/{$key}/{$row->id}.mp3";
-                if ($this->synthesize($text, $voice, $outputPath)) {
-                    $hasAudio[$key] = true;
-                    $count++;
-                } else {
-                    $stats['errors']++;
-                }
-                usleep(self::SLEEP_MS * 1000);
-            }
-
-            DB::table('word_pronunciations')
-                ->where('id', $row->id)
-                ->update(['has_audio' => json_encode($hasAudio)]);
-
+        foreach ($rows as $p) {
+            $result = $generator->regeneratePronunciation($p, $targetVoices, $force);
+            $count          += $result['generated'];
+            $stats['errors'] += $result['errors'];
             $bar->advance();
         }
 
@@ -144,120 +107,35 @@ class GenerateAudio extends Command
         return $count;
     }
 
-    private function generateExamples(array $targetVoices, array &$stats): int
+    /** @param array<string,string> $targetVoices */
+    private function generateExamples(AudioGenerator $generator, array $targetVoices, bool $force, array &$stats): int
     {
         $this->info('--- Examples ---');
 
-        $query = DB::table('word_sense_examples')
-            ->select('word_sense_examples.id', 'word_sense_examples.chinese_text', 'word_sense_examples.has_audio')
-            ->where('word_sense_examples.is_suppressed', false);
-
+        $query = WordSenseExample::query()->where('is_suppressed', false);
         if ($wordSmartId = $this->option('word')) {
-            $query->join('word_senses', 'word_senses.id', '=', 'word_sense_examples.word_sense_id')
-                  ->join('word_objects', 'word_objects.id', '=', 'word_senses.word_object_id')
-                  ->where('word_objects.smart_id', $wordSmartId);
+            $query->whereHas('wordSense.wordObject', fn ($q) => $q->where('smart_id', $wordSmartId));
         }
         if ($limit = (int) $this->option('limit')) {
             $query->limit($limit);
         }
 
-        $rows = $query->orderBy('word_sense_examples.id')->get();
+        $rows = $query->orderBy('id')->get();
         $this->info("Scanning {$rows->count()} examples");
 
         $count = 0;
         $bar = $this->output->createProgressBar($rows->count());
         $bar->start();
 
-        foreach ($rows as $row) {
-            $hasAudio = $this->decodeHasAudio($row->has_audio);
-            $needsGeneration = [];
-
-            foreach ($targetVoices as $key => $voice) {
-                if ($this->option('force') || empty($hasAudio[$key])) {
-                    $needsGeneration[$key] = $voice;
-                }
-            }
-
-            if (empty($needsGeneration)) {
-                $bar->advance();
-                continue;
-            }
-
-            $text = trim($row->chinese_text);
-            if (! $text) {
-                $bar->advance();
-                continue;
-            }
-
-            foreach ($needsGeneration as $key => $voice) {
-                $outputPath = "audio/examples/{$key}/{$row->id}.mp3";
-                if ($this->synthesize($text, $voice, $outputPath)) {
-                    $hasAudio[$key] = true;
-                    $count++;
-                } else {
-                    $stats['errors']++;
-                }
-                usleep(self::SLEEP_MS * 1000);
-            }
-
-            DB::table('word_sense_examples')
-                ->where('id', $row->id)
-                ->update(['has_audio' => json_encode($hasAudio)]);
-
+        foreach ($rows as $e) {
+            $result = $generator->regenerateExample($e, $targetVoices, $force);
+            $count          += $result['generated'];
+            $stats['errors'] += $result['errors'];
             $bar->advance();
         }
 
         $bar->finish();
         $this->newLine();
         return $count;
-    }
-
-    /**
-     * Synthesize text via edge-tts Python CLI, write to storage path.
-     * Returns true on success, false on failure.
-     */
-    private function synthesize(string $text, string $voice, string $storagePath): bool
-    {
-        $absPath = Storage::disk('public')->path($storagePath);
-        $dir = dirname($absPath);
-        if (! File::exists($dir)) {
-            File::makeDirectory($dir, 0755, true);
-        }
-
-        $process = new Process([
-            'python3', '-m', 'edge_tts',
-            '--voice', $voice,
-            '--text', $text,
-            '--write-media', $absPath,
-        ]);
-        $process->setTimeout(30);
-
-        try {
-            $process->run();
-        } catch (\Throwable $e) {
-            $this->error("\nedge-tts exception ({$voice}, {$text}): {$e->getMessage()}");
-            return false;
-        }
-
-        if (! $process->isSuccessful()) {
-            $this->error("\nedge-tts failed ({$voice}, {$text}): " . $process->getErrorOutput());
-            return false;
-        }
-
-        if (! File::exists($absPath) || File::size($absPath) < 500) {
-            $this->error("\nedge-tts produced empty/small file ({$voice}, {$text}): {$storagePath}");
-            if (File::exists($absPath)) File::delete($absPath);
-            return false;
-        }
-
-        return true;
-    }
-
-    private function decodeHasAudio($raw): array
-    {
-        if (is_array($raw)) return $raw;
-        if (! $raw) return [];
-        $decoded = json_decode($raw, true);
-        return is_array($decoded) ? $decoded : [];
     }
 }

@@ -31,6 +31,8 @@ class ImportWordData extends Command
     private int $langZh;
     private array $designations;
     private array $posLabels;
+    /** @var array<int,string> pos_id → slug (for matching existing senses by POS) */
+    private array $posSlugById;
 
     public function handle(): int
     {
@@ -49,29 +51,50 @@ class ImportWordData extends Command
         $this->langZh       = Language::where('code', 'zh-TW')->value('id');
         $this->designations = Designation::all()->keyBy('slug')->map->id->all();
         $this->posLabels    = PosLabel::all()->keyBy('slug')->map->id->all();
+        $this->posSlugById  = PosLabel::all()->keyBy('id')->map->slug->all();
 
-        // Parse JSONL
-        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        // Parse: support both JSONL (one entry per line) and pretty-printed
+        // JSON array (the format enrich:skeleton emits). Detect by sniffing
+        // the first non-whitespace character: '[' → JSON array; '{' → JSONL.
+        $raw = file_get_contents($file);
+        $trimmed = ltrim($raw);
         $entries = [];
-        $parseErrors = 0;
 
-        foreach ($lines as $i => $line) {
-            $entry = json_decode($line, true);
-            if (! $entry) {
-                $this->error("JSON parse error on line " . ($i + 1));
-                $parseErrors++;
-                continue;
+        if ($trimmed !== '' && $trimmed[0] === '[') {
+            // Pretty-printed JSON array — parse as one document.
+            $entries = json_decode($raw, true);
+            if (! is_array($entries)) {
+                $this->error('JSON array parse error: ' . json_last_error_msg());
+                return 1;
             }
-            $entries[] = $entry;
+        } else {
+            // JSONL — one entry per line.
+            $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $parseErrors = 0;
+            foreach ($lines as $i => $line) {
+                $entry = json_decode($line, true);
+                if (! $entry) {
+                    $this->error('JSON parse error on line ' . ($i + 1));
+                    $parseErrors++;
+                    continue;
+                }
+                $entries[] = $entry;
+            }
+            if ($parseErrors) {
+                $this->error("{$parseErrors} parse errors — aborting.");
+                return 1;
+            }
         }
 
-        if ($parseErrors) {
-            $this->error("{$parseErrors} parse errors — aborting.");
-            return 1;
-        }
+        // Filter out non-word top-level entries (e.g. _meta header blocks
+        // produced by gen_lens_disputes_rev0.php and similar cowork artifacts).
+        // Convention: word entries have a 'word' key; metadata blocks do not.
+        $rawCount = count($entries);
+        $entries = array_values(array_filter($entries, fn($e) => is_array($e) && isset($e['word'])));
+        $skipped = $rawCount - count($entries);
 
         $count = count($entries);
-        $this->info("Loaded {$count} entries from {$file}" . ($upsert ? ' [UPSERT MODE]' : ''));
+        $this->info("Loaded {$count} entries from {$file}" . ($skipped ? " ({$skipped} non-word header(s) skipped)" : '') . ($upsert ? ' [UPSERT MODE]' : ''));
 
         // Validate
         $issues = $this->validate($entries);
@@ -106,7 +129,13 @@ class ImportWordData extends Command
                 } elseif ($result['action'] === 'updated') {
                     $updated++;
                     $senses += $result['senses'];
-                    $this->line("  ↻ {$entry['word']['traditional']} (updated, {$result['senses']} senses)");
+                    $detail = sprintf(
+                        'matched %d, editorial-added %d, preserved %d',
+                        $result['matched']   ?? 0,
+                        $result['editorial'] ?? 0,
+                        $result['preserved'] ?? 0
+                    );
+                    $this->line("  ↻ {$entry['word']['traditional']} (upsert: {$detail})");
                 } else {
                     $skipped++;
                     $this->line("  ○ {$entry['word']['traditional']} (exists)");
@@ -204,39 +233,85 @@ class ImportWordData extends Command
                 return ['action' => 'skipped', 'senses' => 0];
             }
 
-            // Update word-level fields
+            // Upsert on existing word — per-sense match, NEVER wipe.
+            //
+            // Policy (2026-04-22, after audit revealed 86 foundational senses
+            // lost to the previous wipe-and-recreate upsert):
+            //   1. Match incoming senses to existing by (pinyin, pos).
+            //   2. Matched → update editorial content in place. Seed fields
+            //      (tocfl_level_id, hsk_level_id, source, alignment) are
+            //      preserved — band stamps come from the seeder before
+            //      enrichment begins, never from the enrichment re-import.
+            //   3. Unmatched incoming → create as an EDITORIAL addition:
+            //      source='editorial', alignment='partial', NO band stamps.
+            //      Enricher discipline (guided by _sibling_senses context in
+            //      the skeleton): only invent a new POS sense when it's
+            //      absent from both the current batch AND siblings. When
+            //      this path triggers, it's 澄言's deliberate judgment and
+            //      the provenance is recorded explicitly.
+            //   4. Unmatched EXISTING (on the word, not in the batch) →
+            //      preserve. Never delete from import.
+
+            // Word-level: update benign fields. Preserve status (never
+            // downgrade published→draft from a draft batch). Preserve
+            // traditional (identifier — if smart_id matches, trad is right).
+            $wordStatus = $word->status === 'published' ? 'published' : $status;
             $word->update([
-                'traditional' => $w['traditional'],
-                'simplified'  => $w['simplified'] ?? $w['traditional'],
-                'structure'   => $w['structure'],
-                'status'      => $status,
+                'simplified' => $w['simplified'] ?? $word->simplified,
+                'structure'  => $w['structure']  ?? $word->structure,
+                'status'     => $wordStatus,
             ]);
 
-            // Delete existing senses and all children to replace cleanly
-            $existingSenseIds = $word->senses()->pluck('id')->all();
-            if ($existingSenseIds) {
-                // Delete children first (definitions, examples, pivots)
-                WordSenseDefinition::whereIn('word_sense_id', $existingSenseIds)->delete();
-                WordSenseExample::whereIn('word_sense_id', $existingSenseIds)
-                    ->where('source', 'default') // Only delete default examples, preserve user examples
-                    ->delete();
-                DB::table('word_sense_designations')->whereIn('word_sense_id', $existingSenseIds)->delete();
-                DB::table('word_sense_domains')->whereIn('word_sense_id', $existingSenseIds)->delete();
-                // word_sense_pos pivot retired 2026-04-21 — POS stored on definitions.
-                DB::table('word_sense_notes')->whereIn('word_sense_id', $existingSenseIds)->delete();
-                WordSense::whereIn('id', $existingSenseIds)->delete();
+            // Index existing senses by (pinyin|pos). POS from definitions
+            // (EN row — authoritative since pivot retired 2026-04-21).
+            $existingSenses = $word->senses()->with(['pronunciation', 'definitions'])->get();
+            $existingByKey = [];
+            foreach ($existingSenses as $es) {
+                $pinyin = $es->pronunciation?->pronunciation_text ?? '';
+                $defEn = $es->definitions->where('language_id', $this->langEn)->first();
+                $posSlug = $defEn ? ($this->posSlugById[$defEn->pos_id] ?? '') : '';
+                $key = $pinyin . '|' . $posSlug;
+                $existingByKey[$key] = $es;
             }
 
-            // Delete old pronunciations and recreate
-            WordPronunciation::where('word_object_id', $word->id)->delete();
-
-            $senseCount = 0;
+            $matched = 0;
+            $editorialAdded = 0;
+            $matchedIds = [];
             foreach ($entry['senses'] as $i => $senseData) {
-                $this->importSense($word, $senseData, $i, $status);
-                $senseCount++;
+                $key = ($senseData['pinyin'] ?? '') . '|' . ($senseData['pos'] ?? '');
+                if (isset($existingByKey[$key])) {
+                    $this->updateExistingSense($existingByKey[$key], $senseData, $status);
+                    $matchedIds[] = $existingByKey[$key]->id;
+                    $matched++;
+                } else {
+                    // Editorial addition. Force provenance fields; drop any
+                    // tocfl/hsk that might be in the JSON (editorial additions
+                    // are out-of-band by definition).
+                    $senseData['source']    = 'editorial';
+                    $senseData['alignment'] = 'partial';
+                    unset($senseData['tocfl'], $senseData['hsk']);
+                    $this->importSense($word, $senseData, $i, $status, stampBands: false);
+                    $this->line("    ✚ editorial sense added: {$key}");
+                    $editorialAdded++;
+                }
             }
 
-            return ['action' => 'updated', 'senses' => $senseCount];
+            $unmatchedExisting = $existingSenses->reject(fn ($es) => in_array($es->id, $matchedIds));
+            $preserved = $unmatchedExisting->count();
+            foreach ($unmatchedExisting as $es) {
+                $pinyin = $es->pronunciation?->pronunciation_text ?? '';
+                $defEn = $es->definitions->where('language_id', $this->langEn)->first();
+                $posSlug = $defEn ? ($this->posSlugById[$defEn->pos_id] ?? '') : '';
+                $this->line("    ⊙ preserved existing sense: {$pinyin}|{$posSlug} (sense_id={$es->id})");
+            }
+
+            return [
+                'action'    => 'updated',
+                'senses'    => $matched + $editorialAdded,
+                'matched'   => $matched,
+                'editorial' => $editorialAdded,
+                'preserved' => $preserved,
+            ];
         }
 
         // New entry
@@ -257,7 +332,19 @@ class ImportWordData extends Command
         return ['action' => 'created', 'senses' => $senseCount];
     }
 
-    private function importSense(WordObject $word, array $s, int $sortOrder, string $status): void
+    /**
+     * Create a new sense.
+     *
+     * @param  bool  $stampBands  When false, tocfl_level_id and hsk_level_id
+     *                            are left null regardless of incoming JSON.
+     *                            Upsert paths pass false — band stamps are
+     *                            seed data, never written by the enrichment
+     *                            pipeline. When true (the non-upsert /
+     *                            first-import path), stamps are taken from
+     *                            the JSON; that path will eventually move
+     *                            to a master-driven seeder.
+     */
+    private function importSense(WordObject $word, array $s, int $sortOrder, string $status, bool $stampBands = true): void
     {
         // Pronunciation
         $pronunciation = WordPronunciation::firstOrCreate(
@@ -273,10 +360,14 @@ class ImportWordData extends Command
         $channelId      = isset($s['channel'])     && $s['channel']     ? ($this->designations[$s['channel']]     ?? null) : null;
         $connotationId  = isset($s['connotation']) && $s['connotation'] ? ($this->designations[$s['connotation']] ?? null) : null;
         $sensitivityId  = isset($s['sensitivity']) ? ($this->designations[$s['sensitivity']] ?? null) : null;
-        $tocflId        = isset($s['tocfl']) ? ($this->designations[$s['tocfl']] ?? null) : null;
-        $hskId          = isset($s['hsk']) ? ($this->designations[$s['hsk']] ?? null) : null;
+        $tocflId        = $stampBands && isset($s['tocfl']) ? ($this->designations[$s['tocfl']] ?? null) : null;
+        $hskId          = $stampBands && isset($s['hsk'])   ? ($this->designations[$s['hsk']]   ?? null) : null;
 
-        // Create sense
+        // Create sense. source/alignment are recorded explicitly — the
+        // upsert path sets source='editorial'/alignment='partial' for
+        // editorial additions (new sense POS that 澄言 added beyond TOCFL).
+        // First-import path defaults to source='tocfl'/alignment='full'
+        // (the master-seeded case).
         $sense = WordSense::create([
             'word_object_id'   => $word->id,
             'pronunciation_id' => $pronunciation->id,
@@ -290,6 +381,8 @@ class ImportWordData extends Command
             'learner_traps'    => $s['learner_traps'] ?? null,
             'tocfl_level_id'   => $tocflId,
             'hsk_level_id'     => $hskId,
+            'source'           => $s['source']    ?? 'tocfl',
+            'alignment'        => $s['alignment'] ?? 'full',
             'status'           => $status,
             // Enricher attribution: CLI flag wins, then per-sense field from
             // the JSON (written by enrich:skeleton), then null. NEVER
@@ -299,6 +392,88 @@ class ImportWordData extends Command
             'enriched_at'      => now(),
         ]);
 
+        $this->writeSenseChildren($sense, $s);
+    }
+
+    /**
+     * Update an existing sense in place — upsert path.
+     *
+     * NEVER touches tocfl_level_id, hsk_level_id, source, alignment. Those
+     * are seed data, set by the seeder before enrichment; the enrichment
+     * re-import only replaces editorial content.
+     *
+     * Child content (definitions, examples, notes, pivots) is wiped and
+     * rewritten from the incoming data. User-contributed examples
+     * (source != 'default') are preserved.
+     */
+    private function updateExistingSense(WordSense $sense, array $s, string $status): void
+    {
+        $senseId = $sense->id;
+
+        // Pronunciation — firstOrCreate will return the existing row when
+        // the match key hit (pinyin matched). No harm in the redundant call.
+        $pronunciation = WordPronunciation::firstOrCreate(
+            [
+                'word_object_id'          => $sense->word_object_id,
+                'pronunciation_system_id' => self::PINYIN_SYSTEM_ID,
+                'pronunciation_text'      => $s['pinyin'],
+            ],
+            ['is_primary' => false]
+        );
+
+        // Resolve editorial FKs. tocfl_level_id / hsk_level_id deliberately
+        // NOT read from $s — they're seed fields, untouchable here.
+        $channelId     = isset($s['channel'])     && $s['channel']     ? ($this->designations[$s['channel']]     ?? null) : null;
+        $connotationId = isset($s['connotation']) && $s['connotation'] ? ($this->designations[$s['connotation']] ?? null) : null;
+        $sensitivityId = isset($s['sensitivity']) ? ($this->designations[$s['sensitivity']] ?? null) : null;
+
+        // Preserve status upward — never downgrade published→draft.
+        $senseStatus = $sense->status === 'published' ? 'published' : $status;
+
+        $sense->update([
+            'pronunciation_id' => $pronunciation->id,
+            'channel_id'       => $channelId,
+            'connotation_id'   => $connotationId,
+            'sensitivity_id'   => $sensitivityId,
+            'intensity'        => $s['intensity'] ?? null,
+            'valency'          => $s['valency'] ?? null,
+            'status'           => $senseStatus,
+            'enriched_by'      => $this->option('enriched-by') ?: ($s['enriched_by'] ?? $sense->enriched_by),
+            'enriched_at'      => now(),
+            // tocfl_level_id, hsk_level_id, source, alignment — NOT touched.
+        ]);
+
+        // Wipe child content for this sense. User-contributed examples
+        // (source != 'default') are preserved. Example translations for
+        // default examples need explicit cleanup — no CASCADE assumed.
+        $defaultExampleIds = WordSenseExample::where('word_sense_id', $senseId)
+            ->where('source', 'default')
+            ->pluck('id')->all();
+        if ($defaultExampleIds) {
+            DB::table('word_sense_example_translations')
+                ->whereIn('word_sense_example_id', $defaultExampleIds)
+                ->delete();
+            WordSenseExample::whereIn('id', $defaultExampleIds)->delete();
+        }
+        WordSenseDefinition::where('word_sense_id', $senseId)->delete();
+        DB::table('word_sense_designations')->where('word_sense_id', $senseId)->delete();
+        DB::table('word_sense_domains')->where('word_sense_id', $senseId)->delete();
+        DB::table('word_sense_notes')->where('word_sense_id', $senseId)->delete();
+
+        // Rewrite child content from incoming data.
+        $this->writeSenseChildren($sense, $s);
+    }
+
+    /**
+     * Write all child content for a sense: domains, designations pivots,
+     * definitions (EN + zh-TW with POS), examples + translations, notes.
+     *
+     * Shared by importSense (new) and updateExistingSense (upsert).
+     * Assumes the caller has already wiped any prior child rows when
+     * updating an existing sense.
+     */
+    private function writeSenseChildren(WordSense $sense, array $s): void
+    {
         // Domains (ordered by relevance, max 4)
         $domains = array_slice($s['domains'] ?? [], 0, 4);
         $domainSync = [];
@@ -351,12 +526,7 @@ class ImportWordData extends Command
             ]);
         }
 
-        // POS is stored on word_sense_definitions.pos_id (written above).
-        // The word_sense_pos pivot was retired 2026-04-21 after drifting on
-        // 882 senses and propagating wrong POS into every batch skeleton.
-
         // Examples — translations go in word_sense_example_translations.
-        $enLangId = \DB::table('languages')->where('code', 'en')->value('id');
         foreach ($s['examples'] ?? [] as $ex) {
             $example = WordSenseExample::create([
                 'word_sense_id' => $sense->id,
@@ -367,10 +537,10 @@ class ImportWordData extends Command
                 'is_suppressed' => false,
             ]);
 
-            if (! empty($ex['english']) && $enLangId) {
-                \DB::table('word_sense_example_translations')->insert([
+            if (! empty($ex['english'])) {
+                DB::table('word_sense_example_translations')->insert([
                     'word_sense_example_id' => $example->id,
-                    'language_id'           => $enLangId,
+                    'language_id'           => $this->langEn,
                     'translation_text'      => $ex['english'],
                     'created_at'            => now(),
                     'updated_at'            => now(),

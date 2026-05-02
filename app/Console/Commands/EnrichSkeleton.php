@@ -129,10 +129,19 @@ class EnrichSkeleton extends Command
                 'wo.smart_id', 'wo.traditional', 'wo.simplified', 'wo.structure'
             );
 
+        if (! $smartIdsOpt && ! $filter) {
+            $this->error('Format A requires --filter or --smart-ids (or both)');
+            return self::FAILURE;
+        }
+
+        // --smart-ids and --filter compose. Passing both narrows to the
+        // intersection: those word_objects' senses at the given level only.
+        // Useful when re-batching a known smart_id list within a level scope.
         if ($smartIdsOpt) {
             $smartIds = array_map('trim', explode(',', $smartIdsOpt));
             $query->whereIn('wo.smart_id', $smartIds);
-        } elseif ($filter) {
+        }
+        if ($filter) {
             $levelId = DB::table('designations')->where('slug', $filter)->value('id');
             if (! $levelId) {
                 $this->error("Unknown --filter slug: {$filter}");
@@ -141,9 +150,6 @@ class EnrichSkeleton extends Command
             // Match either tocfl_level_id or hsk_level_id — the slug tells us which.
             $col = str_starts_with($filter, 'hsk-') ? 'ws.hsk_level_id' : 'ws.tocfl_level_id';
             $query->where($col, $levelId);
-        } else {
-            $this->error('Format A requires --filter or --smart-ids');
-            return self::FAILURE;
         }
 
         if ($unenrichedOnly) {
@@ -337,7 +343,94 @@ class EnrichSkeleton extends Command
             ];
         }
 
+        // ── Sibling senses — read-only context block ─────────────────────
+        //
+        // Each word entry gets `_sibling_senses`: an array of other senses
+        // on the same word_object that are NOT in this batch (different
+        // band, or excluded by --unenriched-only, etc.). Shown so 澄言 can:
+        //   (1) avoid proposing sense splits that duplicate existing senses,
+        //   (2) detect when a foundational sense is MISSING (empty list
+        //       where one was expected — e.g. 家 at L5 with no L1 N sibling
+        //       is a signal the basic sense was dropped),
+        //   (3) write usage notes that reference siblings coherently.
+        //
+        // IMPORTANT: this is informational only. The importer ignores
+        // `_sibling_senses`. 澄言 must not edit it.
+        $this->attachSiblingSenses($byWord, $senseIds);
+
         return array_values($byWord);
+    }
+
+    /**
+     * For each word entry in $byWord, append `_sibling_senses` — other
+     * senses on the same word_object that are NOT in the current batch.
+     *
+     * @param  array<int,array<string,mixed>>  $byWord  keyed by word_object_id
+     * @param  array<int,int>                  $inBatchSenseIds
+     */
+    private function attachSiblingSenses(array &$byWord, array $inBatchSenseIds): void
+    {
+        foreach ($byWord as $woId => &$w) {
+            $w['_sibling_senses'] = [];
+        }
+        unset($w);
+
+        if (empty($byWord)) return;
+
+        $wordObjectIds = array_keys($byWord);
+
+        $siblingRows = DB::table('word_senses as ws')
+            ->leftJoin('word_pronunciations as wp', 'wp.id', '=', 'ws.pronunciation_id')
+            ->whereIn('ws.word_object_id', $wordObjectIds)
+            ->whereNotIn('ws.id', $inBatchSenseIds)
+            ->select(
+                'ws.id as sense_id', 'ws.word_object_id',
+                'ws.tocfl_level_id', 'ws.hsk_level_id',
+                'ws.enriched_by', 'ws.status', 'ws.source', 'ws.alignment',
+                'wp.pronunciation_text as pinyin'
+            )
+            ->orderBy('ws.word_object_id')
+            ->orderBy('ws.id')
+            ->get();
+
+        if ($siblingRows->isEmpty()) return;
+
+        $siblingIds = $siblingRows->pluck('sense_id')->map(fn ($v) => (int) $v)->all();
+
+        // One-POS-and-EN-def-per-sibling. POS from word_sense_definitions
+        // (same authoritative source used for main-batch senses).
+        $posBySibling = [];
+        $defEnBySibling = [];
+        foreach (DB::table('word_sense_definitions')
+                    ->whereIn('word_sense_id', $siblingIds)
+                    ->where('language_id', $this->langEn)
+                    ->orderBy('word_sense_id')
+                    ->orderBy('sort_order')
+                    ->get() as $row) {
+            if (! isset($posBySibling[$row->word_sense_id])) {
+                $posBySibling[$row->word_sense_id] = $this->posSlugById[$row->pos_id] ?? null;
+                $defEnBySibling[$row->word_sense_id] = $row->definition_text;
+            }
+        }
+
+        foreach ($siblingRows as $row) {
+            $woId = (int) $row->word_object_id;
+            $sid = (int) $row->sense_id;
+            if (! isset($byWord[$woId])) continue;
+
+            $byWord[$woId]['_sibling_senses'][] = [
+                'pinyin'        => $row->pinyin,
+                'pos'           => $posBySibling[$sid] ?? null,
+                'definition_en' => $defEnBySibling[$sid] ?? null,
+                'tocfl'         => $row->tocfl_level_id ? ($this->designationSlugById[$row->tocfl_level_id] ?? null) : null,
+                'hsk'           => $row->hsk_level_id   ? ($this->designationSlugById[$row->hsk_level_id]   ?? null) : null,
+                'source'        => $row->source,
+                'alignment'     => $row->alignment,
+                'status'        => $row->status,
+                'enriched_by'   => $row->enriched_by,
+                '_db_sense_id'  => $sid,
+            ];
+        }
     }
 
     // ── Format B: words not yet in DB (CSV input) ────────────────────

@@ -18,6 +18,7 @@ class WordPronunciation extends Model
         'dialect_region',
         'audio_file',
         'has_audio',
+        'audio_text_hash',
     ];
 
     protected function casts(): array

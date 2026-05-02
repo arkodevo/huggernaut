@@ -161,14 +161,11 @@ class CsvImportController extends Controller
         $request->validate(['traditional' => 'required|string|max:16']);
         $traditional = $request->traditional;
 
-        $enricher = new ShifuWordEnricher();
-        $enriched = $enricher->enrich($traditional);
-
-        if (isset($enriched['error'])) {
-            return response()->json(['error' => $enriched['error']], 502);
-        }
-
-        // Check for existing word and find gaps
+        // Fetch existing word FIRST so we can pass sibling context into the
+        // enricher. Parity with cowork: 澄言 sees _sibling_senses in the
+        // skeleton JSON; 師父 now sees the equivalent block in the user
+        // message. Without this, 師父 enriches blind and can propose senses
+        // that duplicate or shadow existing ones.
         $existingWord = WordObject::where('traditional', $traditional)
             ->with([
                 'senses' => fn ($q) => $q->orderBy('id')->with([
@@ -180,6 +177,15 @@ class CsvImportController extends Controller
                 ]),
             ])
             ->first();
+
+        $siblings = $existingWord ? $this->buildSiblingsForShifu($existingWord) : [];
+
+        $enricher = new ShifuWordEnricher();
+        $enriched = $enricher->enrich($traditional, $siblings);
+
+        if (isset($enriched['error'])) {
+            return response()->json(['error' => $enriched['error']], 502);
+        }
 
         $gaps = $existingWord ? $this->findGaps($existingWord, $enriched) : [];
 
@@ -454,6 +460,37 @@ class CsvImportController extends Controller
         $remainingCount = count($remaining);
 
         return view('admin.words.csv-review', compact('wordList', 'hasMore', 'remainingCount'));
+    }
+
+    // ── Private: build sibling context for 師父 ──────────────────────
+
+    /**
+     * Flatten an existing word's senses into the read-only sibling payload
+     * 師父 receives in the user message. Mirrors the shape produced by
+     * `enrich:skeleton` for cowork (EnrichSkeleton::attachSiblingSenses)
+     * so the two enrichment surfaces read the same context.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    private function buildSiblingsForShifu(WordObject $word): array
+    {
+        $langEnId = Language::where('code', 'en')->value('id');
+        $siblings = [];
+        foreach ($word->senses as $sense) {
+            $defEn = $sense->definitions->where('language_id', $langEnId)->first();
+            $siblings[] = [
+                'pinyin'        => $sense->pronunciation?->pronunciation_text,
+                'pos'           => $defEn?->posLabel?->slug,
+                'definition_en' => $defEn?->definition_text,
+                'tocfl'         => $sense->tocflLevel?->slug,
+                'hsk'           => $sense->hskLevel?->slug,
+                'source'        => $sense->source,
+                'alignment'     => $sense->alignment,
+                'status'        => $sense->status,
+                'enriched_by'   => $sense->enriched_by,
+            ];
+        }
+        return $siblings;
     }
 
     // ── Private: find gaps in existing word ──────────────────────────

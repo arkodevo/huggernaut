@@ -33,7 +33,7 @@ class PosLabelSeeder extends Seeder
             ['slug' => 'Num',  'sort_order' => 10, 'en' => 'Number',               'zh' => '數詞'],
             ['slug' => 'IE',   'sort_order' => 11, 'en' => 'Idiomatic Expression', 'zh' => '慣用語'],
             ['slug' => 'Ph',   'sort_order' => 12, 'en' => 'Phrase',               'zh' => '片語'],
-            ['slug' => 'CE',   'sort_order' => 13, 'en' => 'Chengyu',              'zh' => '成語'],
+            ['slug' => 'CE',   'sort_order' => 13, 'en' => 'Complement Expression', 'zh' => null],
         ];
 
         foreach ($topLevel as $data) {
@@ -77,10 +77,11 @@ class PosLabelSeeder extends Seeder
         }
     }
 
-    private function label(int $posId, int $langId, string $text): void
+    private function label(int $posId, int $langId, ?string $text): void
     {
         // pos_label_translations has a composite PK (pos_id, language_id) — no id column.
-        // Use DB::table updateOrInsert which works correctly with composite keys.
+        // label is nullable as of migration 000115 — preserves the row while leaving
+        // the human-facing string for later authoring.
         DB::table('pos_label_translations')->updateOrInsert(
             ['pos_id' => $posId, 'language_id' => $langId],
             ['label'  => $text, 'updated_at' => now()]

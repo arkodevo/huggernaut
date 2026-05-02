@@ -144,5 +144,5 @@
   letter-spacing: 0.05em;
 }
 .pinyin-h { writing-mode: horizontal-tb; }
-.card-pinyin-row { display: flex; align-items: center; margin-top: 0.15rem; }
+.card-pinyin-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem; }
 </style>
